@@ -352,7 +352,7 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
       <div id="ordlist"></div>
       <div class="row">
         <button class="ghost" onclick="clearDone()">Teslimleri arşivle</button>
-        <button class="ghost" onclick="exportCsv()">CSV indir</button>
+        <button class="ghost" onclick="exportExcel()">Excel indir</button>
       </div>
     </div>
   </details>
@@ -395,6 +395,7 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 const OSRM='https://router.project-osrm.org';
 const COLORS=['#c8402c','#1f6fd0','#2f8f4f','#8b3fb5','#d97a00','#0d9b96','#b0245c','#5a6b1f'];
@@ -896,6 +897,35 @@ function exportCsv(){
   a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
   a.download=`siparisler-${new Date().toISOString().slice(0,10)}.csv`;
   a.click();URL.revokeObjectURL(a.href);
+}
+
+// stok giri\u015f/\u00e7\u0131k\u0131\u015f defteri: ara\u00e7 baz\u0131nda y\u00fcklenmesi planlanan / teslim edilen / bekleyen litre
+function exportExcel(){
+  const byVeh={};
+  orderList.forEach(o=>{
+    if(o.status==='canc'||!o.vehicle)return;
+    const v=byVeh[o.vehicle]||(byVeh[o.vehicle]={durak:0,tamam:0,planlanan:0,teslim:0,bekleyen:0});
+    v.durak++;v.planlanan+=o.qty;
+    if(o.status==='done'){v.tamam++;v.teslim+=o.deliveredQty||0;}
+    else v.bekleyen+=o.qty;
+  });
+  const stokRows=[['Plaka','Durak (Tamam/Toplam)','Y\u00fcklenmesi Planlanan (L)','Teslim Edilen (L)','Bekleyen/Yolda (L)']];
+  Object.keys(byVeh).sort().forEach(v=>{
+    const s=byVeh[v];
+    stokRows.push([v,`${s.tamam}/${s.durak}`,s.planlanan,s.teslim,s.bekleyen]);
+  });
+
+  const ordRows=[['Sipari\u015f','M\u00fc\u015fteri','Enlem','Boylam','Sipari\u015f L','B\u0131rak\u0131lan L','Durum','Girildi','Planland\u0131','Teslim','Ara\u00e7','G\u00f6z','Not','\u015eof\u00f6r notu']];
+  orderList.forEach(o=>{
+    const c=customers.find(c=>c.id===o.cid);
+    ordRows.push([o.id,c?c.name:'\u2014',c?c.lat:'',c?c.lng:'',o.qty,o.deliveredQty??'',ST[o.status].lab,
+      fmtDT(o.createdAt),fmtDT(o.plannedAt),fmtDT(o.deliveredAt),o.vehicle??'',o.comp??'',o.note??'',o.deliverNote??'']);
+  });
+
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(stokRows),'Stok \u00d6zeti');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ordRows),'Sipari\u015fler');
+  XLSX.writeFile(wb,`tanker-rota-${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
 // rotaya girecek siparişler: bekleyen + planlanan (teslim/iptal hariç)

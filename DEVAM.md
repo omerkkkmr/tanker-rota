@@ -220,12 +220,78 @@ node /tmp/run.js
 
 ## SONRAKİ AŞAMALAR (yol haritası)
 
-- **Aşama 5: Şoför ekranı** (ayrı `sofor.html`) — plaka+PIN giriş, routes tablosundan
-  kendi rotası, fotoğraf yükleme (dolum/fiş/irsaliye → belgeler bucket), GPS konum
-  doğrulama, teslim işleme → orders tablosuna yazar, planlamacı realtime görür.
-- Aşama 6: Canlı tanker takibi (GPS).
+- ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
+- Aşama 6: Canlı tanker takibi (GPS) — sofor.html artık her teslimde GPS
+  yakalıyor (gps_lat/gps_lng), ama canlı harita üzerinde GÖSTERİM henüz yok.
 - Aşama 7: iOS/Android (opsiyonel, en sonda). WhatsApp reddedildi.
 - Güvenlik: admin şifresi + şoför PIN'leri değiştirilecek. RLS daraltılabilir.
+
+## ŞOFÖR EKRANI + STOK/EXCEL NOTU (2026-09-22)
+
+git deposu kuruldu (`git init`, ilk commit "v17 devralma"). "857 doluma gitti"
+açık sorununa hâlâ elde gerçek sipariş verisi yok — motor kodu satır satır
+incelendi, iki muhtemel senaryo (TIR meşgulken büyük iş var; 857'nin gözünde
+kalan yakıt var) node ile test edildi, İKİSİNDE DE motor kurallara uygun
+davrandı (857 hatalı doluma gitmedi). Gerçek veri/ekran görüntüsü gelmeden
+bu konu kapatılamaz — DEVAM.md'nin istediği gibi kullanıcıdan bekleniyor.
+
+Kullanıcı isteğiyle üç yeni parça eklendi, **hiçbiri Supabase şema değişikliği
+gerektirmedi** (orders.photos/delivered_qty/gps_lat/gps_lng zaten vardı):
+
+1. **`sofor.html`** (yeni, ayrı dosya) — plaka+PIN girişli mobil şoför ekranı.
+   `routes` tablosundaki kendi plakasına ait `legs`'i okuyup durak listesi
+   gösteriyor. Her durakta: boşaltılan litre girişi + **iki zorunlu fotoğraf**
+   (dolum tankı + irsaliye, `capture="environment"` ile doğrudan kamera açar) +
+   opsiyonel not. "Teslimi Kaydet" fotoğraflar `belgeler` bucket'ına yüklenip
+   (path: `teslimat/{plaka}/{oid}-{ts}-tank|irsaliye.ext`), GPS best-effort
+   (4 sn timeout, reddedilirse/başarısız olursa engellemez) alınıp `orders`
+   satırı `status:'done', delivered_qty, photos:[{type,url}], gps_lat/lng,
+   delivered_at` ile güncellenince tamamlanıyor. Ağ hatasında girilen veri
+   KAYBOLMUYOR (form açık kalıyor, tekrar denenebiliyor). `routes` tablosuna
+   realtime abone — planlamacı rotayı yeniden yayınlarsa şoförün ekranı
+   otomatik tazeleniyor. Zaten var olan `sheetPage`/"Teslim işle" akışıyla
+   AYNI kolonlara yazıyor (`delivered_qty`/`deliver_note`/`status`) — iki
+   ekran birbirini bozmuyor, planlamacı hâlâ manuel de işleyebilir.
+
+   **Test:** Gerçek Supabase'e bu ortamdan (container) çıkılamadığı için
+   (bilinen ağ kısıtı, bkz. yukarı) uçtan uca gerçek veriyle DENENEMEDİ.
+   Yerel `python3 -m http.server` ile JS syntax + login hata yönetimi +
+   (sahte veriyle enjekte edilen) durak listesi/teslim formu/tamamlanmış
+   durak görünümü tarayıcıda görsel olarak doğrulandı (mobil 375px genişlik).
+   **Kullanıcının gerçek telefonunda gerçek PIN ile giriş + bir teslimat
+   ucundan uca test edilmesi gerekiyor** — özellikle kamera izni ve GPS izni
+   ilk açılışta tarayıcı tarafından isteniyor, bu adım simüle edilemedi.
+
+2. **Excel'e aktar** (`tanker-rota-planlayici-v17.html`, mevcut "CSV indir"
+   butonunun yerine): SheetJS (`xlsx@0.18.5`, CDN) eklendi, yeni
+   `exportExcel()` fonksiyonu iki sayfalı bir `.xlsx` üretiyor:
+   - **Stok Özeti**: araç bazında durak (tamam/toplam), yüklenmesi planlanan L,
+     teslim edilen L (gerçek `delivered_qty` toplamı), bekleyen/yolda L.
+   - **Siparişler**: eski CSV'nin birebir aynısı (satır bazında tüm alanlar).
+   Bilinçli tasarım kararı: ayrı bir "stok hareket" tablosu AÇILMADI — giriş/
+   çıkış rakamları `orderList`'ten (zaten senkron) CANLI TÜRETİLİYOR, statik
+   bir log tutulmuyor. Bu, replan sonrası yinelenen kayıt riskini baştan
+   önlüyor ama "geçmiş bir günün stok özeti"ni kalıcı olarak saklamıyor —
+   ihtiyaç olursa (ör. ay sonu raporu) ayrı bir iş.
+
+   **Test:** CDN + Supabase bu sandboxtan erişilemediği için buton TIKLANARAK
+   gerçek bir .xlsx indirilemedi; yalnız buton varlığı ve fonksiyonun
+   sözdizimsel doğruluğu (`node --check`) doğrulandı. **Kullanıcının kendi
+   tarayıcısında bir kez denenmesi gerekiyor.**
+
+**AÇIK KALAN / BİLİNÇLİ KAPSAM DIŞI:**
+- Offline kuyruk yok — şoför sinyalsiz bölgede teslim kaydedemez, sinyal
+  gelince tekrar denemesi gerekir (form verisi kaybolmaz ama otomatik
+  yeniden deneme de yok).
+- Garaj aktarımları (TIR→diğer tanker) şoför ekranından ONAYLANMIYOR, bu
+  hareketler yalnızca planlamacının yayınladığı plan üzerinden GÖSTERİLİYOR
+  (bilgi amaçlı okuma), stok özetine "yüklenen" olarak girmiyor — yalnız
+  `orders`/`delivered_qty` üzerinden çıkış tarafı hesaplanıyor.
+- Fiziksel dosyalar (`sofor.html`, planlayıcı) `file://` ile açılırsa kamera/
+  GPS bazı mobil tarayıcılarda kısıtlı çalışabilir — gerçek kullanımda
+  ikisinin de bir https adresinden (basit bir statik hosting, ör. GitHub
+  Pages/Netlify) açılması ÖNERİLİR. Bu proje henüz hiçbir yere deploy
+  edilmedi, hâlâ yerel dosya.
 
 ## KULLANICI ÜSLUBU
 
