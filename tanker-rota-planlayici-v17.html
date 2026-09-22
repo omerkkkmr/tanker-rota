@@ -5,138 +5,156 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tanker Rota Planlayıcı v4</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#101418;--steel:#1c2530;--panel:#f2f0ec;--line:#c8c4bb;--hi:#ffd400;--diesel:#2f8f4f;--alert:#c8402c;--xfer:#8b3fb5}
+:root{--ink:#1b1917;--bg:#f4f1ea;--card:#ffffff;--line:#e5ddc9;--muted:#8b8377;--muted2:#6d655a;
+  --hi:#d9a441;--hi-bg:#e6b558;--hi-border:#a4700f;--diesel:#1f7a44;--alert:#c8402c;--xfer:#8b3fb5;
+  --htext:#f3efe7;--steel:#1b1917}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
-body{font-family:'Archivo',system-ui,sans-serif;background:var(--panel);color:var(--ink);
-  display:grid;grid-template-columns:410px 1fr;height:100vh;overflow:hidden}
-@media(max-width:900px){body{grid-template-columns:1fr;grid-template-rows:auto 1fr;overflow:auto;height:auto}#map{height:60vh}}
-#side{background:var(--steel);color:#f2f0ec;overflow-y:auto;border-right:3px solid var(--ink)}
-.brand{padding:14px 16px;border-bottom:1px solid #313d4c;display:flex;align-items:baseline;justify-content:space-between;gap:10px}
-.brand h1{font-size:15px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
-.brand span{font-family:'IBM Plex Mono';font-size:9px;color:var(--hi);letter-spacing:.08em}
-.sec{border-bottom:1px solid #313d4c}
-.sec>summary{padding:11px 16px;cursor:pointer;font-size:11px;font-weight:800;letter-spacing:.13em;
-  text-transform:uppercase;list-style:none;display:flex;justify-content:space-between;align-items:center}
+body{font-family:'Instrument Sans',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);
+  display:grid;grid-template-rows:auto 1fr;height:100vh;overflow:hidden}
+.mainrow{display:grid;grid-template-columns:410px 1fr;min-height:0;overflow:hidden}
+@media(max-width:900px){
+  body{display:block;height:auto;overflow:auto}
+  .mainrow{display:block;overflow:visible}
+  #side{overflow-y:visible;border-right:0;border-bottom:1px solid var(--line)}
+  #map{height:60vh}
+}
+#side{background:var(--bg);color:var(--ink);overflow-y:auto;border-right:1px solid var(--line)}
+.brand{padding:14px 16px;background:var(--ink);color:var(--htext);display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.brand h1{font-size:15px;font-weight:700;letter-spacing:.02em}
+.brand h1 b{color:var(--hi);font-weight:700}
+.brand span{font-family:'IBM Plex Mono';font-size:9px;color:#b7ada0;letter-spacing:.08em}
+.tabbar{display:flex;background:var(--card);border-bottom:1px solid var(--line);overflow-x:auto}
+.tabbtn{background:transparent;border:0;border-bottom:3px solid transparent;color:var(--muted);
+  padding:13px 12px;font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;white-space:nowrap;
+  display:flex;align-items:center;gap:5px}
+.tabbtn b{font-family:'IBM Plex Mono';font-size:9px;color:var(--muted);font-weight:400}
+.tabbtn.act{color:var(--ink);font-weight:700;border-bottom-color:var(--hi)}
+.tabbtn.act b{color:var(--hi)}
+.tabbtn:hover{color:var(--ink)}
+.sec{border-bottom:1px solid var(--line)}
+.sec>summary{padding:11px 16px;cursor:pointer;font-size:11px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;list-style:none;display:flex;justify-content:space-between;align-items:center;color:var(--muted2)}
 .sec>summary::-webkit-details-marker{display:none}
 .sec>summary::after{content:'▾';color:var(--hi);font-size:11px}
 .sec[open]>summary::after{content:'▴'}
-.sec>summary:hover{background:#25303d}
+.sec>summary:hover{background:#ece5d4}
 .body{padding:4px 16px 16px}
-label{display:block;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:#9aa5b1;margin:9px 0 3px}
-input,textarea,select{width:100%;background:#101821;border:1px solid #3a4655;color:#f2f0ec;padding:7px 8px;
-  font-family:'IBM Plex Mono';font-size:12px;border-radius:2px}
+label{display:block;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:9px 0 3px}
+input,textarea,select{width:100%;background:var(--card);border:1px solid var(--line);color:var(--ink);padding:8px 9px;
+  font-family:'IBM Plex Mono';font-size:12px;border-radius:4px}
 select{cursor:pointer}
 input:focus,textarea:focus,select:focus{outline:2px solid var(--hi);outline-offset:-1px;border-color:var(--hi)}
 textarea{resize:vertical;line-height:1.55;white-space:pre;overflow-x:auto}
-.hint{font-size:10px;color:#7d8894;margin-top:4px;line-height:1.45;font-family:'IBM Plex Mono'}
-button{font-family:'Archivo';font-weight:800;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
-  border:0;padding:9px 12px;border-radius:2px;cursor:pointer}
-.primary{background:var(--hi);color:var(--ink);width:100%;margin-top:12px;padding:12px}
-.primary:hover{background:#ffe14d}
-.primary:disabled{background:#4a5462;color:#8b949e;cursor:wait}
-.ghost{background:transparent;border:1px solid #4a5665;color:#c3cad2;padding:6px 9px;font-size:10px}
-.ghost:hover{border-color:var(--hi);color:var(--hi)}
-.ghost.hot{border-color:var(--hi);color:var(--hi)}
+.hint{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.45;font-family:'IBM Plex Mono'}
+button{font-family:'Instrument Sans';font-weight:600;font-size:12px;letter-spacing:0;text-transform:none;
+  border:0;padding:9px 12px;border-radius:4px;cursor:pointer}
+.primary{background:var(--hi-bg);color:var(--ink);border:1px solid var(--hi-border);width:100%;margin-top:12px;padding:12px}
+.primary:hover{background:#efc36f}
+.primary:disabled{background:#e5ddc9;color:#a89f8f;border-color:#e5ddc9;cursor:wait}
+.ghost{background:transparent;border:1px solid var(--line);color:var(--muted2);padding:7px 10px;font-size:11px}
+.ghost:hover{border-color:var(--hi-border);color:var(--hi-border)}
+.ghost.hot{border-color:var(--hi-border);color:var(--hi-border)}
 .row{display:flex;gap:6px;margin-top:8px}
 .row button{flex:1}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
-.queue-wrap{background:#101821;border:1px solid #3a4655;border-radius:2px;padding:9px;margin-top:4px}
-.queue-val{font-family:'IBM Plex Mono';font-size:18px;font-weight:600;color:var(--hi);text-align:center;margin-bottom:5px}
+.queue-wrap{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:9px;margin-top:4px}
+.queue-val{font-family:'IBM Plex Mono';font-size:18px;font-weight:600;color:var(--hi-border);text-align:center;margin-bottom:5px}
 input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-color:var(--hi)}
-.saved{font-family:'IBM Plex Mono';font-size:9px;color:var(--diesel);opacity:0;transition:opacity .3s}
+.saved{font-family:'IBM Plex Mono';font-size:9px;color:#cdc5b8;opacity:0;transition:opacity .3s}
 .saved.on{opacity:1}
 
 /* müşteri rehberi */
-.cust{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid #2b3543;font-family:'IBM Plex Mono';font-size:11px}
+.cust{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line);font-family:'IBM Plex Mono';font-size:11px}
 .cust:first-child{border-top:0}
-.cust b{font-family:'Archivo';font-size:12px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cust small{color:#7d8894;font-size:9px}
-.xbtn{background:transparent;border:0;color:#7d8894;cursor:pointer;padding:2px 5px;font-size:13px;line-height:1}
+.cust b{font-family:'Instrument Sans';font-size:12px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cust small{color:var(--muted);font-size:9px}
+.xbtn{background:transparent;border:0;color:var(--muted);cursor:pointer;padding:2px 5px;font-size:13px;line-height:1}
 .xbtn:hover{color:var(--alert)}
-.empty{font-family:'IBM Plex Mono';font-size:10px;color:#7d8894;padding:10px 0;text-align:center}
+.empty{font-family:'IBM Plex Mono';font-size:10px;color:var(--muted);padding:10px 0;text-align:center}
 
 /* ---- sipariş yönetimi ---- */
-.filters{display:flex;gap:4px;margin-bottom:9px;flex-wrap:wrap}
-.fbtn{background:#101821;border:1px solid #3a4655;color:#8b949e;padding:5px 9px;border-radius:2px;
-  font-family:'IBM Plex Mono';font-size:10px;letter-spacing:0;text-transform:none;font-weight:400;
+.filters{display:flex;gap:6px;margin-bottom:9px;flex-wrap:wrap}
+.fbtn{background:var(--card);border:1px solid var(--line);color:var(--muted2);padding:6px 13px;border-radius:999px;
+  font-family:'Instrument Sans';font-size:11px;letter-spacing:0;text-transform:none;font-weight:500;
   display:flex;align-items:center;gap:5px}
-.fbtn:hover{border-color:#5a6675;color:#c3cad2}
-.fbtn.act{border-color:var(--hi);color:var(--hi);background:#1f1a00}
+.fbtn:hover{border-color:var(--muted2);color:var(--ink)}
+.fbtn.act{border-color:var(--ink);color:var(--htext);background:var(--ink)}
 .fbtn b{font-weight:600}
-.ocard{background:#151d27;border:1px solid #313d4c;border-left-width:3px;border-radius:3px;
-  padding:9px 10px;margin-bottom:6px}
-.ocard.st-wait{border-left-color:#8b949e}
+.ocard{background:var(--card);border:1px solid var(--line);border-left-width:3px;border-radius:8px;
+  padding:11px 13px;margin-bottom:8px}
+.ocard.st-wait{border-left-color:#c9beac}
 .ocard.st-plan{border-left-color:#1f6fd0}
 .ocard.st-road{border-left-color:#d97a00}
 .ocard.st-done{border-left-color:var(--diesel);opacity:.85}
 .ocard.st-canc{border-left-color:var(--alert);opacity:.55}
 .otop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-.oname{font-size:12px;font-weight:600;line-height:1.3;min-width:0}
-.oname small{display:block;font-family:'IBM Plex Mono';font-size:9px;color:#7d8894;font-weight:400;margin-top:2px}
-.obadge{font-family:'IBM Plex Mono';font-size:8px;padding:2px 6px;border-radius:2px;letter-spacing:.06em;
+.oname{font-size:13px;font-weight:600;line-height:1.3;min-width:0}
+.oname small{display:block;font-family:'IBM Plex Mono';font-size:9px;color:var(--muted);font-weight:400;margin-top:2px}
+.obadge{font-family:'IBM Plex Mono';font-size:8px;padding:3px 8px;border-radius:999px;letter-spacing:.06em;
   white-space:nowrap;border:1px solid}
-.b-wait{color:#9aa5b1;border-color:#3a4655;background:#101821}
-.b-plan{color:#7ab8ff;border-color:#2a5580;background:#0e1b2a}
-.b-road{color:#ffc06a;border-color:#7a4a10;background:#241a0a}
-.b-done{color:#6fd39a;border-color:#2a6a45;background:#0e2418}
-.b-canc{color:#f5a08a;border-color:#7a3020;background:#2a1410}
+.b-wait{color:var(--muted2);border-color:var(--line);background:#efe9dc}
+.b-plan{color:#1f6fd0;border-color:#cfe0f5;background:#eaf2fc}
+.b-road{color:#b06a00;border-color:#f0d9a8;background:#fdf1df}
+.b-done{color:var(--diesel);border-color:#c9e8d2;background:#e8f6ec}
+.b-canc{color:#b3392a;border-color:#f0cec7;background:#fbeae7}
 .oqtyrow{display:flex;align-items:baseline;gap:7px;margin-top:6px;font-family:'IBM Plex Mono';font-size:11px}
-.obig{font-size:15px;font-weight:600;color:#f2f0ec}
+.obig{font-size:15px;font-weight:600;color:var(--ink)}
 .odone{color:var(--diesel);font-weight:600}
-.oshort{color:#ffb64d;font-weight:600}
-.ometa{font-family:'IBM Plex Mono';font-size:9px;color:#6b7580;margin-top:5px;line-height:1.7}
-.ometa .lg{color:#8b949e}
+.oshort{color:#b06a00;font-weight:600}
+.ometa{font-family:'IBM Plex Mono';font-size:9px;color:var(--muted);margin-top:5px;line-height:1.7}
+.ometa .lg{color:var(--muted2)}
 .oacts{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
-.oacts button{background:transparent;border:1px solid #3a4655;color:#8b949e;padding:4px 8px;
-  font-size:9px;font-family:'IBM Plex Mono';letter-spacing:0;text-transform:none;border-radius:2px;font-weight:400}
-.oacts button:hover{border-color:var(--hi);color:var(--hi)}
-.oacts button.ok:hover{border-color:var(--diesel);color:#6fd39a}
-.oacts button.no:hover{border-color:var(--alert);color:#f5a08a}
-.newform{background:#151d27;border:1px solid #313d4c;border-radius:3px;padding:10px;margin-bottom:10px}
-.dlg{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:3000;display:none;
+.oacts button{background:transparent;border:1px solid var(--line);color:var(--muted2);padding:5px 9px;
+  font-size:10px;font-family:'IBM Plex Mono';letter-spacing:0;text-transform:none;border-radius:999px;font-weight:400}
+.oacts button:hover{border-color:var(--hi-border);color:var(--hi-border)}
+.oacts button.ok:hover{border-color:var(--diesel);color:var(--diesel)}
+.oacts button.no:hover{border-color:var(--alert);color:var(--alert)}
+.newform{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:10px}
+.dlg{position:fixed;inset:0;background:rgba(27,25,23,.55);z-index:3000;display:none;
   align-items:center;justify-content:center;padding:16px}
 .dlg.on{display:flex}
-.dlgbox{background:var(--steel);border:1px solid #3a4655;border-radius:4px;padding:16px;width:100%;max-width:330px}
-.dlgbox h3{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
-.dlgbox .sub{font-family:'IBM Plex Mono';font-size:10px;color:#8b949e;margin-bottom:12px;line-height:1.5}
+.dlgbox{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:18px;width:100%;max-width:330px;
+  box-shadow:0 12px 40px rgba(27,25,23,.25)}
+.dlgbox h3{font-size:14px;font-weight:700;letter-spacing:0;text-transform:none;margin-bottom:4px}
+.dlgbox .sub{font-family:'IBM Plex Mono';font-size:10px;color:var(--muted);margin-bottom:12px;line-height:1.5}
 
 .lockrow{display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px}
 .lockrow span{font-size:11px}
 .lockrow select{flex:1;padding:4px 6px;font-size:10px}
 /* durak taşıma */
 .stop.movable{cursor:pointer}
-.stop.movable:hover{background:#25303d}
-.stop.sel{background:#2d2410;outline:1px solid var(--hi)}
-.movebar{background:#2d2410;border-left:3px solid var(--hi);padding:8px 12px;margin:0 16px 8px;
-  border-radius:2px;font-size:11px;line-height:1.5}
-.movebar b{color:var(--hi)}
+.stop.movable:hover{background:#efe9dc}
+.stop.sel{background:#fbf1d9;outline:1px solid var(--hi)}
+.movebar{background:#fbf1d9;border-left:3px solid var(--hi-border);padding:8px 12px;margin:0 16px 8px;
+  border-radius:4px;font-size:11px;line-height:1.5;color:var(--ink)}
+.movebar b{color:var(--hi-border)}
 .movesel{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap}
-.movesel button{background:#101821;border:1px solid #3a4655;color:#c3cad2;padding:4px 8px;
-  font-family:'IBM Plex Mono';font-size:10px;letter-spacing:0;text-transform:none;font-weight:400;border-radius:2px}
-.movesel button:hover{border-color:var(--hi);color:var(--hi)}
-.optbtn{background:transparent;border:1px solid #3a4655;color:#8b949e;padding:5px 8px;
-  font-size:9px;font-family:'IBM Plex Mono';letter-spacing:0;text-transform:none;border-radius:2px;font-weight:400}
-.optbtn:hover{border-color:var(--hi);color:var(--hi)}
-.tripsep{background:#0e1720;border-left:2px solid #3a4655;padding:5px 12px;margin:0;
-  font-family:'IBM Plex Mono';font-size:9px;color:#6b7580;letter-spacing:.08em;text-transform:uppercase}
+.movesel button{background:var(--card);border:1px solid var(--line);color:var(--muted2);padding:5px 9px;
+  font-family:'IBM Plex Mono';font-size:10px;letter-spacing:0;text-transform:none;font-weight:400;border-radius:999px}
+.movesel button:hover{border-color:var(--hi-border);color:var(--hi-border)}
+.optbtn{background:transparent;border:1px solid var(--line);color:var(--muted2);padding:5px 8px;
+  font-size:9px;font-family:'IBM Plex Mono';letter-spacing:0;text-transform:none;border-radius:4px;font-weight:400}
+.optbtn:hover{border-color:var(--hi-border);color:var(--hi-border)}
+.tripsep{background:#ece5d4;border-left:2px solid var(--line);padding:5px 12px;margin:0;
+  font-family:'IBM Plex Mono';font-size:9px;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase}
 
-/* ---- şoför görev sayfası ---- */
-#sheet{position:fixed;inset:0;z-index:2000;background:#f2f0ec;color:#101418;display:none;overflow-y:auto}
+/* ---- şoför görev sayfası (yazdırma amaçlı, açık tema zaten) ---- */
+#sheet{position:fixed;inset:0;z-index:2000;background:#f4f1ea;color:#101418;display:none;overflow-y:auto}
 #sheet.on{display:block}
 .sh-wrap{max-width:560px;margin:0 auto;padding:0 0 40px}
 .sh-bar{position:sticky;top:0;background:var(--ink);color:#f2f0ec;padding:12px 16px;
   display:flex;justify-content:space-between;align-items:center;gap:10px;z-index:5}
-.sh-bar h2{font-size:14px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
-.sh-close{background:transparent;border:1px solid #4a5665;color:#c3cad2;padding:6px 11px;border-radius:2px}
+.sh-bar h2{font-size:14px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.sh-close{background:transparent;border:1px solid #4a5665;color:#c3cad2;padding:6px 11px;border-radius:4px}
 .sh-close:hover{border-color:var(--hi);color:var(--hi)}
-.sh-tabs{display:flex;gap:0;background:#25303d;overflow-x:auto;position:sticky;top:47px;z-index:5}
-.sh-tab{background:transparent;border:0;border-bottom:3px solid transparent;color:#8b949e;
+.sh-tabs{display:flex;gap:0;background:#2a2621;overflow-x:auto;position:sticky;top:47px;z-index:5}
+.sh-tab{background:transparent;border:0;border-bottom:3px solid transparent;color:#a39a8c;
   padding:11px 14px;white-space:nowrap;font-size:11px;letter-spacing:.06em;cursor:pointer}
-.sh-tab.act{color:#f2f0ec;border-bottom-color:var(--tabc,#ffd400);background:#1c2530}
+.sh-tab.act{color:#f2f0ec;border-bottom-color:var(--tabc,#d9a441);background:#1b1917}
 .sh-head{background:#fff;border-bottom:2px solid var(--ink);padding:16px}
 .sh-plate{font-family:'IBM Plex Mono';font-size:22px;font-weight:600;letter-spacing:.04em}
 .sh-sub{font-family:'IBM Plex Mono';font-size:11px;color:#6e6a63;margin-top:3px}
@@ -150,18 +168,18 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
   align-items:center;justify-content:center;font-family:'IBM Plex Mono';font-size:14px;font-weight:600}
 .sh-n.sq{border-radius:4px;font-size:16px}
 .sh-n.plant{background:var(--diesel)}
-.sh-n.garage{background:var(--hi);color:var(--ink)}
+.sh-n.garage{background:var(--hi-bg);color:var(--ink)}
 .sh-n.xfer{background:var(--xfer)}
 .sh-t{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .sh-t b{font-size:16px;font-weight:600;line-height:1.25}
 .sh-time{font-family:'IBM Plex Mono';font-size:15px;font-weight:600;white-space:nowrap}
 .sh-info{font-family:'IBM Plex Mono';font-size:12px;color:#4a4741;margin-top:5px;line-height:1.6}
-.sh-vol{display:inline-block;background:var(--ink);color:#fff;padding:2px 8px;border-radius:2px;
+.sh-vol{display:inline-block;background:var(--ink);color:#fff;padding:2px 8px;border-radius:4px;
   font-weight:600;font-size:13px;margin-right:4px}
 .sh-vol.part{background:#b06a00}
 .sh-nav{display:inline-flex;align-items:center;gap:6px;background:#1f6fd0;color:#fff;
-  text-decoration:none;padding:9px 14px;border-radius:3px;font-family:'Archivo';font-weight:800;
-  font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-top:9px}
+  text-decoration:none;padding:9px 14px;border-radius:4px;font-family:'Instrument Sans';font-weight:600;
+  font-size:12px;letter-spacing:0;text-transform:none;margin-top:9px}
 .sh-nav:active{background:#1a5cb0}
 .sh-note{background:#fff8e1;border-left:3px solid #b06a00;padding:8px 11px;margin-top:8px;font-size:12px;line-height:1.5}
 @media print{
@@ -174,112 +192,171 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 .sh-page.act{display:block}
 
 /* tanker kartları */
-.tcard{background:#151d27;border:1px solid #313d4c;border-radius:3px;padding:10px;margin-bottom:9px}
+.tcard{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:11px;margin-bottom:10px}
 .tcard.off{opacity:.55}
 .thead{display:grid;grid-template-columns:14px 1fr auto auto;gap:8px;align-items:center;margin-bottom:8px}
-.tdot{width:12px;height:12px;border-radius:2px;border:1px solid rgba(255,255,255,.3)}
-.tplate{background:#101821;border:1px solid #3a4655;color:#f2f0ec;padding:5px 7px;
-  font-family:'IBM Plex Mono';font-size:12px;font-weight:600;border-radius:2px;width:100%}
+.tdot{width:12px;height:12px;border-radius:3px;border:1px solid rgba(27,25,23,.25)}
+.tplate{background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:6px 7px;
+  font-family:'IBM Plex Mono';font-size:12px;font-weight:600;border-radius:4px;width:100%}
 .lic{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none;
   font-family:'IBM Plex Mono';font-size:9px;letter-spacing:.05em;white-space:nowrap;
-  border:1px solid #3a4655;padding:4px 7px;border-radius:2px;background:#101821}
-.lic:hover{border-color:#5a6675}
-.lic.no{border-color:#6b3f8a;background:#241a2e;color:#d9a8f5}
+  border:1px solid var(--line);padding:5px 8px;border-radius:999px;background:var(--bg)}
+.lic:hover{border-color:var(--muted2)}
+.lic.no{border-color:#c9a6e0;background:#f3e9fa;color:#7a3fa8}
 .lic input{width:auto;margin:0;accent-color:var(--hi)}
 .comps{display:flex;flex-direction:column;gap:4px}
 .crow{display:grid;grid-template-columns:26px 1fr 1fr 26px;gap:5px;align-items:center}
-.clab{font-family:'IBM Plex Mono';font-size:9px;color:#7d8894;text-align:center}
-.cin{background:#101821;border:1px solid #3a4655;color:#f2f0ec;padding:4px 6px;
-  font-family:'IBM Plex Mono';font-size:11px;border-radius:2px;width:100%;text-align:right}
-.cin.fuel{color:var(--hi)}
-.cin.over{border-color:var(--alert);color:#ff9c85}
+.clab{font-family:'IBM Plex Mono';font-size:9px;color:var(--muted);text-align:center}
+.cin{background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:5px 6px;
+  font-family:'IBM Plex Mono';font-size:11px;border-radius:4px;width:100%;text-align:right}
+.cin.fuel{color:var(--hi-border);font-weight:600}
+.cin.over{border-color:var(--alert);color:var(--alert)}
 .chead{display:grid;grid-template-columns:26px 1fr 1fr 26px;gap:5px;margin-bottom:3px}
-.chead span{font-family:'IBM Plex Mono';font-size:8px;color:#6b7580;letter-spacing:.08em;text-align:center;text-transform:uppercase}
+.chead span{font-family:'IBM Plex Mono';font-size:8px;color:var(--muted);letter-spacing:.08em;text-align:center;text-transform:uppercase}
 .tfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:9px;
-  padding-top:8px;border-top:1px solid #2b3543;font-family:'IBM Plex Mono';font-size:10px;color:#7d8894}
-.tsum b{color:#c3cad2}
-.tsum .f{color:var(--hi)}
+  padding-top:8px;border-top:1px solid var(--line);font-family:'IBM Plex Mono';font-size:10px;color:var(--muted)}
+.tsum b{color:var(--ink)}
+.tsum .f{color:var(--hi-border)}
 .mini{display:flex;gap:4px}
-.mini button{background:transparent;border:1px solid #3a4655;color:#8b949e;padding:3px 7px;
-  font-size:10px;font-family:'IBM Plex Mono';letter-spacing:0;text-transform:none;border-radius:2px;font-weight:400}
-.mini button:hover{border-color:var(--hi);color:var(--hi)}
-.mini button.del:hover{border-color:var(--alert);color:#f5a08a}
-.tlimits{display:flex;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid #2b3543}
-.tir-tog{margin:0;font-size:10px;letter-spacing:.02em;text-transform:none;color:#9aa5b1;
+.mini button{background:transparent;border:1px solid var(--line);color:var(--muted2);padding:4px 8px;
+  font-size:10px;font-family:'IBM Plex Mono';letter-spacing:0;text-transform:none;border-radius:999px;font-weight:400}
+.mini button:hover{border-color:var(--hi-border);color:var(--hi-border)}
+.mini button.del:hover{border-color:var(--alert);color:var(--alert)}
+.tlimits{display:flex;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.tir-tog{margin:0;font-size:10px;letter-spacing:.02em;text-transform:none;color:var(--muted2);
   display:flex;align-items:center;gap:6px;cursor:pointer;width:100%;
-  border:1px solid #3a4655;padding:6px 8px;border-radius:2px;background:#101821}
-.tir-tog:hover{border-color:#5a6675}
-.tir-tog.on{border-color:var(--hi);background:#1f1a00;color:var(--hi)}
+  border:1px solid var(--line);padding:7px 9px;border-radius:4px;background:var(--bg)}
+.tir-tog:hover{border-color:var(--muted2)}
+.tir-tog.on{border-color:var(--hi-border);background:#fbf1d9;color:var(--hi-border)}
 .tir-tog input{width:auto;margin:0;accent-color:var(--hi)}
 
-.shift-in{background:#101821;border:1px solid #3a4655;color:#f2f0ec;padding:3px 5px;
-  font-family:'IBM Plex Mono';font-size:10px;border-radius:2px;width:44px;text-align:right}
+.shift-in{background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:4px 5px;
+  font-family:'IBM Plex Mono';font-size:10px;border-radius:4px;width:44px;text-align:right}
 
 /* sipariş satırları */
-.ordrow{display:grid;grid-template-columns:1fr 84px 30px;gap:6px;padding:6px 0;border-top:1px solid #2b3543;align-items:center}
+.ordrow{display:grid;grid-template-columns:1fr 84px 30px;gap:6px;padding:7px 0;border-top:1px solid var(--line);align-items:center}
 .ordrow:first-child{border-top:0}
 .ordname{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ordname small{display:block;font-family:'IBM Plex Mono';font-size:9px;color:#7d8894;font-weight:400}
+.ordname small{display:block;font-family:'IBM Plex Mono';font-size:9px;color:var(--muted);font-weight:400}
 .ordqty{font-family:'IBM Plex Mono';font-size:11px;text-align:right;padding:5px 6px}
 
-.veh{border-bottom:1px solid #313d4c}
+.veh{border-bottom:1px solid var(--line)}
 .vhead{padding:10px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .vname{font-family:'IBM Plex Mono';font-weight:600;font-size:12px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.chip{width:11px;height:11px;border-radius:2px;flex:none;border:1px solid rgba(255,255,255,.35)}
-.tag{font-family:'IBM Plex Mono';font-size:9px;padding:1px 5px;border-radius:2px;letter-spacing:.05em}
-.tag.nolic{background:#3d2450;color:#d9a8f5;border:1px solid #6b3f8a}
-.tag.nodrv{background:#3a2119;color:#f5a08a;border:1px solid #8a4535}
-.vstat{font-family:'IBM Plex Mono';font-size:10px;color:#9aa5b1;text-align:right;line-height:1.4}
+.chip{width:11px;height:11px;border-radius:3px;flex:none;border:1px solid rgba(27,25,23,.2)}
+.tag{font-family:'IBM Plex Mono';font-size:9px;padding:1px 6px;border-radius:999px;letter-spacing:.05em}
+.tag.nolic{background:#f3e9fa;color:#7a3fa8;border:1px solid #d9bdec}
+.tag.nodrv{background:#fbeae7;color:#b3392a;border:1px solid #f0cec7}
+.vstat{font-family:'IBM Plex Mono';font-size:10px;color:var(--muted);text-align:right;line-height:1.4}
 .stops{padding:0 16px 12px}
-.stop{display:grid;grid-template-columns:24px 1fr auto;gap:9px;padding:7px 0;border-top:1px solid #2b3543;align-items:start}
-.sq{font-family:'IBM Plex Mono';font-size:10px;font-weight:600;background:#101821;border:1px solid #3a4655;
-  border-radius:2px;text-align:center;padding:2px 0;color:var(--hi)}
+.stop{display:grid;grid-template-columns:24px 1fr auto;gap:9px;padding:7px 0;border-top:1px solid var(--line);align-items:start}
+.sq{font-family:'IBM Plex Mono';font-size:10px;font-weight:600;background:var(--bg);border:1px solid var(--line);
+  border-radius:4px;text-align:center;padding:2px 0;color:var(--hi-border)}
 .sname{font-size:12px;font-weight:600;line-height:1.3}
-.smeta{font-family:'IBM Plex Mono';font-size:10px;color:#8b949e;margin-top:2px;line-height:1.5}
-.stime{font-family:'IBM Plex Mono';font-size:11px;color:#f2f0ec;text-align:right;white-space:nowrap}
-.r-garage{background:#1a222c;border-left:2px solid var(--hi)}
-.r-plant{background:#16281f;border-left:2px solid var(--diesel)}
-.r-xfer{background:#241a2e;border-left:2px solid var(--xfer)}
-.partial{color:#ffb64d}
-.warn{background:#3a2119;border-left:3px solid var(--alert);padding:9px 12px;margin:10px 16px;font-size:11px;line-height:1.55;border-radius:2px}
-.ok{background:#16281f;border-left:3px solid var(--diesel);padding:9px 12px;margin:10px 16px;font-size:11px;line-height:1.55;border-radius:2px}
-.info{background:#1c2b3a;border-left:3px solid #4a90d9;padding:9px 12px;margin:10px 16px;font-size:11px;line-height:1.55;border-radius:2px}
-#status{padding:10px 16px;font-family:'IBM Plex Mono';font-size:11px;color:var(--hi);display:none}
+.smeta{font-family:'IBM Plex Mono';font-size:10px;color:var(--muted);margin-top:2px;line-height:1.5}
+.stime{font-family:'IBM Plex Mono';font-size:11px;color:var(--ink);text-align:right;white-space:nowrap}
+.r-garage{background:#fbf3e1;border-left:2px solid var(--hi-border)}
+.r-plant{background:#e8f6ec;border-left:2px solid var(--diesel)}
+.r-xfer{background:#f3e9fa;border-left:2px solid var(--xfer)}
+.partial{color:#b06a00}
+.warn{background:#fbeae7;border-left:3px solid var(--alert);padding:9px 12px;margin:10px 16px;font-size:11px;line-height:1.55;border-radius:4px}
+.ok{background:#e8f6ec;border-left:3px solid var(--diesel);padding:9px 12px;margin:10px 16px;font-size:11px;line-height:1.55;border-radius:4px}
+.info{background:#eaf2fc;border-left:3px solid #4a90d9;padding:9px 12px;margin:10px 16px;font-size:11px;line-height:1.55;border-radius:4px}
+#status{padding:10px 16px;font-family:'IBM Plex Mono';font-size:11px;color:var(--hi-border);display:none}
 #status.on{display:block}
 #map{width:100%;height:100vh;background:#dcd8d0}
 .numico{color:#fff;border:2px solid #fff;border-radius:50%;font-family:'IBM Plex Mono';font-size:11px;
   font-weight:600;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 5px rgba(0,0,0,.4)}
-.pinico{border:2px solid var(--ink);border-radius:3px;display:flex;align-items:center;justify-content:center;
+.pinico{border:2px solid var(--ink);border-radius:4px;display:flex;align-items:center;justify-content:center;
   font-size:13px;box-shadow:0 1px 5px rgba(0,0,0,.4)}
 #legend{position:absolute;bottom:18px;right:12px;z-index:900;background:rgba(255,255,255,.95);
-  border:1px solid var(--line);border-radius:3px;padding:9px 11px;font-size:11px;font-family:'IBM Plex Mono';
+  border:1px solid var(--line);border-radius:6px;padding:9px 11px;font-size:11px;font-family:'IBM Plex Mono';
   display:none;max-width:230px}
 #legend.on{display:block}
 #legend div{display:flex;align-items:center;gap:7px;margin:3px 0}
 #legend i{width:16px;height:3px;flex:none;border-radius:2px}
 .maprel{position:relative}
+
+/* ---- durum şeridi (İstatistik çubuğu) ---- */
+#statbar{position:absolute;top:0;left:0;right:0;z-index:800;background:rgba(244,241,234,.96);
+  border-bottom:1px solid var(--line);display:flex;padding:0 4px}
+#statbar .st{flex:1;padding:11px 10px;text-align:center;border-right:1px solid var(--line)}
+#statbar .st:last-child{border-right:0}
+#statbar .st b{display:block;font-family:'IBM Plex Mono';font-size:17px;font-weight:600;color:var(--ink)}
+#statbar .st span{font-family:'IBM Plex Mono';font-size:8px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+@media(max-width:900px){#statbar{position:static}}
 </style>
 </head>
 <body>
 
-<div id="side">
-  <div class="brand"><h1>Tanker Rota</h1><span id="savemark" class="saved">kaydedildi</span></div>
+<header class="brand">
+  <h1>Tanker Rota <b>Planlayıcı</b></h1>
+  <span id="savemark" class="saved">kaydedildi</span>
+</header>
 
-  <details class="sec">
-    <summary>1 · Konumlar</summary>
+<div class="mainrow">
+<div id="side">
+  <div class="tabbar" id="tabbar">
+    <button class="tabbtn act" data-tab="siparisler" onclick="showTab('siparisler')">Siparişler <b id="ordcount"></b></button>
+    <button class="tabbtn" data-tab="musteriler" onclick="showTab('musteriler')">Müşteriler <b id="custcount"></b></button>
+    <button class="tabbtn" data-tab="filo" onclick="showTab('filo')">Filo <b id="fleetcount"></b></button>
+    <button class="tabbtn" data-tab="ayarlar" onclick="showTab('ayarlar')">Ayarlar</button>
+    <button class="tabbtn" data-tab="plan" onclick="showTab('plan')">Plan</button>
+  </div>
+
+  <div class="sec tabpanel" data-tab="siparisler">
     <div class="body">
+      <div class="newform">
+        <label style="margin-top:0">Yeni sipariş talebi</label>
+        <select id="osel"></select>
+        <div class="row">
+          <input id="oqty" type="number" placeholder="Miktar (L)" value="5000" style="flex:2">
+          <button class="ghost hot" onclick="addOrder()" style="flex:1">+ Talep ekle</button>
+        </div>
+        <input id="onote" placeholder="Not (opsiyonel)" style="margin-top:6px">
+      </div>
+      <div class="filters" id="ofilters"></div>
+      <div id="ordlist"></div>
+      <div class="row">
+        <button class="ghost" onclick="clearDone()">Teslimleri arşivle</button>
+        <button class="ghost" onclick="exportExcel()">Excel indir</button>
+      </div>
+      <button class="primary" id="go" onclick="run()">Rotayı hesapla</button>
+    </div>
+  </div>
+
+  <div class="sec tabpanel" data-tab="musteriler" style="display:none">
+    <div class="body">
+      <div id="custlist"></div>
+      <label>Yeni müşteri</label>
+      <input id="cname" placeholder="Müşteri adı">
+      <input id="cloc" placeholder="40.7712, 30.3541" style="margin-top:6px">
+      <div class="row">
+        <button class="ghost" id="cpick" onclick="pick('cust')">Haritadan seç</button>
+        <button class="ghost" onclick="addCust()">Rehbere ekle</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec tabpanel" data-tab="filo" style="display:none">
+    <div class="body">
+      <div id="fleetlist"></div>
+      <button class="ghost hot" style="width:100%;margin-top:6px" onclick="addTanker()">+ Tanker ekle</button>
+      <div class="hint">Mevcut yakıt = vardiya başında gözde duran yakıt. Lisans yok = tesise giremez, garajda aktarımla yüklenir.</div>
+    </div>
+  </div>
+
+  <div class="sec tabpanel" data-tab="ayarlar" style="display:none">
+    <div class="body">
+      <label style="margin-top:0;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--muted2)">Konumlar</label>
       <label>Garaj (enlem, boylam)</label>
       <input id="garage" value="40.7480, 30.3900">
       <button class="ghost" style="width:100%;margin-top:6px" onclick="pick('garage')">Haritadan seç</button>
       <label>Dolum tesisi (enlem, boylam)</label>
       <input id="plant" value="40.7569, 30.3783">
       <button class="ghost" style="width:100%;margin-top:6px" onclick="pick('plant')">Haritadan seç</button>
-    </div>
-  </details>
 
-  <details class="sec" open>
-    <summary>2 · Süreler & Kısıtlar</summary>
-    <div class="body">
+      <label style="margin-top:20px;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--muted2)">Süreler &amp; Kısıtlar</label>
       <label>Tesiste bugünkü dolum sırası</label>
       <div class="queue-wrap">
         <div class="queue-val"><span id="qval">0</span> dk</div>
@@ -311,58 +388,27 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
       </div>
       <div class="hint">Sola: en az km (birkaç tanker çok çalışır). Sağa: iş tankerlere eşit dağılır.</div>
     </div>
-  </details>
+  </div>
 
-  <details class="sec">
-    <summary>3 · Tankerler <span style="color:#7d8894;font-weight:400" id="fleetcount"></span></summary>
-    <div class="body">
-      <div id="fleetlist"></div>
-      <button class="ghost hot" style="width:100%;margin-top:6px" onclick="addTanker()">+ Tanker ekle</button>
-      <div class="hint">Mevcut yakıt = vardiya başında gözde duran yakıt. Lisans yok = tesise giremez, garajda aktarımla yüklenir.</div>
+  <div class="sec tabpanel" data-tab="plan" style="display:none">
+    <div class="body" style="padding-top:12px">
+      <div id="status"></div>
+      <div id="out"></div>
     </div>
-  </details>
-
-  <details class="sec" open>
-    <summary>4 · Müşteri rehberi <span style="color:#7d8894;font-weight:400" id="custcount"></span></summary>
-    <div class="body">
-      <div id="custlist"></div>
-      <label>Yeni müşteri</label>
-      <input id="cname" placeholder="Müşteri adı">
-      <input id="cloc" placeholder="40.7712, 30.3541" style="margin-top:6px">
-      <div class="row">
-        <button class="ghost" id="cpick" onclick="pick('cust')">Haritadan seç</button>
-        <button class="ghost" onclick="addCust()">Rehbere ekle</button>
-      </div>
-    </div>
-  </details>
-
-  <details class="sec" open>
-    <summary>5 · Siparişler <span style="color:#7d8894;font-weight:400" id="ordcount"></span></summary>
-    <div class="body">
-      <div class="newform">
-        <label style="margin-top:0">Yeni sipariş talebi</label>
-        <select id="osel"></select>
-        <div class="row">
-          <input id="oqty" type="number" placeholder="Miktar (L)" value="5000" style="flex:2">
-          <button class="ghost hot" onclick="addOrder()" style="flex:1">+ Talep ekle</button>
-        </div>
-        <input id="onote" placeholder="Not (opsiyonel)" style="margin-top:6px">
-      </div>
-      <div class="filters" id="ofilters"></div>
-      <div id="ordlist"></div>
-      <div class="row">
-        <button class="ghost" onclick="clearDone()">Teslimleri arşivle</button>
-        <button class="ghost" onclick="exportExcel()">Excel indir</button>
-      </div>
-    </div>
-  </details>
-
-  <div class="body" style="padding-top:0"><button class="primary" id="go" onclick="run()">Rotayı hesapla</button></div>
-  <div id="status"></div>
-  <div id="out"></div>
+  </div>
 </div>
 
-<div class="maprel"><div id="map"></div><div id="legend"></div></div>
+<div class="maprel">
+  <div id="statbar">
+    <div class="st"><b id="stOpen">0</b><span>Açık Sipariş</span></div>
+    <div class="st"><b id="stVol">0</b><span>Talep L</span></div>
+    <div class="st"><b id="stTanker">0</b><span>Tanker</span></div>
+    <div class="st"><b id="stDriver">0</b><span>Şoför</span></div>
+    <div class="st"><b id="stPlan">—</b><span>Plan</span></div>
+  </div>
+  <div id="map"></div><div id="legend"></div>
+</div>
+</div>
 
 <div class="dlg" id="dlg">
   <div class="dlgbox">
@@ -721,6 +767,7 @@ function renderFleet(){
       </div>
     </div>`;
   }).join('');
+  updateStatBar();
 }
 
 /* ---------- sipariş ----------
@@ -844,18 +891,18 @@ function renderOrders(){
     const extra=o.status==='done'&&o.deliveredQty>o.qty;
     return `<div class="ocard st-${s.cls}">
       <div class="otop">
-        <div class="oname">${c?esc(c.name):'<i>silinmiş müşteri</i>'}${o.lockVeh?' <span style="color:#ffd400;font-size:10px" title="Araç kilitli">🔒</span>':''}
+        <div class="oname">${c?esc(c.name):'<i>silinmiş müşteri</i>'}${o.lockVeh?' <span style="color:var(--hi-border);font-size:10px" title="Araç kilitli">🔒</span>':''}
           <small>${fmtDT(o.createdAt)} girildi</small></div>
         <span class="obadge b-${s.cls}">${s.lab}</span>
       </div>
       <div class="oqtyrow">
         ${o.status==='done'
           ? `<span class="obig ${short?'oshort':(extra?'':'odone')}">${L2(o.deliveredQty)} L</span>
-             <span style="color:#6b7580">bırakıldı / ${L2(o.qty)} L sipariş</span>`
+             <span style="color:var(--muted)">bırakıldı / ${L2(o.qty)} L sipariş</span>`
           : `<span class="obig">${L2(o.qty)} L</span>
              <input class="ordqty" style="width:74px;margin-left:auto" type="number" value="${o.qty}" onchange="setQty('${o.id}',this.value)">`}
       </div>
-      ${short?`<div class="ometa" style="color:#ffb64d">Eksik ${L2(o.qty-o.deliveredQty)} L (%${Math.round(o.deliveredQty/o.qty*100)})</div>`:''}
+      ${short?`<div class="ometa" style="color:#b06a00">Eksik ${L2(o.qty-o.deliveredQty)} L (%${Math.round(o.deliveredQty/o.qty*100)})</div>`:''}
       <div class="ometa">
         ${o.note?`<span class="lg">Not:</span> ${esc(o.note)}<br>`:''}
         ${o.vehicle?`<span class="lg">Araç:</span> ${esc(o.vehicle)}${o.comp?` · ${o.comp}. göz`:''}<br>`:''}
@@ -883,6 +930,7 @@ function renderOrders(){
       </div>
     </div>`;
   }).join('');
+  updateStatBar();
 }
 
 function exportCsv(){
@@ -1660,7 +1708,7 @@ async function render(routes,extra,cfg,garage,plant,orders){
 
   let html='';
   for(const r of routes){
-    const tags=(r.veh.lic?'':' <span class="tag nolic">LİSANS YOK</span>')+(r.parked?' <span class="tag nodrv">ŞOFÖR YOK</span>':'')+(r.feeder?' <span class="tag" style="background:#241a2e;color:#d9a8f5;border:1px solid #6b3f8a">BESLEYİCİ</span>':'');
+    const tags=(r.veh.lic?'':' <span class="tag nolic">LİSANS YOK</span>')+(r.parked?' <span class="tag nodrv">ŞOFÖR YOK</span>':'')+(r.feeder?' <span class="tag" style="background:#f3e9fa;color:#7a3fa8;border:1px solid #d9bdec">BESLEYİCİ</span>':'');
     if(!r.drops&&!r.feeder){
       html+=`<div class="veh"><div class="vhead"><div class="vname"><span class="chip" style="background:${r.veh.color}"></span>${r.veh.id}${tags}</div><div class="vstat">${r.parked?'garajda kaldı':'kullanılmadı'}</div></div></div>`;
       continue;
@@ -1698,7 +1746,7 @@ async function render(routes,extra,cfg,garage,plant,orders){
     html+=`<div class="veh"><div class="vhead">
       <div class="vname"><span class="chip" style="background:${r.veh.color}"></span>${r.veh.id}${tags}</div>
       <div style="display:flex;align-items:center;gap:8px">
-        <div class="vstat">${r.drops} durak · ${L2(r.vol)} L${r.trips>1?` · ${r.trips} sefer`:''}${r.leftover>0?`<br><span style="color:#d9a8f5">araçta kalan: ${L2(r.leftover)} L</span>`:''}<br>${r.dist.toFixed(0)} km · <span style="color:${over?'#ff8f7a':'#9aa5b1'}">${dur(r.total)}${over?' ⚠':''}</span></div>
+        <div class="vstat">${r.drops} durak · ${L2(r.vol)} L${r.trips>1?` · ${r.trips} sefer`:''}${r.leftover>0?`<br><span style="color:#7a3fa8">araçta kalan: ${L2(r.leftover)} L</span>`:''}<br>${r.dist.toFixed(0)} km · <span style="color:${over?'#c8402c':'var(--muted)'}">${dur(r.total)}${over?' ⚠':''}</span></div>
         <button class="optbtn" onclick="optVeh('${r.veh.id.replace(/'/g,"\\'")}')" title="Bu tankerin rotasını yeniden optimize et">⟳ opt</button>
         <button class="ghost" style="padding:6px 8px" onclick="openSheet(${li})" title="Şoför görev formu">📋</button>
       </div>
@@ -1718,7 +1766,7 @@ async function render(routes,extra,cfg,garage,plant,orders){
           <div class="smeta">${l.drive?dur(l.drive)+' sürüş · ':''}vardiya ${dur(r.veh.shift)}</div></div>
           <div class="stime">${hhmm(l.time)}</div></div>`;
       else if(l.kind==='plant')
-        html+=`<div class="stop r-plant"><div class="sq">⛽</div><div><div class="sname">Dolum tesisi${l.nth?` <span style="color:#6fd39a;font-size:10px">${l.trip}. sefer</span>`:''}</div>
+        html+=`<div class="stop r-plant"><div class="sq">⛽</div><div><div class="sname">Dolum tesisi${l.nth?` <span style="color:var(--diesel);font-size:10px">${l.trip}. sefer</span>`:''}</div>
           <div class="smeta">${l.nth?l.nth+' · ':''}${dur(l.drive)} sürüş · <b>${L2(l.vol)} L full dolum</b>${l.delivered!=null&&l.delivered<l.vol?` · ${L2(l.delivered)} L teslim · ${L2(l.vol-l.delivered)} L araçta kalır`:''} · ${dur(l.mins)}${cfg.queue?` (${cfg.loadFix} dk + ${cfg.queue} dk sıra)`:''}</div></div>
           <div class="stime">${hhmm(l.time)}</div></div>`;
       else{
@@ -1730,7 +1778,7 @@ async function render(routes,extra,cfg,garage,plant,orders){
         const phaseTxt=l.phase==='kalan'?'kalan yakıt':(l.phase==='besleme'?'beslemeyle':'dolum sonrası');
         html+=`<div class="stop${fixed?'':' movable'}${isSel?' sel':''}"${fixed?'':` onclick="stopClick('${r.veh.id.replace(/'/g,"\\'")}','${oid}')"`}>
           <div class="sq">${j}</div><div>
-          <div class="sname">${esc(l.a.o.name)}${lk?' <span style="color:#ffd400;font-size:10px">🔒</span>':''}</div>
+          <div class="sname">${esc(l.a.o.name)}${lk?' <span style="color:var(--hi-border);font-size:10px">🔒</span>':''}</div>
           <div class="smeta"><span class="${short?'partial':''}">${L2(l.a.give)} / ${L2(l.a.o.qty)} L${short?` · %${Math.round(l.a.give/l.a.o.qty*100)} kısmi`:''}</span> · ${gozStr(l.a)} · ${phaseTxt}<br>${dur(l.drive)} sürüş · ${dur(l.mins)} boşaltma</div></div>
           <div class="stime">${hhmm(l.time)}</div></div>`;
       }
@@ -1747,16 +1795,16 @@ async function render(routes,extra,cfg,garage,plant,orders){
       <b>${c?esc(c.name):'Durak'}</b> seçili · şu an <b>${esc(selStop.vehId)}</b> aracında
       <div class="movesel">
         ${others.map(r=>`<button onclick="moveStop('${r.veh.id.replace(/'/g,"\\'")}')">→ ${esc(r.veh.id)}</button>`).join('')}
-        <button onclick="clearSel()" style="margin-left:auto;border-color:#5a4a10">vazgeç</button>
+        <button onclick="clearSel()" style="margin-left:auto;border-color:var(--line)">vazgeç</button>
       </div>
-      <div style="font-family:'IBM Plex Mono';font-size:9px;color:#8b7a3a;margin-top:6px">Taşınan sipariş o araca kilitlenir 🔒</div>
+      <div style="font-family:'IBM Plex Mono';font-size:9px;color:var(--hi-border);margin-top:6px">Taşınan sipariş o araca kilitlenir 🔒</div>
     </div>`;
   }
   const totKm=routes.reduce((a,b)=>a+b.dist,0), totL=routes.reduce((a,b)=>a+b.vol,0);
   const used=routes.filter(r=>r.drops).length;
   top+=`<div class="ok"><b>${used}/${cfg.drivers} şoför · ${orders.length-extra.unassigned.length}/${orders.length} sipariş · ${L2(totL)} L · ${totKm.toFixed(0)} km</b><br>Dolum ${cfg.loadFix} dk${cfg.queue?` + ${cfg.queue} dk sıra`:''} · Boşaltma ${cfg.dropFix} dk + ${cfg.dropVar} dk/1000 L
     ${used?`<br><button class="ghost hot" style="width:100%;margin-top:9px" onclick="openSheet(0)">📋 Şoför görev formları</button>`:''}
-    ${routes.some(r=>r.leftover>0)?`<br><button class="ghost" style="width:100%;margin-top:6px;border-color:#6b3f8a;color:#d9a8f5" onclick="endDay()">🌙 Günü kapat — kalan yakıtları ertesi güne aktar</button>`:''}</div>`;
+    ${routes.some(r=>r.leftover>0)?`<br><button class="ghost" style="width:100%;margin-top:6px;border-color:#c9a6e0;color:#7a3fa8" onclick="endDay()">🌙 Günü kapat — kalan yakıtları ertesi güne aktar</button>`:''}</div>`;
   if(extra.transfers.length)
     top+=`<div class="info"><b>Garaj aktarımları</b><br>${extra.transfers.map(t=>`${t.from} göz ${t.fromComp} → ${t.to} göz ${t.toComp} · ${L2(t.vol)} L`).join('<br>')}</div>`;
   if(extra.park.length)
@@ -1769,8 +1817,9 @@ async function render(routes,extra,cfg,garage,plant,orders){
   const partials=routes.flatMap(r=>r.legs.filter(l=>l.kind==='drop'&&l.a.give<l.a.o.qty).map(l=>`${esc(l.a.o.name)}: ${L2(l.a.give)}/${L2(l.a.o.qty)} L (${r.veh.id})`));
   if(partials.length)top+=`<div class="info"><b>Kısmi teslimat</b><br>${partials.join('<br>')}</div>`;
   const lefts=routes.filter(r=>r.leftover>0);
-  if(lefts.length)top+=`<div class="info"><b>Full dolum — araçta kalan (ertesi güne)</b><br>${lefts.map(r=>`${r.veh.id}: ${L2(r.leftover)} L`).join('<br>')}<br><span style="color:#8b949e;font-size:10px">Tankerler full döndü. "Günü kapat" ile bu yakıt ertesi günün mevcut yakıtı olur.</span></div>`;
+  if(lefts.length)top+=`<div class="info"><b>Full dolum — araçta kalan (ertesi güne)</b><br>${lefts.map(r=>`${r.veh.id}: ${L2(r.leftover)} L`).join('<br>')}<br><span style="color:var(--muted);font-size:10px">Tankerler full döndü. "Günü kapat" ile bu yakıt ertesi günün mevcut yakıtı olur.</span></div>`;
   document.getElementById('out').innerHTML=top+html;
+  const stPlanEl=document.getElementById('stPlan');if(stPlanEl)stPlanEl.textContent=`${used}/${cfg.drivers}`;
   map.fitBounds(bounds,{padding:[45,45]});
 }
 
@@ -1829,6 +1878,23 @@ async function run(){
   }finally{btn.disabled=false;btn.textContent='Rotayı hesapla';}
 }
 
+/* ---------- sekmeler ---------- */
+function showTab(t){
+  document.querySelectorAll('.tabpanel').forEach(el=>{el.style.display=el.dataset.tab===t?'block':'none';});
+  document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('act',b.dataset.tab===t));
+}
+
+/* ---------- üst durum şeridi ---------- */
+function updateStatBar(){
+  const open=orderList.filter(o=>o.status==='wait'||o.status==='plan'||o.status==='road');
+  const openL=open.reduce((s,o)=>s+o.qty,0);
+  const g=id=>document.getElementById(id);
+  if(g('stOpen'))g('stOpen').textContent=open.length;
+  if(g('stVol'))g('stVol').textContent=L2(openL);
+  if(g('stTanker'))g('stTanker').textContent=tankers.length;
+  if(g('stDriver'))g('stDriver').textContent=document.getElementById('drivers')?.value||'';
+}
+
 /* ---------- init ---------- */
 (async()=>{
   await load();
@@ -1838,6 +1904,7 @@ async function run(){
 FIELDS.forEach(f=>document.getElementById(f).addEventListener('input',()=>{
   if(f==='queue')document.getElementById('qval').textContent=document.getElementById('queue').value;
   if(f==='balance')updateBal();
+  if(f==='drivers')updateStatBar();
   save();if(f==='garage'||f==='plant')draw();
 }));
 document.getElementById('cloc').addEventListener('keydown',e=>{if(e.key==='Enter')addCust()});

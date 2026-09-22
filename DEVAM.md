@@ -218,6 +218,55 @@ EOF
 node /tmp/run.js
 ```
 
+## GÖRÜNÜM YENİLEMESİ (2026-09-22)
+
+Kullanıcı Desktop'ta ayrı tuttuğu bir tasarım prototipini (`Tanker-Rota-
+Planlayici (2).html`, bir Claude Artifact "Bundled Page" çıktısı, kod
+motoru YOK/kırık — yalnız görsel referans) örnek gösterip "görünüm böyle
+olsun" dedi. O dosya render edilip (yerel http.server ile) renkler/fontlar
+computed style'dan tam olarak çıkarıldı: bg `#f4f1ea` (krem), kart
+`#ffffff`, ink `#1b1917`, altın vurgu `#d9a441`/buton `#e6b558`, font
+`Instrument Sans` (Google Fonts) + `IBM Plex Mono` (zaten kullanılıyordu).
+
+`tanker-rota-planlayici-v17.html`'nin TAMAMI bu palete geçirildi (motor
+koduna dokunulmadı, yalnız CSS + birkaç inline stil + HTML iskeleti):
+- Eski sol akordeon (`<details>` ile 5 bölüm) **sekme çubuğuna** çevrildi:
+  Siparişler / Müşteriler / Filo / Ayarlar / Plan. "Konumlar" +
+  "Süreler & Kısıtlar" tek "Ayarlar" sekmesinde birleşti. "Plan" sekmesi
+  eskiden sayfanın altında duran `#status`/`#out` (rota sonucu) alanını
+  taşıyor. Tüm eski `id`'ler (garage/plant/queue/drivers/... ve
+  fleetcount/custcount/ordcount) AYNEN korundu — hiçbir JS fonksiyonu
+  değişmedi, sadece görünürlük artık `showTab()` ile yönetiliyor.
+- Üstte koyu (`#1b1917`) tam genişlik başlık çubuğu + harita üstünde krem
+  "durum şeridi" (Açık Sipariş / Talep L / Tanker / Şoför / Plan —
+  `updateStatBar()`, `renderOrders`/`renderFleet` içinden tetikleniyor).
+- Kartlar/pill butonlar/badge'ler yuvarlatıldı, dark-on-dark renkler
+  light-on-cream karşılıklarına çevrildi (ör. `.fbtn.act` artık siyah dolgu,
+  referanstaki "Açık" pili gibi).
+- Şoför görev formu (`#sheet`, yazdırma amaçlı) bilinçli olarak DOKUNULMADI
+  — zaten kendi açık temasını kullanıyordu, riski düşürmek için aynen
+  bırakıldı.
+
+**Gerçek bir CSS Grid hatası bulunup düzeltildi:** İlk yazımda mobil
+(`max-width:900px`) medya sorgusu `.mainrow`'a `grid-template-rows:auto 1fr`
+uyguluyordu; `#side`'ın `overflow-y:auto` olması nedeniyle grid'in "auto"
+satırı 0 yüksekliğe çöküyordu (sipariş formu görünmüyordu) — yalnızca
+tarayıcıda gerçek dar pencere testiyle yakalandı. Çözüm: mobilde `body` ve
+`.mainrow` düz `display:block`'a düşüyor, `#side` kendi doğal yüksekliğini
+alıyor, normal sayfa kaydırması devreye giriyor.
+
+**Doğrulama:** Yerel `python3 -m http.server` ile hem 415px (mobil) hem
+1300px (masaüstü) genişlikte tüm sekmeler (Siparişler/Müşteriler/Filo/
+Ayarlar/Plan) gerçek verideki gibi görsel olarak doğrulandı; ardından GERÇEK
+işlevsel test yapıldı — 3 sipariş eklendi, "Rotayı hesapla" ile gerçek OSRM
+rotası hesaplandı (bu sandboxtan OSRM'e erişim VAR, Supabase'e YOK — bilinen
+kısıt), harita rotayı çizdi, Plan sekmesi araç kartlarını/uyarı kutularını
+doğru renklerle gösterdi, şoför görev formu (`openSheet`) sorunsuz açıldı.
+Motorda hiçbir davranış değişikliği yok, yalnız görünüm.
+
+`sofor.html` bu turda DOKUNULMADI (kendi ayrı koyu teması var, kapsam
+dışında tutuldu — istenirse ayrı bir iş olarak aynı palete geçirilebilir).
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
