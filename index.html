@@ -990,16 +990,17 @@ async function exportExcel(btn){
   if(btn){btn.disabled=true;btn.textContent='Haz\u0131rlan\u0131yor\u2026';}
   try{
     // kal\u0131c\u0131 teslimat ge\u00e7mi\u015fi: "Teslimleri ar\u015fivle" ile silinen kay\u0131tlar da burada durur
-    let logRows=[['Kay\u0131t','M\u00fc\u015fteri','Sipari\u015f L','B\u0131rak\u0131lan L','Ara\u00e7','G\u00f6z','Not','\u015eof\u00f6r notu','Sipari\u015f giri\u015fi','Teslim','Kay\u0131t zaman\u0131']];
+    let logRows=[['Kay\u0131t','M\u00fc\u015fteri','Sipari\u015f L','B\u0131rak\u0131lan L','Ara\u00e7','G\u00f6z','Not','\u015eof\u00f6r notu','Sipari\u015f giri\u015fi','Teslim','Kay\u0131t zaman\u0131','Dolum tank\u0131 foto\u011fraf\u0131','\u0130rsaliye foto\u011fraf\u0131']];
     if(cloudOK){
       try{
         const{data,error}=await sb.from('teslimat_kayitlari').select('*').order('delivered_at',{ascending:false});
         if(error)throw error;
         (data||[]).forEach(r=>{
           logRows.push([r.id,r.customer_name||'\u2014',r.qty??'',r.delivered_qty??'',r.vehicle??'',r.comp??'',
-            r.note??'',r.deliver_note??'',fmtDT(r.order_created_at),fmtDT(r.delivered_at),fmtDT(r.logged_at)]);
+            r.note??'',r.deliver_note??'',fmtDT(r.order_created_at),fmtDT(r.delivered_at),fmtDT(r.logged_at),
+            r.photo_tank_url??'',r.photo_irsaliye_url??'']);
         });
-      }catch(e){console.warn('teslimat ge\u00e7mi\u015fi \u00e7ekilemedi (supabase-v14-teslimat-log.sql \u00e7al\u0131\u015ft\u0131r\u0131lm\u0131\u015f m\u0131?):',e);}
+      }catch(e){console.warn('teslimat ge\u00e7mi\u015fi \u00e7ekilemedi (supabase-v14/v16 SQL \u00e7al\u0131\u015ft\u0131r\u0131lm\u0131\u015f m\u0131?):',e);}
     }
 
     const byVeh={};
@@ -1016,11 +1017,13 @@ async function exportExcel(btn){
       stokRows.push([v,`${s.tamam}/${s.durak}`,s.planlanan,s.teslim,s.bekleyen]);
     });
 
-    const ordRows=[['Sipari\u015f','M\u00fc\u015fteri','Enlem','Boylam','Sipari\u015f L','B\u0131rak\u0131lan L','Durum','Girildi','Planland\u0131','Teslim','Ara\u00e7','G\u00f6z','Not','\u015eof\u00f6r notu']];
+    const ordRows=[['Sipari\u015f','M\u00fc\u015fteri','Enlem','Boylam','Sipari\u015f L','B\u0131rak\u0131lan L','Durum','Girildi','Planland\u0131','Teslim','Ara\u00e7','G\u00f6z','Not','\u015eof\u00f6r notu','Dolum tank\u0131 foto\u011fraf\u0131','\u0130rsaliye foto\u011fraf\u0131']];
     orderList.forEach(o=>{
       const c=customers.find(c=>c.id===o.cid);
+      const tankUrl=o.photos?.find(p=>p.type==='tank')?.url||'';
+      const irsUrl=o.photos?.find(p=>p.type==='irsaliye')?.url||'';
       ordRows.push([o.id,c?c.name:'\u2014',c?c.lat:'',c?c.lng:'',o.qty,o.deliveredQty??'',ST[o.status].lab,
-        fmtDT(o.createdAt),fmtDT(o.plannedAt),fmtDT(o.deliveredAt),o.vehicle??'',o.comp??'',o.note??'',o.deliverNote??'']);
+        fmtDT(o.createdAt),fmtDT(o.plannedAt),fmtDT(o.deliveredAt),o.vehicle??'',o.comp??'',o.note??'',o.deliverNote??'',tankUrl,irsUrl]);
     });
 
     const wb=XLSX.utils.book_new();

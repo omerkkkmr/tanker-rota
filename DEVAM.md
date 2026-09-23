@@ -572,6 +572,43 @@ kullanılabiliyor) iki gerçek sorun bulundu:
 Masaüstü görünümüne hiç dokunulmadı (değişiklikler yalnızca
 `@media(max-width:900px)` içinde).
 
+## EXCEL'E FOTOĞRAF LİNKLERİ + ANDROID/iOS TEST KAPSAMI NOTU (2026-09-23)
+
+Kullanıcının iki sorusu: (1) Excel'de fotoğraf olacak mı ve tüm kayıtları
+alabilecek mi, (2) Android'de de sorun olmasın.
+
+1. **Excel'de fotoğraf:** `teslimat_kayitlari` tablosu (v14) foto
+   kolonlarını hiç almamıştı — gerçek bir eksiklikti. Yeni
+   `supabase-v16-teslimat-log-fotograf.sql`: `photo_tank_url`/
+   `photo_irsaliye_url` kolonları eklendi, trigger fonksiyonu
+   `NEW.photos` jsonb dizisinden `type='tank'`/`type='irsaliye'`
+   linklerini çıkarıp yazacak şekilde güncellendi, ARTI hâlâ `orders`
+   tablosunda duran (arşivlenmemiş) eski kayıtlar için geriye dönük
+   bir backfill UPDATE'i de var. `index.html`'in `exportExcel()`'i her
+   iki sayfaya da ("Teslimat Geçmişi" VE "Siparişler (bugün)") foto
+   linki sütunları eklendi. **"Tüm kayıtları alabilme"** zaten
+   sağlanıyordu — "Teslimat Geçmişi" sorgusunda hiç `.limit()` yoktu,
+   kontrol edilip doğrulandı. Tarayıcıda `XLSX.writeFile`'ı geçici
+   olarak yakalayıp gerçek workbook içeriği okunarak test edildi:
+   "Siparişler (bugün)" sayfası ŞU AN (v16 çalıştırılmadan) bile gerçek
+   foto linklerini doğru taşıyor (bu veri zaten `orderList`'te bellekte
+   duruyor); "Teslimat Geçmişi" sayfası v16 çalıştırılana kadar foto
+   sütunlarını boş bırakıyor (çökmeden).
+
+2. **Android/iOS test kapsamı — dürüst açıklama:** Bu ortamdaki tarayıcı
+   aracı Chromium tabanlı (Blink motoru) — bu, **Android Chrome ile
+   AYNI motor**, yani mobil görünüm/dinamik testleri Android için
+   gerçekten temsil edici. iOS Safari ise FARKLI bir motor (WebKit) ve
+   bu ortamdan hiç test edilemiyor — önceki oturumdaki 16px input
+   düzeltmesi WebKit'in bilinen bir davranışına karşı ÖNLEYİCİ olarak
+   uygulandı (literal olarak iPhone'da doğrulanamadı). Kullanıcıya bu
+   ayrım açıkça belirtildi; gerçek bir iPhone'da hızlı bir el testi
+   (herhangi bir input alanına dokunup sayfanın zıplayıp zıplamadığına
+   bakmak) hâlâ değerli olur.
+
+**AÇIK KALAN:** `supabase-v16-teslimat-log-fotograf.sql` kullanıcı
+tarafından henüz çalıştırılmadı.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
