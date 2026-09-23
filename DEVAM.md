@@ -609,6 +609,45 @@ alabilecek mi, (2) Android'de de sorun olmasın.
 **AÇIK KALAN:** `supabase-v16-teslimat-log-fotograf.sql` kullanıcı
 tarafından henüz çalıştırılmadı.
 
+## VERİ TASARRUFU: LAZY LOAD + KÜÇÜK ÖNİZLEME (2026-09-23)
+
+Kullanıcı "olabildiğince az veri harcasın, mümkün mü" dedi. En büyük veri
+kalemi fotoğraflardı — önceki oturumda YÜKLEME tarafı sıkıştırılmıştı ama
+listelerde küçük önizleme gösterirken bile TAM boyutlu (1600px) fotoğraf
+indiriliyordu. İki katmanlı çözüm:
+
+1. **`loading="lazy"`** — 3 ekrandaki tüm foto `<img>` etiketlerine
+   eklendi (`index.html` teslim kartları, `siparis/index.html` "Son
+   Teslim Edilenler", `teslimat/index.html` durak detayı). Ekrana hiç
+   girmeyen fotoğraflar artık hiç indirilmiyor.
+
+2. **Ayrı, çok daha küçük "thumb" (önizleme) dosyası** — asıl kazanım bu.
+   `teslimat/index.html`'deki `uploadPhoto()` artık HER fotoğraf için iki
+   dosya üretip yüklüyor: tam boyut (1600px, q0.75 — değişmedi) ve yeni
+   bir thumb (220px, q0.55). `photos` alanı artık `{type,url,thumb}`
+   şeklinde — 3 ekrandaki TÜM küçük resim gösterimleri (`<img>`) artık
+   `p.thumb||p.url` kullanıyor (eski fotoğraflarda thumb yoksa tam
+   boyuta düşer, kırılmaz); tıklanınca açılan `<a href>` hâlâ TAM
+   fotoğrafa gidiyor. Thumb yüklemesi başarısız olursa (ör. eski
+   tarayıcı) sessizce tam url'e düşer, teslimat asla engellenmez.
+   `dolum_fisleri` (tek fotoğraflık, hiçbir listede küçük resim olarak
+   gösterilmiyor) kasıtlı olarak dışarıda bırakıldı — gereksiz karmaşıklık.
+
+   Tarayıcıda gerçek yüklemeyle ölçüldü: 3000×2000 sentetik bir görsel
+   tam boyutta 95 KB, thumb'ı yalnızca **5,3 KB** (~18 kat küçük) çıktı.
+   Gerçek teslim fotoğraflarında (rastgele gürültü değil, düz yüzeyler)
+   oran muhtemelen daha da iyi. Test dosyaları storage'dan silinmeye
+   çalışıldı, silme API'si beklenmedik "Bucket not found" hatası verdi
+   (yok sayıldı — iki küçük test dosyası, ~100 KB, önemsiz).
+
+**Excel'e etkisi yok** — `exportExcel()` hâlâ `.url` (tam boyut) linkini
+kullanıyor, kayıt/doğrulama amaçlı tam kalite korunuyor.
+
+**Dokunulmayanlar (bilinçli):** Harita karo (tile) trafiği — etkileşimli
+rota haritasının doğası gereği, işlevi bozmadan azaltılamaz. 45 saniyelik
+yedek yenileme (soft refresh) — küçük JSON, fotoğraf kadar maliyetli değil,
+dokunulmadı.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

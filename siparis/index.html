@@ -215,7 +215,7 @@ function renderDone(){
       </div>
       <div class="oqty">${L2(o.delivered_qty??o.qty)} L</div>
       ${o.photos&&o.photos.length?`<div class="ophotos">${o.photos.map(p=>
-        `<a href="${p.url}" target="_blank"><img src="${p.url}" title="${p.type==='tank'?'Dolum tankı':p.type==='irsaliye'?'İrsaliye':p.type}"></a>`).join('')}</div>`:''}
+        `<a href="${p.url}" target="_blank"><img src="${p.thumb||p.url}" loading="lazy" title="${p.type==='tank'?'Dolum tankı':p.type==='irsaliye'?'İrsaliye':p.type}"></a>`).join('')}</div>`:''}
     </div>`;
   }).join('');
 }

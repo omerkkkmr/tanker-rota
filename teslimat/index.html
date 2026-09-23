@@ -298,8 +298,8 @@ function openStop(oid){
         ${o.deliver_note?`<br>Not: ${esc(o.deliver_note)}`:''}
       </div>
       <div class="readonly-photos">
-        ${tank?`<a href="${tank.url}" target="_blank"><img src="${tank.url}"></a>`:''}
-        ${irs?`<a href="${irs.url}" target="_blank"><img src="${irs.url}"></a>`:''}
+        ${tank?`<a href="${tank.url}" target="_blank"><img src="${tank.thumb||tank.url}" loading="lazy"></a>`:''}
+        ${irs?`<a href="${irs.url}" target="_blank"><img src="${irs.thumb||irs.url}" loading="lazy"></a>`:''}
       </div>
       <div class="dlgbtns">
         <button class="btn-cancel" onclick="closeDlg()">Kapat</button>
@@ -378,7 +378,7 @@ async function submitFis(){
   btn.disabled=true;
   try{
     noteEl.textContent='Fotoğraf yükleniyor…';
-    const url=await uploadPhoto(photoFis,`plant-${curFisIdx}`,'fis');
+    const{url}=await uploadPhoto(photoFis,`plant-${curFisIdx}`,'fis');
     noteEl.textContent='Kaydediliyor…';
     const{error}=await sb.from('dolum_fisleri').insert({plate:session.plate,vol:curFisVol,photo_url:url,note:note||null});
     if(error)throw error;
@@ -451,14 +451,27 @@ async function compressImage(file,maxDim=1600,quality=0.75){
     return file;
   }
 }
+// Veri tasarrufu için: tam boyutlu fotoğrafın yanında çok daha küçük bir
+// "thumb" (önizleme) de yüklenir. Listelerdeki küçük resimler bu thumb'ı
+// kullanır — tam fotoğraf yalnızca tıklanıp açıldığında indirilir.
 async function uploadPhoto(file,oid,tag){
-  const blob=await compressImage(file);
-  const ext=blob.type==='image/jpeg'?'jpg':extOf(file);
-  const path=`teslimat/${session.plate.replace(/\s+/g,'')}/${oid}-${Date.now()}-${tag}.${ext}`;
-  const{error}=await sb.storage.from('belgeler').upload(path,blob,{upsert:false,contentType:blob.type||file.type||'image/jpeg'});
+  const full=await compressImage(file,1600,0.75);
+  const thumb=await compressImage(file,220,0.55);
+  const stamp=Date.now();
+  const base=`teslimat/${session.plate.replace(/\s+/g,'')}/${oid}-${stamp}-${tag}`;
+  const fullExt=full.type==='image/jpeg'?'jpg':extOf(file);
+  const fullPath=`${base}.${fullExt}`;
+  const{error}=await sb.storage.from('belgeler').upload(fullPath,full,{upsert:false,contentType:full.type||file.type||'image/jpeg'});
   if(error)throw error;
-  const{data}=sb.storage.from('belgeler').getPublicUrl(path);
-  return data.publicUrl;
+  const{data}=sb.storage.from('belgeler').getPublicUrl(fullPath);
+  let thumbUrl=data.publicUrl;
+  try{
+    const thumbExt=thumb.type==='image/jpeg'?'jpg':extOf(file);
+    const thumbPath=`${base}-thumb.${thumbExt}`;
+    const{error:te}=await sb.storage.from('belgeler').upload(thumbPath,thumb,{upsert:false,contentType:thumb.type||file.type||'image/jpeg'});
+    if(!te){const{data:td}=sb.storage.from('belgeler').getPublicUrl(thumbPath);thumbUrl=td.publicUrl;}
+  }catch(e){console.warn('küçük önizleme yüklenemedi, tam boyut kullanılacak:',e);}
+  return {url:data.publicUrl,thumb:thumbUrl};
 }
 
 async function submitDelivery(){
@@ -471,7 +484,7 @@ async function submitDelivery(){
   btn.disabled=true;
   try{
     noteEl.textContent='Fotoğraflar yükleniyor…';
-    const[tankUrl,irsUrl,gps]=await Promise.all([
+    const[tankRes,irsRes,gps]=await Promise.all([
       uploadPhoto(photoTank,curLeg.oid,'tank'),
       uploadPhoto(photoIrs,curLeg.oid,'irsaliye'),
       getGps()
@@ -481,7 +494,7 @@ async function submitDelivery(){
       status:'done',
       delivered_qty:Math.round(litre),
       deliver_note:note||null,
-      photos:[{type:'tank',url:tankUrl},{type:'irsaliye',url:irsUrl}],
+      photos:[{type:'tank',url:tankRes.url,thumb:tankRes.thumb},{type:'irsaliye',url:irsRes.url,thumb:irsRes.thumb}],
       gps_lat:gps?gps.lat:null,
       gps_lng:gps?gps.lng:null,
       delivered_at:new Date().toISOString()
