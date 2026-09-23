@@ -934,10 +934,17 @@ hiçbir hata göstermeden.
 
 Kolaylık için `supabase-v15-v18-toplu.sql` eklendi — dört dosyanın
 birleşimi, hepsi `if not exists` korumalı olduğu için TEK seferde SQL
-Editor'e yapıştırılıp çalıştırılabilir. Kullanıcıya bu adım hatırlatıldı;
-çalıştırılınca "held" (ertele) kalıcılığı, teslimat geçmişinde foto
-linkleri, kırmızı "SİLİNDİ" işareti ve İptal Geçmişi sayfası hepsi aynı
-anda aktif olacak.
+Editor'e yapıştırılıp çalıştırılabilir. Kullanıcıya bu adım hatırlatıldı.
+
+**Güncelleme — kullanıcı çalıştırdı, doğrulandı (aynı gün):** REST
+sorgusuyla `orders.held`, `teslimat_kayitlari.photo_tank_url`,
+`teslimat_kayitlari.siparis_silindi` ve `iptal_kayitlari` tablosunun
+hepsinin artık var olduğu teyit edildi — v15-v18'in DÖRDÜ DE canlıda
+aktif. Kullanıcı ardından "gereksiz dosyaları sil" dedi;
+`supabase-v15-v18-toplu.sql` işini gördüğü ve artık v15/v16/v17/v18
+dosyalarının birebir (bakımı zor) kopyası olduğu için silindi — dört
+ayrı versiyonlu migration dosyası (tarihçe için) repoda kalmaya devam
+ediyor.
 
 ## SONRAKİ AŞAMALAR (yol haritası)
 
