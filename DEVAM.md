@@ -701,6 +701,33 @@ görüneceğinin kanıtı; (2) `markLogDeleted()` sütun henüz yokken (v17
 **AÇIK KALAN:** `supabase-v17-silinen-teslimat-isaretle.sql` kullanıcı
 tarafından henüz çalıştırılmadı.
 
+## "PLANDAN ÇIKAR" — BİR SİPARİŞİ AÇIKTA BEKLETME (2026-09-23)
+
+Kullanıcı gerçek bir senaryo sordu: "siparişler geldi herkese atadım ama
+birini beklettim/atamadım, açıkta durması gerek — ne yaparım?" Mevcut
+"⏸ Yarına bırak" (v15, `held`) yalnızca HENÜZ 'wait' durumundaki bir
+siparişte işe yarıyordu — `activeOrders()` held kontrolünü SADECE
+`status==='wait'` için yapıyordu. Ama kullanıcının senaryosu şuydu: "Rotayı
+hesapla" ZATEN çalıştırılmış, sipariş bir araca 'plan' olarak atanmış —
+bunu GERİ ÇEKMENİN hiçbir yolu yoktu (durum düğmeleri yalnızca plan→road
+ve road→plan destekliyordu, plan→wait hiç yoktu).
+
+Yeni `unplanOrder(id)` + 'plan' durumundaki her sipariş kartına "⏸ Plandan
+çıkar" düğmesi: `status='wait'`, `held=true`, `vehicle=null`, `comp=null`,
+`plannedAt=null` yapıyor — sipariş anında açığa düşüyor VE bir sonraki
+"Rotayı hesapla"da (held sayesinde) tekrar otomatik atanmıyor, kullanıcı
+"▶ Bugüne al" ile bilinçli olarak geri dahil etmeden. Gerçek bir plan
+siparişiyle (54 KP 525'e atanmıştı) uçtan uca test edildi:
+`status/vehicle/comp` doğru şekilde Supabase'e yazıldı, `activeOrders()`
+onu doğru şekilde dışladı. (`held` alanı kendisi hâlâ v15 SQL'i
+bekliyor — o çalışana kadar bu koruma yalnızca o oturumda/yerelde geçerli,
+ama status/vehicle sıfırlanması her zaman kalıcı.)
+
+**Kullanıcıya cevap:** Sipariş henüz "Bekliyor"daysa doğrudan "⏸ Yarına
+bırak"; "Planlandı"ya geçtiyse (rota zaten hesaplandıktan sonra fark
+edildiyse) yeni "⏸ Plandan çıkar" düğmesini kullan — ikisi de aynı
+sonuca (açıkta, ertelenmiş) götürür.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

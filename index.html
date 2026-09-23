@@ -969,7 +969,8 @@ function renderOrders(){
       <div class="oacts">
         ${o.status==='wait'?`<button onclick="toggleHold('${o.id}')" title="Bugünkü 'Rotayı hesapla' bu siparişi görmezden gelir">${o.held?'▶ Bugüne al':'⏸ Yarına bırak'}</button>`:''}
         ${o.status==='wait'?`<button onclick="setOrdStatus('${o.id}','canc')" class="no">İptal</button>`:''}
-        ${o.status==='plan'?`<button onclick="setOrdStatus('${o.id}','road')">Yola çıktı</button>`:''}
+        ${o.status==='plan'?`<button onclick="unplanOrder('${o.id}')" title="Plandan çıkar, açıkta bekletmeye al">⏸ Plandan çıkar</button>
+                             <button onclick="setOrdStatus('${o.id}','road')">Yola çıktı</button>`:''}
         ${o.status==='road'?`<button onclick="setOrdStatus('${o.id}','plan')">Geri al</button>`:''}
         ${(o.status==='plan'||o.status==='road')?`<button class="ok" onclick="openDlg('${o.id}')">Teslim işle</button>`:''}
         ${o.status==='done'?`<button onclick="openDlg('${o.id}')">Teslimi düzelt</button>
@@ -1066,6 +1067,15 @@ function toggleHold(id){
   const o=byId(id);if(!o)return;
   o.held=!o.held;
   save();renderOrders();cloudOrderUpsert(o);
+}
+// rota hesaplanıp bir araca atanmış (plan) bir siparişi geri açığa/bekletmeye
+// al — "herkese atadım ama birini açıkta bırakmam gerekti" senaryosu
+function unplanOrder(id){
+  const o=byId(id);if(!o)return;
+  const c=customers.find(c=>c.id===o.cid);
+  if(!confirm(`${c?c.name:'Bu'} siparişi plandan çıkarılıp beklemeye alınsın mı?\n\nRota yeniden hesaplanana kadar hiçbir araca atanmayacak (görev formundan/mevcut haritadan silinmez, "Rotayı hesapla" tekrar çalıştırılınca güncellenir).`))return;
+  o.status='wait';o.held=true;o.vehicle=null;o.comp=null;o.plannedAt=null;
+  save();renderOrders();draw();cloudOrderUpsert(o);
 }
 
 /* ---------- parse ---------- */
