@@ -749,6 +749,73 @@ istenirse (aynı `teslimat_kayitlari` deseni, `NEW.status='canc'` de
 tetiklenecek şekilde) ayrı bir iş olarak eklenebilir — kullanıcı onayı
 bekleniyor, otomatik yapılmadı.
 
+**Güncelleme — kullanıcı onayladı, eklendi (aynı gün):** Yukarıdaki asimetri
+kapatıldı. `supabase-v18-iptal-log.sql` — `teslimat_kayitlari` ile AYNI
+desende yeni `iptal_kayitlari` tablosu + `log_iptal()` tetikleyicisi
+(`NEW.status='canc'` olduğu an otomatik loglar, `OLD.status is distinct
+from 'canc'` kontrolüyle aynı siparişin tekrar tekrar loglanması
+engellendi). Excel indirmeye yeni bir "İptal Geçmişi" sayfası eklendi
+(Teslimat Geçmişi ile yan yana). `clearDone()`'ın onay mesajı da artık
+doğru: "ikisi de Excel'de HER ZAMAN kalır" diyor (önceki mesaj hâlâ
+iptaller için kalıcı kayıt YOK diyordu — artık yanlış olurdu). **v18 SQL
+kullanıcı tarafından henüz çalıştırılmadı** — çalıştırılana kadar İptal
+Geçmişi sayfası sadece başlık satırıyla boş gelir, hata vermez (aynı
+zaten kurulmuş "eksik migration → sessiz no-op" deseni, tarayıcıda
+`iptal_kayitlari` bulunamadı uyarısıyla doğrulandı).
+
+## iPHONE'DA "EXCEL İNDİR" ÇALIŞMIYOR — GERÇEK ÇÖZÜLDÜ (2026-09-23)
+
+Kullanıcı gerçek iPhone'da test edip bildirdi: "excel indir çalışmıyor
+iphonede denedim sadece" (masaüstünde ve Android'de sorun yoktu). **Kök
+neden:** `exportExcel()` önce Supabase'den `teslimat_kayitlari` verisini
+`await` ile çekiyor, SONRA `XLSX.writeFile(...)` çağırıyordu. iOS
+Safari, bir `await` zincirinden sonra çalışan kodu artık "gerçek bir
+kullanıcı tıklamasına bağlı" saymayabiliyor — bu yüzden dosya indirmeyi
+sessizce engelliyor (hata da vermiyor, sadece hiçbir şey olmuyor).
+
+**Çözüm — iki adımlı buton deseni:** `exportExcel(btn)` artık veriyi
+`await`le çekip workbook'u hazırlıyor, sonra `XLSX.writeFile`'ı HEMEN
+çağırmak yerine butonu "📥 İndirmek için tıkla"ya çeviriyor; o ikinci
+tıklama `await` içermeyen SENKRON bir `onclick`, bu yüzden Safari'nin
+"gerçek tıklama" şartını karşılıyor ve indirme güvenilir çalışıyor.
+`btn` verilmezse (programatik çağrı) eski senkron davranış korunuyor.
+
+Tarayıcıda doğrulandı: `XLSX.writeFile` mock'lanıp `exportExcel(null)`
+çağrısıyla üretilen workbook'un sayfa isimleri/içerikleri doğru
+üretildiği teyit edildi (bkz. aşağıdaki not — aynı testte yeni "İptal
+Geçmişi" sayfası da doğrulandı); gerçek iPhone'da buton-tıkla akışı
+kullanıcı tarafından henüz yeniden test edilmedi, bir sonraki kullanımda
+teyit istenecek.
+
+## TANKER GÖZ/HACİM: AYARLAR'A TAŞINDI (2026-09-23)
+
+Kullanıcı isteği: "tankerlerin gözlerini ve hacimlerini ayarlardan
+değiştirebileyim, içlerindeki litreleri filodan yazabileyim — sadece göz
+ve hacimler ayarlardan değişsin." Önceden Filo sekmesindeki her tanker
+kartında göz sayısı (+ göz/✕ ile) ve hacim (L) birlikte, günlük "mevcut L"
+ile aynı yerde düzenleniyordu — yapısal (nadiren değişen) veri ile günlük
+operasyon verisi karışıktı.
+
+Ayarlar sekmesine yeni "Tanker Yapılandırması" bölümü (`renderTankConfig()`)
+eklendi — göz ekleme/silme (`addComp`/`delComp`) ve hacim girme (`setCap`)
+BURAYA taşındı, aynı `tankers[]` dizisini kullanıyor. Filo sekmesindeki
+kart artık hacim'i salt-okunur gösteriyor, yalnızca "mevcut L" (`setCur`)
+editable kaldı; "Göz/hacim değişikliği için Ayarlar sekmesine bak" ipucu
+eklendi.
+
+**Gerçek bir hata bulunup düzeltildi (kendi testimde yakalandı, kullanıcıya
+gitmeden önce):** Hacim artık iki AYRI DOM'da gösteriliyor (Ayarlar'da
+input, Filo'da salt-okunur metin) ama `setCap()` performans için (yazarken
+odak kaybolmasın diye) tam `renderFleet()` yerine yalnız özet satırını
+güncelliyordu — bu yüzden Ayarlar'da hacim değiştirilince Filo'daki eski
+değer sekme değiştirilene kadar YANLIŞ görünmeye devam ediyordu (yalnız alt
+toplam "L" doğru güncelleniyordu, tek tek göz hacmi değil). `hacim-${i}-${j}`
+id'si eklenip `setCap` artık o elementi de canlı güncelliyor; aynı şekilde
+Ayarlar'ın kendi alt toplamı (`tcfgsum${i}`) da önceden hiç canlı
+güncellenmiyordu, o da eklendi. Tarayıcıda doğrulandı: Ayarlar'da bir
+hacim 9999'a değiştirilip Filo'ya geçilince değerin ANINDA doğru göründüğü
+teyit edildi, sonra test değeri geri (7000) alındı.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

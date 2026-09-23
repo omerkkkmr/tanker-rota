@@ -401,6 +401,10 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
         <input type="range" id="balance" min="0" max="60" step="5" value="25">
       </div>
       <div class="hint">Sola: en az km (birkaç tanker çok çalışır). Sağa: iş tankerlere eşit dağılır.</div>
+
+      <label style="margin-top:20px;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--muted2)">Tanker Yapılandırması</label>
+      <div class="hint" style="margin-top:0;margin-bottom:8px">Göz sayısı ve hacimler (yapısal, nadiren değişir) buradan düzenlenir. Günlük mevcut yakıt miktarı Filo sekmesinden girilir.</div>
+      <div id="tankConfigList"></div>
     </div>
   </div>
 
@@ -737,6 +741,13 @@ function tankSaveSoon(i){clearTimeout(tankTimer[i]);tankTimer[i]=setTimeout(()=>
 function setCap(i,j,v){
   tankers[i].comps[j].cap=Math.max(0,parseInt(v)||0);
   save();updateSum(i);markOver(i);tankSaveSoon(i);
+  const hacimEl=document.getElementById(`hacim-${i}-${j}`);
+  if(hacimEl)hacimEl.textContent=L2(tankers[i].comps[j].cap);
+  const cfgSumEl=document.getElementById(`tcfgsum${i}`);
+  if(cfgSumEl){
+    const cap=tankers[i].comps.reduce((s,c)=>s+c.cap,0);
+    cfgSumEl.innerHTML=`<b>${tankers[i].comps.length} göz · ${L2(cap)} L</b>`;
+  }
 }
 function setCur(i,j,v){
   tankers[i].comps[j].cur=Math.max(0,parseInt(v)||0);
@@ -750,7 +761,7 @@ function updateSum(i){
 }
 // mevcut > hacim olan gözü kırmızıya boya (yeniden çizmeden)
 function markOver(i){
-  const card=document.querySelectorAll('.tcard')[i];
+  const card=document.querySelectorAll('#fleetlist .tcard')[i];
   if(!card)return;
   card.querySelectorAll('.cin.fuel').forEach((el,j)=>{
     const c=tankers[i].comps[j];
@@ -778,14 +789,14 @@ function renderFleet(){
       <div class="comps">${t.comps.map((c,j)=>`
         <div class="crow">
           <div class="clab">${j+1}</div>
-          <input class="cin" type="number" value="${c.cap}" onchange="setCap(${i},${j},this.value)">
+          <div class="clab" id="hacim-${i}-${j}" style="text-align:right;padding-right:6px">${L2(c.cap)}</div>
           <input class="cin fuel${c.cur>c.cap?' over':''}" type="number" value="${c.cur}" onchange="setCur(${i},${j},this.value)">
-          <button class="xbtn" onclick="delComp(${i},${j})" title="Gözü sil">✕</button>
+          <span></span>
         </div>`).join('')}</div>
+      <div class="hint" style="margin-top:2px">Göz/hacim değişikliği için <b>Ayarlar</b> sekmesine bak.</div>
       <div class="tfoot">
         <div class="tsum" id="tsum${i}"><b>${t.comps.length} göz · ${L2(cap)} L</b>${cur?` · <span class="f">${L2(cur)} L dolu</span>`:''}</div>
         <div class="mini">
-          <button onclick="addComp(${i})">+ göz</button>
           <span style="align-self:center">vardiya</span>
           <input class="shift-in" type="number" value="${t.shift}" onchange="setShift(${i},this.value)"><span style="align-self:center">s</span>
         </div>
@@ -798,7 +809,38 @@ function renderFleet(){
       </div>
     </div>`;
   }).join('');
+  renderTankConfig();
   updateStatBar();
+}
+// Ayarlar sekmesindeki "Tanker Yapılandırması": göz sayısı + hacim, yapısal
+// veri (nadiren değişir). Mevcut yakıt (Filo'daki .cin.fuel) buraya dahil
+// değil — aynı tankers[] dizisini, aynı setCap/addComp/delComp fonksiyonlarını
+// kullanır, yalnızca başka bir ekranda gösterir.
+function renderTankConfig(){
+  const el=document.getElementById('tankConfigList');
+  if(!el)return;
+  if(!tankers.length){el.innerHTML='<div class="empty">Tanker yok — Filo sekmesinden ekle</div>';return;}
+  el.innerHTML=tankers.map((t,i)=>{
+    const color=COLORS[i%COLORS.length];
+    const cap=t.comps.reduce((s,c)=>s+c.cap,0);
+    return `<div class="tcard">
+      <div class="thead">
+        <div class="tdot" style="background:${color}"></div>
+        <div class="vname" style="flex:1">${esc(t.plate)||'<i>plakasız</i>'}</div>
+      </div>
+      <div class="chead"><span>göz</span><span>hacim L</span><span></span></div>
+      <div class="comps">${t.comps.map((c,j)=>`
+        <div class="crow">
+          <div class="clab">${j+1}</div>
+          <input class="cin" type="number" value="${c.cap}" onchange="setCap(${i},${j},this.value)">
+          <button class="xbtn" onclick="delComp(${i},${j})" title="Gözü sil">✕</button>
+        </div>`).join('')}</div>
+      <div class="tfoot">
+        <div class="tsum" id="tcfgsum${i}"><b>${t.comps.length} göz · ${L2(cap)} L</b></div>
+        <button onclick="addComp(${i})">+ göz</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 /* ---------- sipariş ----------
@@ -868,7 +910,7 @@ function clearDone(){
   const canc=orderList.filter(o=>o.status==='canc').length;
   const n=done+canc;
   if(!n)return alert('Arşivlenecek teslim/iptal yok.');
-  if(!confirm(`${n} kayıt (${done} teslim, ${canc} iptal) listeden kalıcı olarak silinsin mi?\n\nTeslim edilenler "Excel indir"deki Teslimat Geçmişi'nde HER ZAMAN kalır. İptal edilenler için kalıcı kayıt YOK — tamamen silinirler.`))return;
+  if(!confirm(`${n} kayıt (${done} teslim, ${canc} iptal) listeden kalıcı olarak silinsin mi?\n\nİkisi de "Excel indir"deki Teslimat Geçmişi / İptal Geçmişi sekmelerinde HER ZAMAN kalır — bu yalnız uygulamadaki listeden kaldırır.`))return;
   const gone=orderList.filter(o=>o.status==='done'||o.status==='canc').map(o=>o.id);
   orderList=orderList.filter(o=>o.status!=='done'&&o.status!=='canc');
   save();renderOrders();draw();
@@ -1021,6 +1063,19 @@ async function exportExcel(btn){
       }catch(e){console.warn('teslimat ge\u00e7mi\u015fi \u00e7ekilemedi (supabase-v14/v16/v17 SQL \u00e7al\u0131\u015ft\u0131r\u0131lm\u0131\u015f m\u0131?):',e);}
     }
 
+    // kal\u0131c\u0131 iptal ge\u00e7mi\u015fi: "Teslimleri ar\u015fivle" ile silinen iptaller de burada durur
+    let cancRows=[['Kay\u0131t','M\u00fc\u015fteri','Sipari\u015f L','Ara\u00e7','Not','Sipari\u015f giri\u015fi','\u0130ptal','Kay\u0131t zaman\u0131']];
+    if(cloudOK){
+      try{
+        const{data,error}=await sb.from('iptal_kayitlari').select('*').order('cancelled_at',{ascending:false});
+        if(error)throw error;
+        (data||[]).forEach(r=>{
+          cancRows.push([r.id,r.customer_name||'\u2014',r.qty??'',r.vehicle??'',r.note??'',
+            fmtDT(r.order_created_at),fmtDT(r.cancelled_at),fmtDT(r.logged_at)]);
+        });
+      }catch(e){console.warn('iptal ge\u00e7mi\u015fi \u00e7ekilemedi (supabase-v18 SQL \u00e7al\u0131\u015ft\u0131r\u0131lm\u0131\u015f m\u0131?):',e);}
+    }
+
     const byVeh={};
     orderList.forEach(o=>{
       if(o.status==='canc'||!o.vehicle)return;
@@ -1046,11 +1101,29 @@ async function exportExcel(btn){
 
     const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(logRows),'Teslimat Ge\u00e7mi\u015fi');
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(cancRows),'\u0130ptal Ge\u00e7mi\u015fi');
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(stokRows),'Stok \u00d6zeti (bug\u00fcn)');
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ordRows),'Sipari\u015fler (bug\u00fcn)');
-    XLSX.writeFile(wb,`tanker-rota-${new Date().toISOString().slice(0,10)}.xlsx`);
-  }finally{
+    const filename=`tanker-rota-${new Date().toISOString().slice(0,10)}.xlsx`;
+    // iOS Safari: veri \u00e7ekmek i\u00e7in "await" kullan\u0131ld\u0131ktan SONRA indirme
+    // tetiklenirse, bu art\u0131k "ger\u00e7ek bir t\u0131klamaya ba\u011fl\u0131" say\u0131lmay\u0131p
+    // sessizce engellenebiliyor. Bu y\u00fczden dosyay\u0131 burada indirmiyoruz \u2014
+    // butonu "haz\u0131r, indirmek i\u00e7in t\u0131kla"ya \u00e7eviriyoruz; o t\u0131klama
+    // senkron (await'siz) oldu\u011fu i\u00e7in Safari'de de g\u00fcvenilir \u00e7al\u0131\u015f\u0131r.
+    if(btn){
+      btn.disabled=false;
+      btn.textContent='\ud83d\udce5 \u0130ndirmek i\u00e7in t\u0131kla';
+      btn.onclick=()=>{
+        XLSX.writeFile(wb,filename);
+        btn.textContent=oldTxt;
+        btn.onclick=()=>exportExcel(btn);
+      };
+    }else{
+      XLSX.writeFile(wb,filename);
+    }
+  }catch(e){
     if(btn){btn.disabled=false;btn.textContent=oldTxt;}
+    throw e;
   }
 }
 
