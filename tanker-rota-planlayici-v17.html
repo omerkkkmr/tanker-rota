@@ -620,8 +620,8 @@ async function cloudTankResort(){
 
 /* ---------- map ---------- */
 let map=L.map('map').setView([40.76,30.38],10);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-  {attribution:'&copy; OpenStreetMap &copy; CARTO',maxZoom:19}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  {attribution:'&copy; OpenStreetMap katkıcıları',maxZoom:19}).addTo(map);
 let layers=L.layerGroup().addTo(map);
 let pickMode=null;
 
