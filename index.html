@@ -338,7 +338,7 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
       <div class="filters" id="ofilters"></div>
       <div id="ordlist"></div>
       <div class="row">
-        <button class="ghost" onclick="clearDone()">Teslimleri arşivle</button>
+        <button class="ghost" onclick="clearDone()">Ekranı temizle</button>
         <button class="ghost" onclick="exportExcel(this)">Excel indir</button>
       </div>
       <button class="primary" id="go" onclick="run()">Rotayı hesapla</button>
@@ -915,8 +915,8 @@ function clearDone(){
   const done=orderList.filter(o=>o.status==='done').length;
   const canc=orderList.filter(o=>o.status==='canc').length;
   const n=done+canc;
-  if(!n)return alert('Arşivlenecek teslim/iptal yok.');
-  if(!confirm(`${n} kayıt (${done} teslim, ${canc} iptal) listeden kalıcı olarak silinsin mi?\n\nİkisi de "Excel indir"deki Teslimat Geçmişi / İptal Geçmişi sekmelerinde HER ZAMAN kalır — bu yalnız uygulamadaki listeden kaldırır.`))return;
+  if(!n)return alert('Temizlenecek teslim/iptal yok.');
+  if(!confirm(`${n} kayıt (${done} teslim, ${canc} iptal) listeden kalıcı olarak silinsin mi?\n\nİkisi de "Excel indir"deki Teslimat Geçmişi / İptal Geçmişi sekmelerinde HER ZAMAN kalır — bu yalnız uygulamadaki listeyi temizler, arşivleme işlemi zaten otomatik olur.`))return;
   const gone=orderList.filter(o=>o.status==='done'||o.status==='canc').map(o=>o.id);
   orderList=orderList.filter(o=>o.status!=='done'&&o.status!=='canc');
   save();renderOrders();draw();

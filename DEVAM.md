@@ -904,6 +904,19 @@ mock'lanıp workbook sayfa listesinde "Müşteri Rehberi" olduğu ve
 içeriğinin gerçek 6 müşteriyi (isim+koordinat, alfabetik) doğru taşıdığı
 teyit edildi.
 
+## "TESLİMLERİ ARŞİVLE" → "EKRANI TEMİZLE" (2026-09-23)
+
+Kullanıcı haklı bir tutarsızlık fark etti: "teslimleri arşivle mantıksız
+kalıyor, ekranı temizle demek daha mantıklı değil mi". Doğru — buton
+aslında hiçbir şeyi arşivlemiyor; kalıcı arşivleme (`teslimat_kayitlari`/
+`iptal_kayitlari` tetikleyicileri) zaten teslim/iptal ANINDA otomatik
+oluyor. Bu butonun tek işlevi uygulamadaki GÖRÜNÜR listeyi temizlemek —
+"arşivle" ismi kullanıcıyı "bu butona basmazsam veri kaybolur mu" diye
+düşündürüyordu (nitekim önceki bir soru da tam bu karışıklıktan
+doğmuştu). Buton metni "Ekranı temizle" oldu, onay mesajı da "arşivleme
+işlemi zaten otomatik olur" diye netleştirildi. `clearDone()` fonksiyon
+adı ve davranışı hiç değişmedi — yalnızca kullanıcıya gösterilen metin.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
