@@ -816,6 +816,69 @@ güncellenmiyordu, o da eklendi. Tarayıcıda doğrulandı: Ayarlar'da bir
 hacim 9999'a değiştirilip Filo'ya geçilince değerin ANINDA doğru göründüğü
 teyit edildi, sonra test değeri geri (7000) alındı.
 
+## GÖRSEL CİLA: DERİNLİK + HAREKET (2026-09-23)
+
+Kullanıcı "görsel olarak iyi mi, daha iyi yapabilir miyiz, profesyonel
+kalsın" diye sordu. Değerlendirme: durum rozetleri (BEKLİYOR/PLANLANDI/
+YOLDA/TESLİM/İPTAL) zaten renk kodluydu (`.b-wait/.b-plan/.b-road/.b-done/
+.b-canc`), buton hiyerarşisi (`.primary` dolu gold / `.ghost`+`.oacts`
+çerçeveli) de zaten ayrışıktı — bunlar iyiydi. Eksik olan: hiçbir kart
+(`ocard`, `tcard`, `card`, `stop`, `newform`, `queue-wrap`, `plateBtn`)
+gölge kullanmıyordu (tamamen düz/kağıt üzerine çizim gibi duruyordu) ve
+hiçbir etkileşimde (hover/active) yumuşak geçiş yoktu (renk/gölge anlık
+sıçrıyordu).
+
+Kullanıcı bir üçüncü parti "Yakıt Ofisi" filo/fatura paneli ekran görüntüsü
+paylaştı ama netleştirdi: **referans değil**, renk/stil ona benzemesi
+gerekmiyor — sadece "en uygun ve iyisini bul her açıdan" dendi, karar
+serbest bırakıldı.
+
+3 ekrana da (index/siparis/teslimat) aynı desen uygulandı: `:root`'a
+`--sh-sm`/`--sh-md` iki gölge token'ı eklendi; tüm kart sınıflarına
+`box-shadow:var(--sh-sm)` (dinlenme hali) eklendi; `.primary`/`.btn-save`
+gibi birincil butonlara hover/active'te `box-shadow:var(--sh-md)` +
+`transform:translateY(-1px)` "kalkma" mikro-etkileşimi eklendi;
+button/input/select/kart sınıflarına genel `transition:box-shadow .15s,
+border-color .15s,background-color .15s,transform .1s,color .15s`
+eklendi; üç ekranın header/brand şeridine de zemin ile ayrışması için
+ince bir alt gölge (`box-shadow:0 1px 0 rgba(0,0,0,.15)`) eklendi. Renk
+paleti (cream/gold tema) ve rozet renkleri hiç değiştirilmedi — kullanıcı
+"renkler önemli değil" dedi, mevcut kimlik korundu.
+
+Tarayıcıda üç ekranın da masaüstü ve 375px mobil genişlikte doğru
+render edildiği (kart gölgeleri görünür ama abartısız, hiçbir düzen
+kayması/taşma yok) doğrulandı. `node --check` her üç dosyada da script
+bloğunun bozulmadığını doğruladı.
+
+**Devamı — kullanıcı daha fazlasını istedi:** "font ve kutular vs de
+değişse nasıl olur, özgün ve amaca uygun olarak, yakıt ofisini boşver onu
+örnek alma" + "modern olmalı". Aynı oturumda ikinci bir tur yapıldı:
+
+1. **Font:** `Instrument Sans` → `Manrope` (wght 400-800) üç ekranda da
+   (Google Fonts linki + tüm `font-family` referansları). Veri/rakam
+   alanları (`IBM Plex Mono`) hiç değişmedi — plaka, litre, tarih gibi
+   sabit genişlikli veriler için zaten doğru seçimdi, korundu. Başlıklar
+   (`.brand h1`, `header h1`, `#login h1`) yeni 800 ağırlığa çekildi,
+   daha vurgulu/modern bir hiyerarşi için.
+2. **Kutular:** Tüm kart/input/buton `border-radius` değerleri kabaca
+   ikiye katlandı (kartlar 8→14/16px, inputlar/butonlar 4→7-9px,
+   uyarı/bilgi şeritleri 4→9px, teslimat modalının üst köşeleri
+   12→20px) — daha yumuşak, çağdaş bir SaaS hissi için. Kartlara ayrıca
+   biraz daha iç boşluk eklendi (örn. `.ocard` 11px/13px → 14px/16px)
+   nefes alan bir düzen için. Küçük yapısal öğeler (harita pin'leri,
+   renk noktaları/`.tdot`, dairesel rozet ikonları) bilinçli olarak
+   dokunulmadı — onlar zaten işlevsel/küçük, büyütmek anlamsız olurdu.
+
+Kullanıcının paylaştığı "Yakıt Ofisi" ekran görüntüsü netleştirildiği
+gibi **referans olarak kullanılmadı** — renk paleti (cream/gold),
+durum rozeti renkleri ve genel kompozisyon hiç değişmedi, yalnızca
+tipografi ve kutu geometrisi güncellendi.
+
+Tarayıcıda üç ekran da (Siparişler/Müşteriler/Filo sekmeleri, sipariş
+kartı — gerçek teslim edilmiş bir sipariş fotoğraflarıyla dahil — ve
+teslimat ekranının tanker seçim listesi) yeniden ekran görüntüsüyle
+doğrulandı; `node --check` yine üç dosyada da temiz geçti.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

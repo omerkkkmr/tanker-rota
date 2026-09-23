@@ -4,36 +4,41 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Sipariş Girişi — Tanker Rota</title>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 :root{--ink:#1b1917;--bg:#f4f1ea;--card:#ffffff;--line:#e5ddc9;--muted:#8b8377;--muted2:#6d655a;
-  --hi:#d9a441;--hi-bg:#e6b558;--hi-border:#a4700f;--diesel:#1f7a44;--alert:#c8402c;--htext:#f3efe7}
+  --hi:#d9a441;--hi-bg:#e6b558;--hi-border:#a4700f;--diesel:#1f7a44;--alert:#c8402c;--htext:#f3efe7;
+  --sh-sm:0 1px 2px rgba(27,25,23,.05),0 1px 3px rgba(27,25,23,.06);
+  --sh-md:0 4px 14px rgba(27,25,23,.09),0 1px 3px rgba(27,25,23,.07)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea,.card,.ocard,.mappick,.ocancel{
+  transition:box-shadow .15s ease,border-color .15s ease,background-color .15s ease,transform .1s ease,color .15s ease}
 html,body{height:100%}
-body{font-family:'Instrument Sans',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+body{font-family:'Manrope',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
 input,button,select,textarea{font-family:inherit;font-size:16px}
 button{cursor:pointer}
 .mono{font-family:'IBM Plex Mono'}
 
 header{position:sticky;top:0;z-index:10;background:var(--ink);color:var(--htext);
-  padding:16px 18px;display:flex;justify-content:space-between;align-items:center}
-header h1{font-size:16px;font-weight:700;letter-spacing:.02em}
+  padding:16px 18px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 0 rgba(0,0,0,.15)}
+header h1{font-size:16px;font-weight:800;letter-spacing:.01em}
 header span{font-family:'IBM Plex Mono';font-size:10px;color:#b7ada0}
 
 .wrap{max-width:520px;margin:0 auto;padding:18px 16px 60px}
 
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:18px;box-shadow:var(--sh-sm)}
 label{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
 label:first-child{margin-top:0}
 input,select{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:12px 11px;
-  font-family:'IBM Plex Mono';font-size:15px;border-radius:6px}
+  font-family:'IBM Plex Mono';font-size:15px;border-radius:9px}
 input:focus,select:focus{outline:2px solid var(--hi);outline-offset:-1px;border-color:var(--hi)}
 select{cursor:pointer}
 .primary{width:100%;margin-top:18px;padding:15px;background:var(--hi-bg);border:1px solid var(--hi-border);
-  color:var(--ink);border-radius:6px;font-weight:700;font-size:15px}
-.primary:hover{background:#efc36f}
-.primary:disabled{background:#e5ddc9;color:#a89f8f;border-color:#e5ddc9;cursor:wait}
+  color:var(--ink);border-radius:9px;font-weight:700;font-size:15px;box-shadow:var(--sh-sm)}
+.primary:hover{background:#efc36f;box-shadow:var(--sh-md);transform:translateY(-1px)}
+.primary:active{transform:translateY(0)}
+.primary:disabled{background:#e5ddc9;color:#a89f8f;border-color:#e5ddc9;cursor:wait;box-shadow:none;transform:none}
 .msg{font-family:'IBM Plex Mono';font-size:11px;min-height:16px;margin-top:10px;text-align:center}
 .msg.ok{color:var(--diesel)}
 .msg.err{color:var(--alert)}
@@ -42,8 +47,8 @@ select{cursor:pointer}
   margin:0 0 12px;display:flex;justify-content:space-between;align-items:center}
 .sectitle b{font-family:'IBM Plex Mono';color:var(--ink);font-weight:600}
 
-.ocard{background:var(--card);border:1px solid var(--line);border-left:3px solid #c9beac;border-radius:8px;
-  padding:12px 14px;margin-bottom:8px}
+.ocard{background:var(--card);border:1px solid var(--line);border-left:3px solid #c9beac;border-radius:14px;
+  padding:14px 16px;margin-bottom:9px;box-shadow:var(--sh-sm)}
 .ocard.st-plan{border-left-color:#1f6fd0}
 .ocard.st-road{border-left-color:#d97a00}
 .otop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
@@ -57,7 +62,7 @@ select{cursor:pointer}
 .b-done{color:var(--diesel);border-color:#c9e8d2;background:#e8f6ec}
 .ocard.st-done{border-left-color:var(--diesel);opacity:.9}
 .ophotos{display:flex;gap:6px;margin-top:8px}
-.ophotos img{width:52px;height:52px;object-fit:cover;border-radius:4px;border:1px solid var(--line)}
+.ophotos img{width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
 .oheld{color:var(--hi-border);font-family:'IBM Plex Mono';font-size:10px;margin-top:4px}
 .oqty{font-family:'IBM Plex Mono';font-size:16px;font-weight:600;margin-top:6px}
 .onote{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);margin-top:4px}
@@ -67,10 +72,10 @@ select{cursor:pointer}
 .empty{padding:24px 0;text-align:center;color:var(--muted);font-family:'IBM Plex Mono';font-size:12px}
 
 .mappick{background:transparent;border:1px solid var(--line);color:var(--muted2);padding:10px 12px;
-  border-radius:6px;font-family:'IBM Plex Mono';font-size:11px;width:100%;margin-top:8px;text-align:left;
+  border-radius:9px;font-family:'IBM Plex Mono';font-size:11px;width:100%;margin-top:8px;text-align:left;
   display:flex;align-items:center;gap:8px}
 .mappick.have{border-color:var(--diesel);color:var(--diesel)}
-#pickMap{display:none;height:240px;border-radius:6px;margin-top:8px;border:1px solid var(--line)}
+#pickMap{display:none;height:240px;border-radius:9px;margin-top:8px;border:1px solid var(--line)}
 #pickMap.on{display:block}
 .pickhint{font-family:'IBM Plex Mono';font-size:10px;color:var(--muted);text-align:center;margin-top:6px;display:none}
 .pickhint.on{display:block}
