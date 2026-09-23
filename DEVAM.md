@@ -539,6 +539,39 @@ henüz çalıştırılmadı — çalıştırılana kadar "Yarına bırak" yalnı
 açık olan tarayıcı sekmesinde çalışır, sayfa yenilenince/başka cihazda
 kaybolur (ama hiçbir zaman veri kaybına veya kayıt hatasına yol açmaz).
 
+## MOBİL GÖRÜNÜM/DİNAMİK TARAMASI (2026-09-23)
+
+Kullanıcı "görünümü ve dinamikleri mobile uygun yapalım" dedi. Üç ekranı
+da gerçek 375px genişlikte (mobil) tek tek gezip somut sorun aradım —
+`teslimat/` ve `siparis/` zaten baştan mobil-öncelikli yazıldığı için
+temizdi, `index.html`'de (masaüstü dispatcher aracı, ama telefondan da
+kullanılabiliyor) iki gerçek sorun bulundu:
+
+1. **Yüzen "Haritayı Göster" düğmesi içerik üstüne biniyordu** — mobilde
+   `position:fixed;bottom:18px` olduğu için, hangi sekmede olursa olsun
+   listenin/planın EN ALTINDAKİ kart(lar)ın üzerine oturuyordu (ör. bir
+   siparişin saati/butonu düğmenin arkasında kalıyordu). `#side`'a mobilde
+   `padding-bottom:76px` eklendi — artık kaydırılabilir alanın sonunda
+   düğmenin kapatabileceği kadar boşluk var, hiçbir içerik kalıcı olarak
+   gizlenmiyor. Gerçek rota hesaplanıp Plan sekmesinin en altı kontrol
+   edilerek doğrulandı.
+
+2. **iOS Safari otomatik yakınlaştırma:** `index.html`'in taban input
+   stili 12px'ti (masaüstü için tasarlanmış, kompakt); iOS Safari
+   16px'in altındaki bir inputa dokununca SAYFAYI OTOMATİK YAKINLAŞTIRIR
+   — telefonda her alana dokunuşta can sıkıcı bir zıplama olurdu. Mobilde
+   (`max-width:900px`) tüm input/select/textarea + özel sınıflar
+   (`.tplate`, `.cin`, `.shift-in`, `.ordqty`, `.lockrow select`) 16px'e
+   çıkarıldı. **Bir CSS kaynak-sırası hatası da bulunup düzeltildi:** ilk
+   denemede bu kuralı dosyanın BAŞINA (ilk `@media` bloğuna) koymuştum —
+   aynı özgüllükteki `.tplate{font-size:12px}` gibi kurallar dosyada DAHA
+   SONRA geldiği için onu eziyordu (CSS'te eşit özgüllükte kaynak sırası
+   kazanır). Kural dosyanın EN SONUNA taşınınca (`getComputedStyle` ile
+   tarayıcıda 12px→16px değiştiği doğrulanarak) düzeldi.
+
+Masaüstü görünümüne hiç dokunulmadı (değişiklikler yalnızca
+`@media(max-width:900px)` içinde).
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

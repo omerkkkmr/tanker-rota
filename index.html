@@ -18,7 +18,7 @@ body{font-family:'Instrument Sans',-apple-system,'Segoe UI',Helvetica,Arial,sans
 @media(max-width:900px){
   body{display:block;height:auto;overflow:auto}
   .mainrow{display:block;overflow:visible}
-  #side{overflow-y:visible;border-right:0;border-bottom:1px solid var(--line)}
+  #side{overflow-y:visible;border-right:0;border-bottom:1px solid var(--line);padding-bottom:76px}
 }
 #side{background:var(--bg);color:var(--ink);overflow-y:auto;border-right:1px solid var(--line)}
 .brand{padding:14px 16px;background:var(--ink);color:var(--htext);display:flex;align-items:baseline;justify-content:space-between;gap:10px}
@@ -294,6 +294,11 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 #statbar .st b{display:block;font-family:'IBM Plex Mono';font-size:17px;font-weight:600;color:var(--ink)}
 #statbar .st span{font-family:'IBM Plex Mono';font-size:8px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
 @media(max-width:900px){#map{flex:none;height:60vh}}
+/* iOS Safari küçük inputlara dokununca sayfayı otomatik yakınlaştırır — mobilde hiçbir alan 16px'in altına inmesin.
+   Dosyanın sonunda: aynı özgüllükteki (.tplate vb.) daha önceki kurallardan kaynak sırasında sonra gelmesi gerekiyor. */
+@media(max-width:900px){
+  input,textarea,select,.queue-val,.ordqty,.tplate,.cin,.shift-in,.lockrow select{font-size:16px}
+}
 </style>
 </head>
 <body>
