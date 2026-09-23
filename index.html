@@ -864,9 +864,11 @@ function setOrdStatus(id,s){
   save();renderOrders();draw();cloudOrderUpsert(o);
 }
 function clearDone(){
-  const n=orderList.filter(o=>o.status==='done'||o.status==='canc').length;
+  const done=orderList.filter(o=>o.status==='done').length;
+  const canc=orderList.filter(o=>o.status==='canc').length;
+  const n=done+canc;
   if(!n)return alert('Arşivlenecek teslim/iptal yok.');
-  if(!confirm(`${n} teslim/iptal kaydı silinsin mi? CSV ile yedek alabilirsin.`))return;
+  if(!confirm(`${n} kayıt (${done} teslim, ${canc} iptal) listeden kalıcı olarak silinsin mi?\n\nTeslim edilenler "Excel indir"deki Teslimat Geçmişi'nde HER ZAMAN kalır. İptal edilenler için kalıcı kayıt YOK — tamamen silinirler.`))return;
   const gone=orderList.filter(o=>o.status==='done'||o.status==='canc').map(o=>o.id);
   orderList=orderList.filter(o=>o.status!=='done'&&o.status!=='canc');
   save();renderOrders();draw();

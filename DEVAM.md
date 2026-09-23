@@ -728,6 +728,27 @@ bırak"; "Planlandı"ya geçtiyse (rota zaten hesaplandıktan sonra fark
 edildiyse) yeni "⏸ Plandan çıkar" düğmesini kullan — ikisi de aynı
 sonuca (açıkta, ertelenmiş) götürür.
 
+## "TESLİMLERİ ARŞİVLE" NET AÇIKLAMASI + DÜZELTME (2026-09-23)
+
+Kullanıcı "arşivle deyince ne oluyor, sonra bir şekilde görebilecek miyim"
+diye sordu. `clearDone()` kodu incelendi: teslim+iptal durumundaki
+siparişleri `orders` tablosundan KALICI OLARAK siliyor (`cloudOrderDelete`
+her biri için). **Gerçek bir tutarsızlık bulundu:** onay mesajı hâlâ eski
+"CSV ile yedek alabilirsin" diyordu — CSV çoktan Excel'e çevrilmişti,
+mesaj hiç güncellenmemişti. Düzeltildi: artık teslim/iptal sayısını ayrı
+ayrı gösteriyor VE hangisinin kalıcı geçmişte kalıp hangisinin
+KALMAYACAĞINI açıkça söylüyor.
+
+**Gerçek/net durum:** Teslim edilenler `teslimat_kayitlari` tetikleyicisi
+sayesinde (v14) arşivlemeden ÖNCE zaten kalıcı tabloya kopyalanmış
+durumda — "Excel indir" → "Teslimat Geçmişi" sayfasında SONSUZA KADAR
+kalırlar, arşivleme bunu hiç etkilemez. **İptal edilenler için böyle bir
+kalıcı kayıt YOK** — arşivlenince tamamen, geri dönüşsüz silinirler.
+Kullanıcıya bu asimetri açıkça anlatıldı, iptaller için de kalıcı log
+istenirse (aynı `teslimat_kayitlari` deseni, `NEW.status='canc'` de
+tetiklenecek şekilde) ayrı bir iş olarak eklenebilir — kullanıcı onayı
+bekleniyor, otomatik yapılmadı.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
