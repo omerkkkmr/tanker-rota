@@ -18,18 +18,23 @@ yönlendirmesi. Tek dosya HTML (Leaflet + OSRM + Supabase).
 
 ## GÜNCEL DOSYA
 
-**Aktif sürüm: `tanker-rota-planlayici-v17.html`** (tek dosya, ~96 KB)
-Önceki çalışan yedek: `tanker-rota-planlayici-v16.html`
-SQL kurulum: `supabase-kurulum.sql`, `supabase-v12-ek.sql` (is_tir kolonu)
+**(2026-09-23 itibariyle) Dosya adları kısa link için değiştirildi:**
+- Planlayıcı: `index.html` (eskiden `tanker-rota-planlayici-v17.html`)
+- Şoför ekranı: `sofor/index.html` (eskiden `sofor.html`)
 
-İlk iş: bunu bir git deposuna al.
-```
-cd <proje-klasörü>
-git init
-git add tanker-rota-planlayici-v17.html supabase-kurulum.sql supabase-v12-ek.sql DEVAM.md
-git commit -m "v17 devralma"
-```
-Bundan sonra v17 üzerinde çalış, sürüm numarası yerine git commit kullan.
+Canlı adresler (GitHub Pages, repo: `github.com/omerkkkmr/tanker-rota`):
+- Planlayıcı: `https://omerkkkmr.github.io/tanker-rota/`
+- Şoför: `https://omerkkkmr.github.io/tanker-rota/sofor/`
+
+Eski arşiv dosyaları (`PROJE-BAGLAM.md`, `tanker-rota-planlayici-v8.html`,
+referans tasarım prototipi) kullanıcı isteğiyle silindi — hâlâ git
+geçmişinde duruyor, gerekirse `git log --diff-filter=D` ile bulunabilir.
+
+SQL kurulum: `supabase-kurulum.sql`, `supabase-v12-ek.sql` (is_tir kolonu),
+`supabase-v13-dolum-fisi.sql` (dolum fişi fotoğrafı tablosu).
+
+Çalışma düzeni: `main` dalına commit + `git push` → birkaç saniye içinde
+canlı adrese yansır (GitHub Pages otomatik derliyor).
 
 ## TEKNİK YAPI
 
