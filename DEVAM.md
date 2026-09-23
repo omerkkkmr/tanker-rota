@@ -392,6 +392,38 @@ Canlı adresler kısaltıldı (dosyalar `index.html` olarak köke taşındı):
 `git push` sonrası GitHub Pages otomatik derliyor (~10-30 sn), her seferinde
 `curl` ile canlı URL'in 200 döndüğü doğrulanarak ilerlendi.
 
+## KALICI TESLİMAT GEÇMİŞİ (2026-09-23)
+
+Kullanıcı "tüm yapılan teslim sipariş vs yi excelde biriktirsin her zaman"
+dedi — sorun şuydu: `exportExcel()` yalnız o ANKİ `orderList`'i (bellek/
+Supabase'deki güncel hal) yazıyordu; "Teslimleri arşivle" ile teslim edilen
+siparişler `orders` tablosundan SİLİNDİĞİNDE geçmişleri de kayboluyordu.
+
+Çözüm istemci kodunda DEĞİL, veritabanı seviyesinde: yeni
+`supabase-v14-teslimat-log.sql` → `teslimat_kayitlari` tablosu + bir
+Postgres TRIGGER (`log_teslimat()`, `orders` tablosunda `insert or update`
+sonrası çalışır, `NEW.status='done'` olduğu her an bir satır ekler).
+Bilinçli tercih: bunu her bir client dosyasına (planlayıcı `saveDeliv()`,
+teslimat ekranı `submitDelivery()`, ileride eklenecek her ne olursa) TEK
+TEK yazmak yerine DB tetikleyicisi yapıldı — "her zaman biriksin" isteği
+böylece hangi ekrandan işlenirse işlensin garanti ediliyor, client kodu
+unutamaz. "Teslimi düzelt" ile aynı sipariş tekrar 'done' yapılırsa YENİ
+bir satır daha eklenir (silinmez/üzerine yazılmaz) — düzeltmeler de iz
+bıraksın diye bilinçli bir tercih.
+
+`index.html`'deki `exportExcel()` artık async: önce `teslimat_kayitlari`
+tablosunun TAMAMINI çekip "Teslimat Geçmişi" (kalıcı, hiç silinmeyen) sayfası
+olarak ekliyor, "Stok Özeti"/"Siparişler" sayfaları hâlâ o ANKİ görünümü
+gösteriyor ("bugün" etiketiyle ayrıştırıldı). Tablo henüz yoksa (kullanıcı
+SQL'i çalıştırmadıysa) hata fırlatmadan boş bir geçmiş sayfasıyla devam
+ediyor, konsola uyarı yazıyor — tarayıcıda bu durum (tablo yokken) test
+edilip çökmediği doğrulandı.
+
+**AÇIK KALAN:** `supabase-v14-teslimat-log.sql` kullanıcı tarafından
+Supabase'de henüz çalıştırılmadı — çalıştırılana kadar "Teslimat Geçmişi"
+sayfası boş gelir (diğer iki sayfa normal çalışır). `dolum_fisleri`
+(v13) de hâlâ aynı durumda, açık.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

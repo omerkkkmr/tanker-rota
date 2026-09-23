@@ -328,7 +328,7 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
       <div id="ordlist"></div>
       <div class="row">
         <button class="ghost" onclick="clearDone()">Teslimleri arşivle</button>
-        <button class="ghost" onclick="exportExcel()">Excel indir</button>
+        <button class="ghost" onclick="exportExcel(this)">Excel indir</button>
       </div>
       <button class="primary" id="go" onclick="run()">Rotayı hesapla</button>
     </div>
@@ -960,32 +960,52 @@ function exportCsv(){
 }
 
 // stok giri\u015f/\u00e7\u0131k\u0131\u015f defteri: ara\u00e7 baz\u0131nda y\u00fcklenmesi planlanan / teslim edilen / bekleyen litre
-function exportExcel(){
-  const byVeh={};
-  orderList.forEach(o=>{
-    if(o.status==='canc'||!o.vehicle)return;
-    const v=byVeh[o.vehicle]||(byVeh[o.vehicle]={durak:0,tamam:0,planlanan:0,teslim:0,bekleyen:0});
-    v.durak++;v.planlanan+=o.qty;
-    if(o.status==='done'){v.tamam++;v.teslim+=o.deliveredQty||0;}
-    else v.bekleyen+=o.qty;
-  });
-  const stokRows=[['Plaka','Durak (Tamam/Toplam)','Y\u00fcklenmesi Planlanan (L)','Teslim Edilen (L)','Bekleyen/Yolda (L)']];
-  Object.keys(byVeh).sort().forEach(v=>{
-    const s=byVeh[v];
-    stokRows.push([v,`${s.tamam}/${s.durak}`,s.planlanan,s.teslim,s.bekleyen]);
-  });
+async function exportExcel(btn){
+  const oldTxt=btn?btn.textContent:null;
+  if(btn){btn.disabled=true;btn.textContent='Haz\u0131rlan\u0131yor\u2026';}
+  try{
+    // kal\u0131c\u0131 teslimat ge\u00e7mi\u015fi: "Teslimleri ar\u015fivle" ile silinen kay\u0131tlar da burada durur
+    let logRows=[['Kay\u0131t','M\u00fc\u015fteri','Sipari\u015f L','B\u0131rak\u0131lan L','Ara\u00e7','G\u00f6z','Not','\u015eof\u00f6r notu','Sipari\u015f giri\u015fi','Teslim','Kay\u0131t zaman\u0131']];
+    if(cloudOK){
+      try{
+        const{data,error}=await sb.from('teslimat_kayitlari').select('*').order('delivered_at',{ascending:false});
+        if(error)throw error;
+        (data||[]).forEach(r=>{
+          logRows.push([r.id,r.customer_name||'\u2014',r.qty??'',r.delivered_qty??'',r.vehicle??'',r.comp??'',
+            r.note??'',r.deliver_note??'',fmtDT(r.order_created_at),fmtDT(r.delivered_at),fmtDT(r.logged_at)]);
+        });
+      }catch(e){console.warn('teslimat ge\u00e7mi\u015fi \u00e7ekilemedi (supabase-v14-teslimat-log.sql \u00e7al\u0131\u015ft\u0131r\u0131lm\u0131\u015f m\u0131?):',e);}
+    }
 
-  const ordRows=[['Sipari\u015f','M\u00fc\u015fteri','Enlem','Boylam','Sipari\u015f L','B\u0131rak\u0131lan L','Durum','Girildi','Planland\u0131','Teslim','Ara\u00e7','G\u00f6z','Not','\u015eof\u00f6r notu']];
-  orderList.forEach(o=>{
-    const c=customers.find(c=>c.id===o.cid);
-    ordRows.push([o.id,c?c.name:'\u2014',c?c.lat:'',c?c.lng:'',o.qty,o.deliveredQty??'',ST[o.status].lab,
-      fmtDT(o.createdAt),fmtDT(o.plannedAt),fmtDT(o.deliveredAt),o.vehicle??'',o.comp??'',o.note??'',o.deliverNote??'']);
-  });
+    const byVeh={};
+    orderList.forEach(o=>{
+      if(o.status==='canc'||!o.vehicle)return;
+      const v=byVeh[o.vehicle]||(byVeh[o.vehicle]={durak:0,tamam:0,planlanan:0,teslim:0,bekleyen:0});
+      v.durak++;v.planlanan+=o.qty;
+      if(o.status==='done'){v.tamam++;v.teslim+=o.deliveredQty||0;}
+      else v.bekleyen+=o.qty;
+    });
+    const stokRows=[['Plaka','Durak (Tamam/Toplam)','Y\u00fcklenmesi Planlanan (L)','Teslim Edilen (L)','Bekleyen/Yolda (L)']];
+    Object.keys(byVeh).sort().forEach(v=>{
+      const s=byVeh[v];
+      stokRows.push([v,`${s.tamam}/${s.durak}`,s.planlanan,s.teslim,s.bekleyen]);
+    });
 
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(stokRows),'Stok \u00d6zeti');
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ordRows),'Sipari\u015fler');
-  XLSX.writeFile(wb,`tanker-rota-${new Date().toISOString().slice(0,10)}.xlsx`);
+    const ordRows=[['Sipari\u015f','M\u00fc\u015fteri','Enlem','Boylam','Sipari\u015f L','B\u0131rak\u0131lan L','Durum','Girildi','Planland\u0131','Teslim','Ara\u00e7','G\u00f6z','Not','\u015eof\u00f6r notu']];
+    orderList.forEach(o=>{
+      const c=customers.find(c=>c.id===o.cid);
+      ordRows.push([o.id,c?c.name:'\u2014',c?c.lat:'',c?c.lng:'',o.qty,o.deliveredQty??'',ST[o.status].lab,
+        fmtDT(o.createdAt),fmtDT(o.plannedAt),fmtDT(o.deliveredAt),o.vehicle??'',o.comp??'',o.note??'',o.deliverNote??'']);
+    });
+
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(logRows),'Teslimat Ge\u00e7mi\u015fi');
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(stokRows),'Stok \u00d6zeti (bug\u00fcn)');
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ordRows),'Sipari\u015fler (bug\u00fcn)');
+    XLSX.writeFile(wb,`tanker-rota-${new Date().toISOString().slice(0,10)}.xlsx`);
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent=oldTxt;}
+  }
 }
 
 // rotaya girecek siparişler: bekleyen + planlanan (teslim/iptal hariç)
