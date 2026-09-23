@@ -648,6 +648,26 @@ rota haritasının doğası gereği, işlevi bozmadan azaltılamaz. 45 saniyelik
 yedek yenileme (soft refresh) — küçük JSON, fotoğraf kadar maliyetli değil,
 dokunulmadı.
 
+## iOS ZOOM GERÇEKTEN KALICI KALIYORMUŞ (2026-09-23)
+
+Kullanıcı "iphoneda yazı yazmak isteyince ekran yaklaşıyor ama geri eski
+haline gelmiyor" dedi — önceki oturumdaki 16px input düzeltmesi (yakınlaşma
+TETİKLENMESİNİ azaltır) sorunu tam çözmemiş. Kök neden bulundu:
+`teslimat/index.html` ve `siparis/index.html`'in viewport meta etiketinde
+`maximum-scale=1` VARDI (sayfa pinch-zoom'u tamamen kapatıyor, sorun hiç
+yaşanmıyordu) ama **`index.html` (planlayıcı) bunu hiç içermiyordu** —
+sadece `width=device-width, initial-scale=1`. iOS Safari'de bazen bir
+inputa dokunup yakınlaştıktan sonra otomatik geri dönüş güvenilmiyor;
+kalıcı çözüm yakınlaşmayı baştan hiç açmamak. `index.html`'e de aynı
+`maximum-scale=1` eklendi.
+
+**Haritanın kendi zoom'u etkilenmedi mi diye kontrol edildi:** Leaflet
+haritası kendi dokunma/​buton işleyicileriyle çalışıyor, sayfa seviyesindeki
+pinch-zoom kısıtlamasından bağımsız — tarayıcıda `map.zoomIn()` çağrılıp
+zoom seviyesinin (10→11) sorunsuz değiştiği doğrulandı (zaten `siparis/
+index.html`'de de aynı kısıtlamayla birlikte bir Leaflet haritası — konum
+seçici — sorunsuz çalışıyordu, bu da ayrı bir kanıttı).
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
