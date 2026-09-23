@@ -668,6 +668,39 @@ zoom seviyesinin (10→11) sorunsuz değiştiği doğrulandı (zaten `siparis/
 index.html`'de de aynı kısıtlamayla birlikte bir Leaflet haritası — konum
 seçici — sorunsuz çalışıyordu, bu da ayrı bir kanıttı).
 
+## SİLİNEN TESLİMATLAR EXCEL'DE KIRMIZI İZ BIRAKIR (2026-09-23)
+
+Kullanıcı: "sipariş silinirse teslim edildiyse Excel'den silmesin, yanına
+'silindi' kırmızı ile belirtsin." Kalıcı log (`teslimat_kayitlari`) zaten
+`orders` tablosundan bağımsız olduğu için silme onu ETKİLEMİYORDU — asıl
+eksik, silme OLAYININ görünür bir iz bırakmamasıydı.
+
+Yeni `supabase-v17-silinen-teslimat-isaretle.sql`: `teslimat_kayitlari`'na
+`siparis_silindi boolean` eklendi. `index.html`'in `delOrder()`'ı artık
+sildiği sipariş `status==='done'` ise (a) silmeden önce ayrı, daha ciddi
+bir onay mesajı gösteriyor, (b) `cloudOrderDelete`'ten sonra
+`markLogDeleted(id)` ile kalıcı log satırını `siparis_silindi=true`
+yapıyor.
+
+**Gerçek kırmızı renk için kütüphane değişti:** `exportExcel()`'in
+kullandığı standart `xlsx@0.18.5` (SheetJS ücretsiz sürüm) .xlsx
+ÇIKTISINDA hücre stilini (dolgu rengi) desteklemiyor — denendi, sessizce
+yok sayıyordu. `xlsx-js-style@1.2.0`'a (aynı API'yi koruyan, stil
+desteği eklenmiş bir topluluk çatalı) geçildi. "Teslimat Geçmişi"
+sayfasına yeni bir "Durum" sütunu eklendi; `siparis_silindi=true` olan
+satırlar kırmızı dolgu + beyaz kalın yazıyla ("SİLİNDİ") işaretleniyor.
+
+Tarayıcıda üç ayrı doğrulama yapıldı: (1) stil nesnesinin GERÇEKTEN
+`.xlsx` ikili formatına yazılıp geri okunduğunda hayatta kaldığı
+(`XLSX.write`→`XLSX.read` round-trip, dolgu rengi `C8402C` aynen
+korundu, normal satırlarda dolgu yok) — bu, gerçekten Excel'de kırmızı
+görüneceğinin kanıtı; (2) `markLogDeleted()` sütun henüz yokken (v17
+çalıştırılmadan) çökmeden 400 hatasını sessizce yuttuğu; (3) tam
+`exportExcel()` akışının yeni "Durum" sütunuyla hatasız tamamlandığı.
+
+**AÇIK KALAN:** `supabase-v17-silinen-teslimat-isaretle.sql` kullanıcı
+tarafından henüz çalıştırılmadı.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

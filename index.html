@@ -458,7 +458,7 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script>
 const OSRM='https://router.project-osrm.org';
 const COLORS=['#c8402c','#1f6fd0','#2f8f4f','#8b3fb5','#d97a00','#0d9b96','#b0245c','#5a6b1f'];
@@ -832,9 +832,21 @@ function addOrder(){
 const byId=id=>orderList.find(o=>o.id===id);
 function delOrder(id){
   const o=byId(id);if(!o)return;
-  if(!confirm('Bu sipariş silinsin mi?'))return;
+  const wasDone=o.status==='done';
+  const msg=wasDone
+    ?'Bu sipariş TESLİM EDİLMİŞ. Silmek istediğine emin misin?\n\nKalıcı teslimat kaydı Excel\'de "SİLİNDİ" olarak kırmızı görünmeye devam edecek.'
+    :'Bu sipariş silinsin mi?';
+  if(!confirm(msg))return;
   orderList=orderList.filter(x=>x.id!==id);save();renderOrders();draw();
   cloudOrderDelete(id);
+  if(wasDone)markLogDeleted(id);
+}
+// teslim edilmiş bir sipariş silinirse kalıcı kayıtta iz bıraksın —
+// Excel geçmişi asla sessizce kaybolmasın
+async function markLogDeleted(orderId){
+  if(!cloudOK)return;
+  try{await sb.from('teslimat_kayitlari').update({siparis_silindi:true}).eq('order_id',orderId);}
+  catch(e){console.warn('"silindi" işareti yazılamadı (supabase-v17-silinen-teslimat-isaretle.sql çalıştırılmış mı?):',e);}
 }
 function setQty(id,v){const o=byId(id),q=parseInt(v);if(o&&q>0){o.qty=q;save();renderOrders();draw();cloudOrderUpsert(o);}}
 function setLock(id,v){
@@ -990,17 +1002,20 @@ async function exportExcel(btn){
   if(btn){btn.disabled=true;btn.textContent='Haz\u0131rlan\u0131yor\u2026';}
   try{
     // kal\u0131c\u0131 teslimat ge\u00e7mi\u015fi: "Teslimleri ar\u015fivle" ile silinen kay\u0131tlar da burada durur
-    let logRows=[['Kay\u0131t','M\u00fc\u015fteri','Sipari\u015f L','B\u0131rak\u0131lan L','Ara\u00e7','G\u00f6z','Not','\u015eof\u00f6r notu','Sipari\u015f giri\u015fi','Teslim','Kay\u0131t zaman\u0131','Dolum tank\u0131 foto\u011fraf\u0131','\u0130rsaliye foto\u011fraf\u0131']];
+    const DELCELL={font:{color:{rgb:'FFFFFF'},bold:true},fill:{patternType:'solid',fgColor:{rgb:'C8402C'}}};
+    const styledRow=(vals,style)=>style?vals.map(v=>({v:v??'',s:style})):vals;
+    let logRows=[['Kay\u0131t','Durum','M\u00fc\u015fteri','Sipari\u015f L','B\u0131rak\u0131lan L','Ara\u00e7','G\u00f6z','Not','\u015eof\u00f6r notu','Sipari\u015f giri\u015fi','Teslim','Kay\u0131t zaman\u0131','Dolum tank\u0131 foto\u011fraf\u0131','\u0130rsaliye foto\u011fraf\u0131']];
     if(cloudOK){
       try{
         const{data,error}=await sb.from('teslimat_kayitlari').select('*').order('delivered_at',{ascending:false});
         if(error)throw error;
         (data||[]).forEach(r=>{
-          logRows.push([r.id,r.customer_name||'\u2014',r.qty??'',r.delivered_qty??'',r.vehicle??'',r.comp??'',
+          const deleted=!!r.siparis_silindi;
+          logRows.push(styledRow([r.id,deleted?'S\u0130L\u0130ND\u0130':'',r.customer_name||'\u2014',r.qty??'',r.delivered_qty??'',r.vehicle??'',r.comp??'',
             r.note??'',r.deliver_note??'',fmtDT(r.order_created_at),fmtDT(r.delivered_at),fmtDT(r.logged_at),
-            r.photo_tank_url??'',r.photo_irsaliye_url??'']);
+            r.photo_tank_url??'',r.photo_irsaliye_url??''],deleted?DELCELL:null));
         });
-      }catch(e){console.warn('teslimat ge\u00e7mi\u015fi \u00e7ekilemedi (supabase-v14/v16 SQL \u00e7al\u0131\u015ft\u0131r\u0131lm\u0131\u015f m\u0131?):',e);}
+      }catch(e){console.warn('teslimat ge\u00e7mi\u015fi \u00e7ekilemedi (supabase-v14/v16/v17 SQL \u00e7al\u0131\u015ft\u0131r\u0131lm\u0131\u015f m\u0131?):',e);}
     }
 
     const byVeh={};
