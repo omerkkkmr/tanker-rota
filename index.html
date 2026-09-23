@@ -319,9 +319,9 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
   <div class="tabbar" id="tabbar">
     <button class="tabbtn act" data-tab="siparisler" onclick="showTab('siparisler')">Siparişler <b id="ordcount"></b></button>
     <button class="tabbtn" data-tab="musteriler" onclick="showTab('musteriler')">Müşteriler <b id="custcount"></b></button>
+    <button class="tabbtn" data-tab="plan" onclick="showTab('plan')">Plan</button>
     <button class="tabbtn" data-tab="filo" onclick="showTab('filo')">Filo <b id="fleetcount"></b></button>
     <button class="tabbtn" data-tab="ayarlar" onclick="showTab('ayarlar')">Ayarlar</button>
-    <button class="tabbtn" data-tab="plan" onclick="showTab('plan')">Plan</button>
   </div>
 
   <div class="sec tabpanel" data-tab="siparisler">
@@ -1096,6 +1096,11 @@ async function exportExcel(btn){
       stokRows.push([v,`${s.tamam}/${s.durak}`,s.planlanan,s.teslim,s.bekleyen]);
     });
 
+    const custRows=[['M\u00fc\u015fteri','Enlem','Boylam']];
+    customers.slice().sort((a,b)=>a.name.localeCompare(b.name,'tr')).forEach(c=>{
+      custRows.push([c.name,c.lat,c.lng]);
+    });
+
     const ordRows=[['Sipari\u015f','M\u00fc\u015fteri','Enlem','Boylam','Sipari\u015f L','B\u0131rak\u0131lan L','Durum','Girildi','Planland\u0131','Teslim','Ara\u00e7','G\u00f6z','Not','\u015eof\u00f6r notu','Dolum tank\u0131 foto\u011fraf\u0131','\u0130rsaliye foto\u011fraf\u0131']];
     orderList.forEach(o=>{
       const c=customers.find(c=>c.id===o.cid);
@@ -1110,6 +1115,7 @@ async function exportExcel(btn){
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(cancRows),'\u0130ptal Ge\u00e7mi\u015fi');
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(stokRows),'Stok \u00d6zeti (bug\u00fcn)');
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ordRows),'Sipari\u015fler (bug\u00fcn)');
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(custRows),'M\u00fc\u015fteri Rehberi');
     const filename=`tanker-rota-${new Date().toISOString().slice(0,10)}.xlsx`;
     // iOS Safari: veri \u00e7ekmek i\u00e7in "await" kullan\u0131ld\u0131ktan SONRA indirme
     // tetiklenirse, bu art\u0131k "ger\u00e7ek bir t\u0131klamaya ba\u011fl\u0131" say\u0131lmay\u0131p

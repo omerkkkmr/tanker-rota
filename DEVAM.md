@@ -879,6 +879,31 @@ kartı — gerçek teslim edilmiş bir sipariş fotoğraflarıyla dahil — ve
 teslimat ekranının tanker seçim listesi) yeniden ekran görüntüsüyle
 doğrulandı; `node --check` yine üç dosyada da temiz geçti.
 
+## MÜŞTERİ REHBERİ EXCEL'E EKLENDİ + SEKME SIRASI (2026-09-23)
+
+İki küçük istek aynı oturumda: "rehberde excele aktarılabilsin" ve
+"ayarlar ve plan sekmelerinin yerleri değişsin, hatta filo da sağa kayıp
+planla yer değişsin".
+
+1. **Müşteri Rehberi sheet'i:** `exportExcel()`'e yeni bir sayfa eklendi
+   — `customers[]` dizisi (isim + enlem/boylam) alfabetik sıralanıp
+   "Müşteri Rehberi" adıyla eklendi. Sipariş/teslim istatistiği DAHİL
+   EDİLMEDİ (bilinçli sadelik — kullanıcı sadece rehberin kendisinin
+   aktarılabilmesini istedi, ekstra kırılım istemedi; istenirse sonra
+   eklenebilir).
+2. **Sekme sırası:** İki adımda değişti. Önce Ayarlar↔Plan yer
+   değiştirdi, sonra kullanıcı "filo da sağa kayıp planla yer değişsin"
+   dedi — Filo↔Plan da yer değiştirdi. Nihai sıra: **Siparişler →
+   Müşteriler → Plan → Filo → Ayarlar** (önceki: Siparişler →
+   Müşteriler → Filo → Ayarlar → Plan). Yalnızca `.tabbtn` buton
+   sırası değişti; panel `<div>`'lerinin DOM sırası (`data-tab`
+   toggle'ı zaten sıradan bağımsız çalışıyor) dokunulmadı.
+
+Tarayıcıda doğrulandı: tabbar'da yeni sıra göründü; `exportExcel(null)`
+mock'lanıp workbook sayfa listesinde "Müşteri Rehberi" olduğu ve
+içeriğinin gerçek 6 müşteriyi (isim+koordinat, alfabetik) doğru taşıdığı
+teyit edildi.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
