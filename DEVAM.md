@@ -441,6 +441,49 @@ yüklenir — hiçbir zaman yükleme tamamen engellenmez. Tarayıcıda sentetik
 görseliyle doğrulandı: 0,51 MB'a indi (77x küçülme) — gerçek fotoğraflarda
 (gürültü değil, yumuşak geçişli görüntü) oran genelde çok daha iyi çıkar.
 
+## GERÇEK HATALAR BULUNUP DÜZELTİLDİ + YENİ MÜŞTERİ AKIŞI (2026-09-23)
+
+Kullanıcı üç şey bildirdi: (1) sipariş girerken yeni müşteri oluşturulamıyor,
+(2) sildiği siparişler kapatıp açınca geri geliyor, (3) sipariş ekranından
+girilen sipariş planlayıcıya gelmiyor. İkisi GERÇEK bug çıktı, ikisini de
+gerçek Supabase verisiyle (test kayıtları sonradan temizlendi) doğrulayarak
+düzelttim:
+
+1. **Silme hatası (gerçek bug):** `index.html`'deki `delOrder(id)` siparişi
+   yalnız YEREL `orderList`'ten çıkarıp `save()` (localStorage) çağırıyordu
+   — `cloudOrderDelete(id)` HİÇ ÇAĞRILMIYORDU. Yani sipariş Supabase'de
+   duruyordu; sayfa yenilenince `load()` buluttan tekrar çekip geri
+   getiriyordu. Tek satır eksikti, eklendi.
+
+2. **Senkron gecikmesi (gerçek eksik):** `index.html`'in realtime aboneliği
+   yalnız `orders` tablosunu dinliyordu, `customers`'ı DİNLEMİYORDU. Sipariş
+   Girişi ekranından yeni müşteri+sipariş eklenince, SİPARİŞ anında geliyordu
+   ama o siparişin bağlı olduğu YENİ MÜŞTERİ gelmiyordu (plan­layıcıda
+   "<silinmiş müşteri>" gibi görünebilirdi) — iki gerçek pencereyle test
+   edilip doğrulandı. `subscribeRealtime()`'a `customers` tablosu +
+   `applyCustomerChange()` eklendi, artık anında geliyor.
+
+3. **Genel dayanıklılık (kullanıcının "teslimatı da dikkate alarak güncelle"
+   isteği doğrultusunda üç ekrana da eklendi):** realtime WebSocket
+   bağlantısı sessizce kopabiliyor (mobilde zayıf sinyal, sekme uzun süre
+   arka planda, vb. — test sırasında BU ORTAMDA da bir WS bağlantısının
+   gerçekten koptuğu gözlemlendi, bu riskin gerçek olduğunu doğruladı).
+   Üç ekrana da (`index.html`, `teslimat/index.html`, `siparis/index.html`)
+   45 saniyede bir sessizce buluttan tazeleyen bir yedek zamanlayıcı
+   (`softRefresh`/`loadRoute(false)`) eklendi — realtime çalışmasa bile
+   en geç 45 saniyede kendini onarır. Planlayıcıda bu fonksiyon ayrıca
+   İLK yüklemede bulut erişilemezse bile (o zamana kadar "⚠ yerel" modunda
+   takılı kalınırdı) sonradan kurtarabiliyor.
+
+4. **Yeni müşteri akışı** (`siparis/index.html`): müşteri açılır listesine
+   "+ Yeni müşteri ekle" seçeneği eklendi, seçilince bir isim alanı açılıyor.
+   Sipariş girenler genelde müşterinin GPS konumunu bilmediği için yeni
+   müşteri garajın konumuyla (geçici) kaydediliyor, kullanıcıya "konum
+   planlayıcıdan düzeltilmeli" mesajı gösteriliyor — planlayıcıdaki mevcut
+   "Haritadan seç" ile dispatcher sonradan düzeltir. Tarayıcıda gerçek
+   Supabase'e yeni müşteri+sipariş eklenip planlayıcıda (madde 2'deki düzeltme
+   sayesinde) doğru konumla (garaj koordinatları) göründüğü doğrulandı.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

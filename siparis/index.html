@@ -71,7 +71,8 @@ select{cursor:pointer}
 <div class="wrap">
   <div class="card">
     <label>Müşteri</label>
-    <select id="osel"></select>
+    <select id="osel" onchange="toggleNewCust()"></select>
+    <input id="ncname" placeholder="Yeni müşteri adı" style="display:none;margin-top:8px">
     <label>Miktar (L)</label>
     <input id="oqty" type="number" placeholder="Miktar (L)" value="5000">
     <label>Not (opsiyonel)</label>
@@ -109,9 +110,17 @@ async function load(){
   subscribeRealtime();
 }
 function renderCustSelect(){
-  document.getElementById('osel').innerHTML=customers.length
-    ?customers.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')
-    :'<option value="">Müşteri rehberi boş</option>';
+  const sel=document.getElementById('osel');
+  const cur=sel.value;
+  sel.innerHTML=customers.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')
+    +'<option value="__new__">+ Yeni müşteri ekle</option>';
+  if(cur&&(cur==='__new__'||customers.some(c=>c.id===cur)))sel.value=cur;
+  toggleNewCust();
+}
+function toggleNewCust(){
+  const isNew=document.getElementById('osel').value==='__new__';
+  document.getElementById('ncname').style.display=isNew?'block':'none';
+  if(isNew)document.getElementById('ncname').focus();
 }
 function renderOrders(){
   const open=orderList.filter(o=>o.status==='wait'||o.status==='plan'||o.status==='road');
@@ -133,22 +142,36 @@ function renderOrders(){
   }).join('');
 }
 
+// Sipariş girenler genelde müşterinin haritadaki konumunu bilmez; yeni
+// müşteri buradan yalnızca isimle oluşturulur, garajın konumuyla (geçici)
+// kaydedilir — planlamacı ekranındaki "Haritadan seç" ile sonradan düzeltilir.
+const DEPOT_LAT=40.7480, DEPOT_LNG=30.3900;
+
 async function addOrder(){
-  const cid=document.getElementById('osel').value;
+  let cid=document.getElementById('osel').value;
   const qty=parseInt(document.getElementById('oqty').value);
   const note=document.getElementById('onote').value.trim();
   const msg=document.getElementById('msg');
   msg.className='msg';msg.textContent='';
+  const isNew=cid==='__new__';
+  const newName=document.getElementById('ncname').value.trim();
   if(!cid){msg.className='msg err';msg.textContent='Önce müşteri seç.';return;}
+  if(isNew&&!newName){msg.className='msg err';msg.textContent='Yeni müşterinin adını gir.';return;}
   if(!qty||qty<=0){msg.className='msg err';msg.textContent='Geçerli miktar gir.';return;}
   const btn=document.getElementById('addBtn');
   btn.disabled=true;
   try{
+    if(isNew){
+      const{data,error}=await sb.from('customers').insert({name:newName,lat:DEPOT_LAT,lng:DEPOT_LNG}).select().single();
+      if(error)throw error;
+      cid=data.id;
+    }
     const{error}=await sb.from('orders').insert({customer_id:cid,qty,status:'wait',note:note||''});
     if(error)throw error;
     document.getElementById('onote').value='';
-    msg.className='msg ok';msg.textContent='✓ Talep eklendi';
-    setTimeout(()=>{msg.textContent='';},2500);
+    if(isNew)document.getElementById('ncname').value='';
+    msg.className='msg ok';msg.textContent=isNew?'✓ Yeni müşteri + talep eklendi (konum planlayıcıdan düzeltilmeli)':'✓ Talep eklendi';
+    setTimeout(()=>{msg.textContent='';},3500);
     load();
   }catch(e){
     console.warn(e);
@@ -181,6 +204,8 @@ function subscribeRealtime(){
 
 document.getElementById('topDate').textContent=new Date().toLocaleDateString('tr-TR',{day:'2-digit',month:'long',year:'numeric'});
 load();
+// yedek yenileme: realtime bağlantısı sessizce koparsa kendini onarır
+setInterval(load,45000);
 </script>
 </body>
 </html>

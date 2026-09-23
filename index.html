@@ -815,6 +815,7 @@ function delOrder(id){
   const o=byId(id);if(!o)return;
   if(!confirm('Bu sipariş silinsin mi?'))return;
   orderList=orderList.filter(x=>x.id!==id);save();renderOrders();draw();
+  cloudOrderDelete(id);
 }
 function setQty(id,v){const o=byId(id),q=parseInt(v);if(o&&q>0){o.qty=q;save();renderOrders();draw();cloudOrderUpsert(o);}}
 function setLock(id,v){
@@ -1552,7 +1553,20 @@ function subscribeRealtime(){
   rtActive=true;
   sb.channel('orders-live')
     .on('postgres_changes',{event:'*',schema:'public',table:'orders'},applyOrderChange)
+    .on('postgres_changes',{event:'*',schema:'public',table:'customers'},applyCustomerChange)
     .subscribe();
+}
+// başka bir ekrandan (ör. Sipariş Girişi'nde "+ Yeni müşteri ekle") eklenen
+// müşteriler anında görünsün diye — sadece orders dinlemek yetmiyordu
+function applyCustomerChange(payload){
+  const {eventType,new:row,old}=payload;
+  if(eventType==='DELETE'){customers=customers.filter(c=>c.id!==old.id);}
+  else{
+    const c={id:row.id,name:row.name,lat:row.lat,lng:row.lng};
+    const i=customers.findIndex(x=>x.id===c.id);
+    if(i>=0)customers[i]=c; else customers.push(c);
+  }
+  localSave();renderCust();renderOrders();
 }
 function applyOrderChange(payload){
   const {eventType,new:row,old}=payload;
@@ -1937,6 +1951,26 @@ function updateJumpButtons(){
 }
 window.addEventListener('scroll',updateJumpButtons,{passive:true});
 window.addEventListener('resize',updateJumpButtons);
+
+// yedek yenileme: realtime bağlantısı sessizce koparsa (uzun süre açık kalan
+// sekme, ağ değişikliği, mobil arka plan vb.) kendini onarır. İlk yüklemede
+// buluta erişilemediyse bile burada kurtarır (cloudOK sonradan true olabilir).
+async function softRefresh(){
+  try{
+    const[cs,od]=await Promise.all([
+      sb.from('customers').select('*').order('created_at'),
+      sb.from('orders').select('*').order('created_at'),
+    ]);
+    if(cs.error||od.error)throw(cs.error||od.error);
+    customers=cs.data.map(r=>({id:r.id,name:r.name,lat:r.lat,lng:r.lng}));
+    orderList=od.data.map(fromRow);
+    if(!cloudOK){cloudOK=true;setCloudBadge(true);}
+    localSave();renderCust();renderOrders();
+    if(!curPlan||!lastRun)draw();
+    subscribeRealtime();
+  }catch(e){console.warn('yedek yenileme başarısız:',e);}
+}
+setInterval(softRefresh,45000);
 
 /* ---------- init ---------- */
 (async()=>{

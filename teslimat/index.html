@@ -177,11 +177,13 @@ function selectPlate(id,plate){
 }
 function doLogout(){
   if(rtChannel){sb.removeChannel(rtChannel);rtChannel=null;}
+  if(refreshTimer){clearInterval(refreshTimer);refreshTimer=null;}
   clearSession();session=null;myVehicle=null;orderStatus={};
   document.getElementById('app').classList.remove('on');
   document.getElementById('login').style.display='flex';
   loadPlateList();
 }
+let refreshTimer=null;
 function enterApp(){
   document.getElementById('login').style.display='none';
   document.getElementById('app').classList.add('on');
@@ -189,6 +191,9 @@ function enterApp(){
   document.getElementById('hdrDate').textContent=new Date().toLocaleDateString('tr-TR',{day:'2-digit',month:'long',year:'numeric'});
   loadRoute(true);
   subscribeRealtime();
+  // yedek yenileme: mobilde realtime bağlantısı sessizce kopabilir (zayıf
+  // sinyal, arka plana atma vb.) — bu, rotayı kendiliğinden tazeler.
+  if(!refreshTimer)refreshTimer=setInterval(()=>loadRoute(false),45000);
 }
 
 /* ---------- rota yükleme ---------- */
