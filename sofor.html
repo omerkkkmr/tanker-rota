@@ -239,9 +239,16 @@ function render(){
   document.getElementById('sVol').textContent=L2(volDone);
 
   let n=0;
-  tl.innerHTML=myVehicle.legs.map(l=>{
+  tl.innerHTML=myVehicle.legs.map((l,i)=>{
     if(l.kind==='garage')return `<div class="leg"><div class="leg-info">🏁 <b>${esc(l.label)}</b> · ${hhmm(l.time)}</div></div>`;
-    if(l.kind==='plant')return `<div class="leg"><div class="leg-info">⛽ <b>Tesiste dolum</b> · ${hhmm(l.time)} · ${L2(l.vol)} L</div></div>`;
+    if(l.kind==='plant'){
+      const done=fisUploaded[i];
+      return `<div class="leg"><div class="leg-info">⛽ <b>Tesiste dolum</b> · ${hhmm(l.time)} · ${L2(l.vol)} L
+        <div style="margin-top:8px">${done
+          ?`<span style="color:#6fd39a">✓ Fiş yüklendi</span>`
+          :`<button class="photobtn" style="width:auto;display:inline-flex" onclick="openFis(${i},${l.vol})"><span class="icon">🧾</span><span>Fiş Yükle</span></button>`}</div>
+        </div></div>`;
+    }
     if(l.kind==='xfer')return `<div class="leg"><div class="leg-info">⇄ <b>Garajda aktarım</b> · ${hhmm(l.time)}<br>${(l.items||[]).map(t=>t.to===session.plate?`<b>${esc(t.from)}</b>'den ${L2(t.vol)} L alındı`:`<b>${esc(t.to)}</b>'e ${L2(t.vol)} L verildi`).join('<br>')}</div></div>`;
     if(l.kind==='feedout')return `<div class="leg"><div class="leg-info">📤 <b>Besleme (garajda aktarım)</b> · ${hhmm(l.time)} · ${L2(l.vol)} L dağıtıldı</div></div>`;
     if(l.kind!=='drop')return '';
@@ -264,6 +271,8 @@ function render(){
 /* ---------- teslim modalı ---------- */
 let curLeg=null;
 let photoTank=null, photoIrs=null;
+let fisUploaded={};   // plant leg index -> fiş foto url (bu oturum için)
+let curFisIdx=null, curFisVol=null, photoFis=null;
 function findLeg(oid){return myVehicle.legs.find(l=>l.kind==='drop'&&l.oid===oid);}
 
 function openStop(oid){
@@ -324,7 +333,58 @@ function openStop(oid){
   }
   document.getElementById('dlg').classList.add('on');
 }
-function closeDlg(){document.getElementById('dlg').classList.remove('on');curLeg=null;photoTank=null;photoIrs=null;}
+function closeDlg(){document.getElementById('dlg').classList.remove('on');curLeg=null;photoTank=null;photoIrs=null;curFisIdx=null;photoFis=null;}
+
+/* ---------- dolum fişi (tesiste alınan makbuz) ---------- */
+function openFis(idx,vol){
+  curFisIdx=idx;curFisVol=vol;photoFis=null;
+  const box=document.getElementById('dlgBox');
+  box.innerHTML=`
+    <h3>Dolum Fişi</h3>
+    <div class="csub">${session.plate} · ${L2(vol)} L dolum</div>
+    <label>Fiş Fotoğrafı</label>
+    <button class="photobtn" id="btnFis" onclick="document.getElementById('fileFis').click()">
+      <span class="icon">🧾</span><span>Fotoğraf çek</span>
+    </button>
+    <input type="file" id="fileFis" accept="image/*" capture="environment" style="display:none" onchange="onFisPhoto(this)">
+    <label>Not (opsiyonel)</label>
+    <input type="text" id="fFisNote" placeholder="—">
+    <div class="dlgbtns">
+      <button class="btn-cancel" onclick="closeDlg()">Vazgeç</button>
+      <button class="btn-save" id="btnFisSave" onclick="submitFis()" disabled>Fişi Kaydet</button>
+    </div>
+    <div class="savingNote" id="saveNote"></div>`;
+  document.getElementById('dlg').classList.add('on');
+}
+function onFisPhoto(input){
+  const f=input.files[0];if(!f)return;
+  photoFis=f;
+  const url=URL.createObjectURL(f);
+  document.getElementById('btnFis').className='photobtn have';
+  document.getElementById('btnFis').innerHTML=`<img src="${url}"><span>Fotoğraf alındı ✓ (değiştirmek için dokun)</span>`;
+  document.getElementById('btnFisSave').disabled=false;
+}
+async function submitFis(){
+  if(curFisIdx==null||!photoFis)return;
+  const note=document.getElementById('fFisNote').value.trim();
+  const btn=document.getElementById('btnFisSave');
+  const noteEl=document.getElementById('saveNote');
+  btn.disabled=true;
+  try{
+    noteEl.textContent='Fotoğraf yükleniyor…';
+    const url=await uploadPhoto(photoFis,`plant-${curFisIdx}`,'fis');
+    noteEl.textContent='Kaydediliyor…';
+    const{error}=await sb.from('dolum_fisleri').insert({plate:session.plate,vol:curFisVol,photo_url:url,note:note||null});
+    if(error)throw error;
+    fisUploaded[curFisIdx]=url;
+    closeDlg();
+    render();
+  }catch(e){
+    console.warn(e);
+    noteEl.textContent='Hata: kaydedilemedi. Sinyal kontrol edip tekrar deneyin.';
+    btn.disabled=false;
+  }
+}
 
 function onPhoto(input,type){
   const f=input.files[0];if(!f)return;

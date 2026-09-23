@@ -298,6 +298,54 @@ Supabase ücretsiz projesinin otomatik duraklatılmış olması ya da (b)
 dosyanın henüz telefona hiç ulaşmamış olması (sadece Mac'te duruyordu) —
 kesin teşhis kullanıcıdan bekleniyor, konu KAPANMADI.
 
+## HARİTA ALTLIĞI İKİ KEZ DEĞİŞTİ + DOLUM FİŞİ + MOBİL ATLAMA (2026-09-23)
+
+Kullanıcı harita ekran görüntüsü paylaştı: `tile.openstreetmap.org` **403
+"Access blocked — App is not following the tile usage policy"** veriyordu.
+OSM'in gönüllü sunucuları uygulama/toplu istek trafiğini bilerek
+engelliyor (bir önceki oturumda CARTO'dan buraya geçmiştim, o da kısa
+sürede tıkandı). **Esri'nin anahtar istemeyen, uygulama gömme kullanımına
+açık `World_Street_Map` tile servisine** geçildi — bu servis binlerce
+Leaflet projesinde tam bu senaryo için (OSM'in engellemesi) standart
+alternatif olarak kullanılıyor, tarayıcıda gerçek yol/etiket/harita ile
+doğrulandı. **Eğer bu da ileride tıkanırsa** sıradaki seçenek: kullanıcının
+kendi ücretsiz MapTiler/Stadia hesabı (anahtarla) — bunlar duraklamayan
+kalıcı çözüm ama hesap açmayı gerektiriyor.
+
+**Ayrıca aynı oturumda üç iş daha:**
+
+1. **Dolum fişi fotoğrafı** — kullanıcı "tanker fişi fotosu da eklensin"
+   dedi (tesiste dolum sırasında alınan kağıt makbuz/fiş — teslimattaki
+   irsaliye/tank fotoğrafından AYRI, giriş tarafının kanıtı). Yeni tablo
+   `dolum_fisleri` (`supabase-v13-dolum-fisi.sql` — plate, vol, photo_url,
+   note, created_at; `belgeler` bucket'ı zaten var, aynısı kullanılıyor).
+   `sofor.html`'de "Tesiste dolum" satırına bir "🧾 Fiş Yükle" butonu
+   eklendi — dolum leg'inin dizideki index'i (`i`) oturum içi anahtar
+   olarak kullanılıyor (`fisUploaded[i]`), kalıcı bir sipariş kaydına bağlı
+   olmadığı için bu şekilde en basit çözüm. Tarayıcıda sahte veriyle modal
+   görsel olarak doğrulandı; **kullanıcının bu tabloyu Supabase'de
+   `supabase-v13-dolum-fisi.sql`'i çalıştırarak oluşturması gerekiyor**,
+   yoksa fiş kaydı hata verir (foto yine de storage'a yüklenir, yalnız DB
+   insert'i başarısız olur — bu turda bu hata durumu ayrıca test edilmedi).
+
+2. **Mobilde liste↔harita atlama** — kullanıcı "şöför ve planlama
+   ekranları tamamen mobile göre yapılsın" dedi. `sofor.html` zaten baştan
+   mobil-öncelikliydi (dokunulmadı). Planlayıcıda TAM bir yeniden tasarım
+   yerine (kapsamı büyük, kullanıcı ne istediğini netleştirmeden riskli),
+   ÖLÇÜLÜ bir mobil iyileştirme yapıldı: mobilde sekme çubuğu artık
+   `position:sticky` (kaydırırken kaybolmuyor); yüzen "🗺️ Haritayı Göster"
+   / "📋 Listeye Dön" düğmeleri eklendi (`updateJumpButtons()`, scroll
+   pozisyonuna göre ikisi arasında geçiş yapıyor) — böylece kullanıcı uzun
+   sipariş listesini kaydırmadan haritaya atlayabiliyor. Tarayıcıda mobil
+   genişlikte (375px) doğrulandı. **Bu, "tamamen mobile göre" isteğinin
+   TAMAMI değil** — eğer kullanıcı daha fazlasını (ör. alttan sekme
+   navigasyonu, masaüstü-özel ekranların mobilde tamamen gizlenmesi)
+   isterse somut örnekle (ekran görüntüsü/referans) belirtmesi gerekiyor,
+   kör bir "tam yeniden tasarım" riskli olurdu.
+
+**AÇIK KALAN:** `dolum_fisleri` tablosu kullanıcı tarafından Supabase'de
+henüz oluşturulmadı (SQL dosyası hazır, çalıştırılması gerekiyor).
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

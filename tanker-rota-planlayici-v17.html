@@ -26,6 +26,16 @@ body{font-family:'Instrument Sans',-apple-system,'Segoe UI',Helvetica,Arial,sans
 .brand h1 b{color:var(--hi);font-weight:700}
 .brand span{font-family:'IBM Plex Mono';font-size:9px;color:#b7ada0;letter-spacing:.08em}
 .tabbar{display:flex;background:var(--card);border-bottom:1px solid var(--line);overflow-x:auto}
+@media(max-width:900px){.tabbar{position:sticky;top:0;z-index:50}}
+#mapJump,#listBack{display:none}
+@media(max-width:900px){
+  #mapJump{display:flex;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:900;
+    background:var(--ink);color:var(--htext);border:0;border-radius:999px;padding:13px 22px;
+    align-items:center;gap:8px;font-weight:700;font-size:12px;box-shadow:0 6px 18px rgba(27,25,23,.35)}
+  #listBack{display:flex;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:900;
+    background:var(--hi-bg);color:var(--ink);border:1px solid var(--hi-border);border-radius:999px;padding:13px 22px;
+    align-items:center;gap:8px;font-weight:700;font-size:12px;box-shadow:0 6px 18px rgba(27,25,23,.35)}
+}
 .tabbtn{background:transparent;border:0;border-bottom:3px solid transparent;color:var(--muted);
   padding:13px 12px;font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;white-space:nowrap;
   display:flex;align-items:center;gap:5px}
@@ -397,7 +407,10 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
   </div>
 </div>
 
+<button id="mapJump" onclick="document.querySelector('.maprel').scrollIntoView({behavior:'smooth'})">🗺️ Haritayı Göster</button>
+
 <div class="maprel">
+  <button id="listBack" onclick="document.getElementById('side').scrollIntoView({behavior:'smooth'})">📋 Listeye Dön</button>
   <div id="statbar">
     <div class="st"><b id="stOpen">0</b><span>Açık Sipariş</span></div>
     <div class="st"><b id="stVol">0</b><span>Talep L</span></div>
@@ -1894,10 +1907,22 @@ function updateStatBar(){
   if(g('stDriver'))g('stDriver').textContent=document.getElementById('drivers')?.value||'';
 }
 
+/* ---------- mobil: liste/harita atlama düğmeleri ---------- */
+function updateJumpButtons(){
+  if(window.innerWidth>900)return;
+  const maprelTop=document.querySelector('.maprel').getBoundingClientRect().top;
+  const atMap=maprelTop<window.innerHeight*0.4;
+  document.getElementById('mapJump').style.display=atMap?'none':'flex';
+  document.getElementById('listBack').style.display=atMap?'flex':'none';
+}
+window.addEventListener('scroll',updateJumpButtons,{passive:true});
+window.addEventListener('resize',updateJumpButtons);
+
 /* ---------- init ---------- */
 (async()=>{
   await load();
   renderFleet();renderCust();renderOrders();draw();
+  updateJumpButtons();
   subscribeRealtime();
 })();
 FIELDS.forEach(f=>document.getElementById(f).addEventListener('input',()=>{
