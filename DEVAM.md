@@ -267,6 +267,37 @@ Motorda hiçbir davranış değişikliği yok, yalnız görünüm.
 `sofor.html` bu turda DOKUNULMADI (kendi ayrı koyu teması var, kapsam
 dışında tutuldu — istenirse ayrı bir iş olarak aynı palete geçirilebilir).
 
+## PROJE KLASÖRÜ TAŞINDI + sofor.html PIN kaldırıldı (2026-09-23)
+
+Kullanıcı çalışma klasörünün **Masaüstü/Tanker Rota** olmasını istedi (bu
+oturuma kadar Downloads'ta çalışılıyordu — kullanıcının ilk mesajdaki
+dosya ekleri oradan geldiği için). git deposu (.git + tüm commit geçmişi)
+Downloads'tan buraya kopyalandı; Masaüstünde zaten duran eski dosyalar
+(`PROJE-BAGLAM.md` — v8 dönemi eski bağlam dosyası, `tanker-rota-
+planlayici-v8.html` — Supabase öncesi ilk sürüm, `Tanker-Rota-Planlayici
+(2).html` — görünüm yenilemesinde referans alınan tasarım prototipi) de
+depoya eklendi, arşiv olarak duruyorlar. Downloads'taki kopya silindi —
+**tek çalışma klasörü artık burası.**
+
+`sofor.html`'de kullanıcı "PIN falan olmasın" dedi — giriş ekranı PIN
+girişinden **plaka listesine tıklayarak seçme**ye çevrildi:
+`tankers` tablosundan `id,plate` çekilip (sort sırasına göre) her biri bir
+buton olarak listeleniyor, tıklayınca doğrudan `enterApp()`. `doLogin()`/
+`#pinInput`/`#loginBtn` kaldırıldı, yerine `loadPlateList()`/`selectPlate(
+id,plate)` geldi. `tankers.pin` kolonu DB'de duruyor (dokunulmadı, zararsız,
+kullanılmıyor). Kimlik doğrulama YOK artık — herhangi biri herhangi bir
+tankeri seçip o tankerin rotasını görebilir/teslim işleyebilir; bu bilinçli
+bir ödünleşim (kullanıcı sadeliği PIN güvenliğine tercih etti). Yerel
+sunucuyla (sahte veriyle enjekte edilerek) plaka listesi görünümü ve
+seçince ana ekrana geçiş tarayıcıda doğrulandı; gerçek Supabase bu ortamdan
+erişilemediği için (bilinen kısıt) gerçek veriyle uçtan uca test kullanıcı
+tarafından yapılmalı.
+
+**Kullanıcının bildirdiği "Bağlantı hatası" şikayeti** muhtemelen ya (a)
+Supabase ücretsiz projesinin otomatik duraklatılmış olması ya da (b)
+dosyanın henüz telefona hiç ulaşmamış olması (sadece Mac'te duruyordu) —
+kesin teşhis kullanıcıdan bekleniyor, konu KAPANMADI.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

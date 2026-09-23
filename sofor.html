@@ -18,12 +18,11 @@ button{cursor:pointer}
 #login{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:18px}
 #login h1{font-size:20px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
 #login .sub{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);text-align:center;line-height:1.6}
-#pinInput{width:220px;max-width:80vw;text-align:center;letter-spacing:.3em;font-family:'IBM Plex Mono';font-size:26px;
-  padding:14px 10px;background:var(--steel);border:1px solid var(--line);color:#f2f0ec;border-radius:4px}
-#pinInput:focus{outline:none;border-color:var(--hi)}
-#loginBtn{width:220px;max-width:80vw;padding:14px;background:var(--hi);color:#101418;border:0;border-radius:4px;
-  font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-#loginErr{color:#f5a08a;font-family:'IBM Plex Mono';font-size:11px;min-height:14px}
+.plateList{width:280px;max-width:85vw;display:flex;flex-direction:column;gap:10px}
+.plateBtn{width:100%;padding:16px;background:var(--steel);border:1px solid var(--line);color:#f2f0ec;border-radius:6px;
+  font-family:'IBM Plex Mono';font-size:18px;font-weight:600;letter-spacing:.04em;text-align:center}
+.plateBtn:active{border-color:var(--hi);color:var(--hi)}
+#loginErr{color:#f5a08a;font-family:'IBM Plex Mono';font-size:11px;min-height:14px;text-align:center}
 
 /* ---- ana ekran ---- */
 #app{display:none;min-height:100vh;flex-direction:column}
@@ -98,10 +97,9 @@ header button:active{border-color:var(--hi);color:var(--hi)}
 <body>
 
 <div id="login">
-  <h1>Şoför Girişi</h1>
-  <div class="sub">Tanker plakanıza tanımlı PIN'i girin.</div>
-  <input id="pinInput" type="tel" inputmode="numeric" placeholder="• • •" maxlength="6" autocomplete="off">
-  <button id="loginBtn" onclick="doLogin()">Giriş Yap</button>
+  <h1>Tankerini Seç</h1>
+  <div class="sub">Bugün kullandığın tankeri listeden seç.</div>
+  <div id="plateList" class="plateList"></div>
   <div id="loginErr"></div>
 </div>
 
@@ -156,32 +154,32 @@ function loadSession(){try{return JSON.parse(localStorage.getItem(SESSION_KEY)||
 function saveSession(s){try{localStorage.setItem(SESSION_KEY,JSON.stringify(s));}catch(e){}}
 function clearSession(){try{localStorage.removeItem(SESSION_KEY);}catch(e){}}
 
-async function doLogin(){
-  const pin=document.getElementById('pinInput').value.trim();
+async function loadPlateList(){
   const err=document.getElementById('loginErr');
-  err.textContent='';
-  if(!pin)return;
-  document.getElementById('loginBtn').disabled=true;
+  const box=document.getElementById('plateList');
+  err.textContent='';box.innerHTML='<div class="sub">Yükleniyor…</div>';
   try{
-    const{data,error}=await sb.from('tankers').select('id,plate,pin').eq('pin',pin).limit(1);
+    const{data,error}=await sb.from('tankers').select('id,plate').order('sort');
     if(error)throw error;
-    if(!data||!data.length){err.textContent='PIN hatalı. Tekrar deneyin.';return;}
-    session={id:data[0].id,plate:data[0].plate};
-    saveSession(session);
-    enterApp();
+    if(!data||!data.length){box.innerHTML='';err.textContent='Kayıtlı tanker bulunamadı.';return;}
+    box.innerHTML=data.map(t=>`<button class="plateBtn" onclick='selectPlate(${JSON.stringify(t.id)},${JSON.stringify(t.plate)})'>${esc(t.plate)}</button>`).join('');
   }catch(e){
     console.warn(e);
+    box.innerHTML='';
     err.textContent='Bağlantı hatası — internet/sinyal kontrol edin.';
-  }finally{
-    document.getElementById('loginBtn').disabled=false;
   }
+}
+function selectPlate(id,plate){
+  session={id,plate};
+  saveSession(session);
+  enterApp();
 }
 function doLogout(){
   if(rtChannel){sb.removeChannel(rtChannel);rtChannel=null;}
   clearSession();session=null;myVehicle=null;orderStatus={};
   document.getElementById('app').classList.remove('on');
   document.getElementById('login').style.display='flex';
-  document.getElementById('pinInput').value='';
+  loadPlateList();
 }
 function enterApp(){
   document.getElementById('login').style.display='none';
@@ -410,10 +408,9 @@ async function submitDelivery(){
 }
 
 /* ---------- başlangıç ---------- */
-document.getElementById('pinInput').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 (function init(){
   session=loadSession();
-  if(session)enterApp();
+  if(session)enterApp();else loadPlateList();
 })();
 </script>
 </body>
