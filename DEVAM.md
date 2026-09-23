@@ -351,6 +351,47 @@ kalıcı çözüm ama hesap açmayı gerektiriyor.
 **AÇIK KALAN:** `dolum_fisleri` tablosu kullanıcı tarafından Supabase'de
 henüz oluşturulmadı (SQL dosyası hazır, çalıştırılması gerekiyor).
 
+## GITHUB PAGES YAYINI + SİPARİŞ GİRİŞİ EKRANI (2026-09-23)
+
+Kullanıcı "androidde ve iphonda çalışır mı" diye sordu — cevap: tarayıcıdan
+evet ama `file://` yerine bir https adresi gerekiyordu (kamera/GPS için).
+Kullanıcı GitHub Pages'i seçti. Süreç: `gh` CLI kuruldu (Homebrew), kullanıcı
+kendi hesabıyla device-flow ile giriş yaptı (`omerkkkmr`), `gh auth setup-git`
+ile git'in kimlik doğrulaması `gh`'ye bağlandı (kullanıcı önce tarayıcıdan
+Google ile giriş yapmaya çalışıp takılmıştı — git'in beklediği kimlik
+doğrulama bu değildi). **`git push` işlemi Claude Code'un otomatik mod
+sınıflandırıcısı tarafından "herkese açık içerik oluşturma" gerekçesiyle
+engellendi** — sohbetteki onay yetmedi, kullanıcının komutu KENDİ
+terminalinden çalıştırması gerekti (ilginç şekilde SONRAKİ push'lar Claude
+Code'un kendi Bash aracından sorunsuz geçti — sınıflandırıcı görünüşe göre
+yalnızca İLK/yeni public repo push'unu daha sıkı değerlendiriyor).
+
+Repo: `github.com/omerkkkmr/tanker-rota` (**public** — ücretsiz GitHub Pages
+private repo desteklemiyor; bu, `supabase-kurulum.sql`'deki proje URL'i +
+publishable key'in artık daha kolay bulunabilir olduğu anlamına gelir —
+zaten tasarım gereği tarayıcıda görünür olacaktı ama repo public olunca
+GitHub arama/botlar için de görünür hale geldi; tüm tablolarda RLS "herkes
+okur+yazar" olduğundan bu anahtarı bulan biri tüm veriyi okuyup
+değiştirebilir — kullanıcıya açıkça söylendi, "yap" onayı alındı).
+
+Canlı adresler kısaltıldı (dosyalar `index.html` olarak köke taşındı):
+- Planlayıcı: `https://omerkkkmr.github.io/tanker-rota/`
+- Teslimat (eski `sofor/`, kullanıcı "sofor değil teslimat olsun" dedi,
+  klasör adı + sayfa `<title>`'ı değiştirildi): `.../tanker-rota/teslimat/`
+- **Yeni: Sipariş Girişi** (kullanıcı "sadece sipariş girenler için ekran
+  olsun" dedi — planlayıcının tam motorunu (Leaflet/OSRM/filo/rota) hiç
+  yüklemeyen, yalnızca müşteri seç + miktar + not + "Talep Ekle" ve açık
+  sipariş listesi olan minimal bir sayfa): `.../tanker-rota/siparis/`.
+  Aynı `orders`/`customers` tablolarını kullanıyor (planlayıcıyla aynı
+  veri, ayrı bir kopya değil), realtime abone — planlamacı ekranında da
+  anında görünür. Gerçek Supabase verisiyle (gerçek müşteri/sipariş
+  listesi) tarayıcıda doğrulandı; canlı veriyi kirletmemek için test
+  siparişi GÖNDERİLMEDİ (insert kodu zaten planlayıcı/teslimat'takiyle
+  birebir aynı desen, ayrıca test edilmiş).
+
+`git push` sonrası GitHub Pages otomatik derliyor (~10-30 sn), her seferinde
+`curl` ile canlı URL'in 200 döndüğü doğrulanarak ilerlendi.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Sipariş Girişi — Tanker Rota</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1b1917;--bg:#f4f1ea;--card:#ffffff;--line:#e5ddc9;--muted:#8b8377;--muted2:#6d655a;
+  --hi:#d9a441;--hi-bg:#e6b558;--hi-border:#a4700f;--diesel:#1f7a44;--alert:#c8402c;--htext:#f3efe7}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:'Instrument Sans',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+input,button,select,textarea{font-family:inherit;font-size:16px}
+button{cursor:pointer}
+.mono{font-family:'IBM Plex Mono'}
+
+header{position:sticky;top:0;z-index:10;background:var(--ink);color:var(--htext);
+  padding:16px 18px;display:flex;justify-content:space-between;align-items:center}
+header h1{font-size:16px;font-weight:700;letter-spacing:.02em}
+header span{font-family:'IBM Plex Mono';font-size:10px;color:#b7ada0}
+
+.wrap{max-width:520px;margin:0 auto;padding:18px 16px 60px}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:18px}
+label{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+label:first-child{margin-top:0}
+input,select{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:12px 11px;
+  font-family:'IBM Plex Mono';font-size:15px;border-radius:6px}
+input:focus,select:focus{outline:2px solid var(--hi);outline-offset:-1px;border-color:var(--hi)}
+select{cursor:pointer}
+.primary{width:100%;margin-top:18px;padding:15px;background:var(--hi-bg);border:1px solid var(--hi-border);
+  color:var(--ink);border-radius:6px;font-weight:700;font-size:15px}
+.primary:hover{background:#efc36f}
+.primary:disabled{background:#e5ddc9;color:#a89f8f;border-color:#e5ddc9;cursor:wait}
+.msg{font-family:'IBM Plex Mono';font-size:11px;min-height:16px;margin-top:10px;text-align:center}
+.msg.ok{color:var(--diesel)}
+.msg.err{color:var(--alert)}
+
+.sectitle{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2);
+  margin:0 0 12px;display:flex;justify-content:space-between;align-items:center}
+.sectitle b{font-family:'IBM Plex Mono';color:var(--ink);font-weight:600}
+
+.ocard{background:var(--card);border:1px solid var(--line);border-left:3px solid #c9beac;border-radius:8px;
+  padding:12px 14px;margin-bottom:8px}
+.ocard.st-plan{border-left-color:#1f6fd0}
+.ocard.st-road{border-left-color:#d97a00}
+.otop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.oname{font-size:13px;font-weight:600}
+.oname small{display:block;font-family:'IBM Plex Mono';font-size:9px;color:var(--muted);font-weight:400;margin-top:2px}
+.obadge{font-family:'IBM Plex Mono';font-size:8px;padding:3px 8px;border-radius:999px;letter-spacing:.06em;
+  white-space:nowrap;border:1px solid;flex-shrink:0}
+.b-wait{color:var(--muted2);border-color:var(--line);background:#efe9dc}
+.b-plan{color:#1f6fd0;border-color:#cfe0f5;background:#eaf2fc}
+.b-road{color:#b06a00;border-color:#f0d9a8;background:#fdf1df}
+.oqty{font-family:'IBM Plex Mono';font-size:16px;font-weight:600;margin-top:6px}
+.onote{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);margin-top:4px}
+.ocancel{margin-top:10px;background:transparent;border:1px solid var(--line);color:var(--muted2);
+  padding:6px 12px;border-radius:999px;font-size:10px;font-family:'IBM Plex Mono'}
+.ocancel:active{border-color:var(--alert);color:var(--alert)}
+.empty{padding:24px 0;text-align:center;color:var(--muted);font-family:'IBM Plex Mono';font-size:12px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Sipariş Girişi</h1>
+  <span id="topDate"></span>
+</header>
+
+<div class="wrap">
+  <div class="card">
+    <label>Müşteri</label>
+    <select id="osel"></select>
+    <label>Miktar (L)</label>
+    <input id="oqty" type="number" placeholder="Miktar (L)" value="5000">
+    <label>Not (opsiyonel)</label>
+    <input id="onote" placeholder="—">
+    <button class="primary" id="addBtn" onclick="addOrder()">+ Talep Ekle</button>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div class="sectitle">Açık Siparişler <b id="openCount">0</b></div>
+  <div id="ordlist"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SB_URL='https://vtrtshvfwjjazpvcmfcq.supabase.co';
+const SB_KEY='sb_publishable_IIiVphchfanRWnzi9jehCQ_qt6w8i8o';
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
+
+const L2=n=>Math.round(n).toLocaleString('tr');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDT=s=>s?new Date(s).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+const ST={wait:{lab:'BEKLİYOR',cls:'wait'},plan:{lab:'PLANLANDI',cls:'plan'},road:{lab:'YOLDA',cls:'road'}};
+
+let customers=[], orderList=[];
+
+async function load(){
+  const[cs,od]=await Promise.all([
+    sb.from('customers').select('id,name').order('name'),
+    sb.from('orders').select('id,customer_id,qty,status,note,created_at').order('created_at',{ascending:false})
+  ]);
+  if(cs.data)customers=cs.data;
+  if(od.data)orderList=od.data;
+  renderCustSelect();
+  renderOrders();
+  subscribeRealtime();
+}
+function renderCustSelect(){
+  document.getElementById('osel').innerHTML=customers.length
+    ?customers.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')
+    :'<option value="">Müşteri rehberi boş</option>';
+}
+function renderOrders(){
+  const open=orderList.filter(o=>o.status==='wait'||o.status==='plan'||o.status==='road');
+  document.getElementById('openCount').textContent=open.length;
+  const el=document.getElementById('ordlist');
+  if(!open.length){el.innerHTML='<div class="empty">Açık sipariş yok</div>';return;}
+  el.innerHTML=open.map(o=>{
+    const c=customers.find(c=>c.id===o.customer_id);
+    const s=ST[o.status]||ST.wait;
+    return `<div class="ocard st-${s.cls}">
+      <div class="otop">
+        <div class="oname">${c?esc(c.name):'<i>silinmiş müşteri</i>'}<small>${fmtDT(o.created_at)} girildi</small></div>
+        <span class="obadge b-${s.cls}">${s.lab}</span>
+      </div>
+      <div class="oqty">${L2(o.qty)} L</div>
+      ${o.note?`<div class="onote">Not: ${esc(o.note)}</div>`:''}
+      ${o.status==='wait'?`<button class="ocancel" onclick="cancelOrder('${o.id}')">İptal et</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+async function addOrder(){
+  const cid=document.getElementById('osel').value;
+  const qty=parseInt(document.getElementById('oqty').value);
+  const note=document.getElementById('onote').value.trim();
+  const msg=document.getElementById('msg');
+  msg.className='msg';msg.textContent='';
+  if(!cid){msg.className='msg err';msg.textContent='Önce müşteri seç.';return;}
+  if(!qty||qty<=0){msg.className='msg err';msg.textContent='Geçerli miktar gir.';return;}
+  const btn=document.getElementById('addBtn');
+  btn.disabled=true;
+  try{
+    const{error}=await sb.from('orders').insert({customer_id:cid,qty,status:'wait',note:note||''});
+    if(error)throw error;
+    document.getElementById('onote').value='';
+    msg.className='msg ok';msg.textContent='✓ Talep eklendi';
+    setTimeout(()=>{msg.textContent='';},2500);
+    load();
+  }catch(e){
+    console.warn(e);
+    msg.className='msg err';msg.textContent='Kaydedilemedi — internet/sinyal kontrol edin.';
+  }finally{
+    btn.disabled=false;
+  }
+}
+async function cancelOrder(id){
+  if(!confirm('Bu talebi iptal etmek istediğine emin misin?'))return;
+  try{
+    const{error}=await sb.from('orders').update({status:'canc'}).eq('id',id);
+    if(error)throw error;
+    load();
+  }catch(e){
+    console.warn(e);
+    alert('İptal edilemedi — internet/sinyal kontrol edin.');
+  }
+}
+
+let rtActive=false;
+function subscribeRealtime(){
+  if(rtActive)return;
+  rtActive=true;
+  sb.channel('siparis-live')
+    .on('postgres_changes',{event:'*',schema:'public',table:'orders'},()=>load())
+    .on('postgres_changes',{event:'*',schema:'public',table:'customers'},()=>load())
+    .subscribe();
+}
+
+document.getElementById('topDate').textContent=new Date().toLocaleDateString('tr-TR',{day:'2-digit',month:'long',year:'numeric'});
+load();
+</script>
+</body>
+</html>
