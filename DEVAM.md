@@ -500,6 +500,45 @@ Gerçek Supabase'e uçtan uca test edildi: haritada bir noktaya dokunulup
 ("40.7150, 30.4280") yeni müşteri+sipariş eklendi, veritabanında TAM o
 koordinatlarla kaydedildiği doğrulandı, test kaydı temizlendi.
 
+## FOTOĞRAFLAR 3 EKRANDA DA + "YARINA BIRAK" AKIŞI (2026-09-23)
+
+Kullanıcının iki isteği: (1) teslim fotoğrafları sadece `teslimat/`de
+görünüyordu, planlayıcı ve sipariş girişinde de görünsün; (2) bazı
+siparişleri aynı gün, bazılarını ertesi güne planladığı gerçek iş akışının
+düzgün desteklenmesi — "Rotayı hesapla" HER ZAMAN tüm bekleyen+planlanan
+siparişleri rotaya dahil ediyordu, yarına bırakılmak istenen bir sipariş
+istemeden bugünün rotasına karışabiliyordu.
+
+1. **Fotoğraflar:** `index.html` order kartlarına (durum='done') ve
+   `siparis/index.html`'e yeni "Son Teslim Edilenler" bölümüne (son 15
+   teslimat, fotoğraflarıyla) eklendi. `teslimat/index.html`'e dokunulmadı
+   (zaten vardı). Gerçek geçmiş teslimat verisiyle (önceki oturumlardan
+   kalma gerçek fotoğraflar) tarayıcıda doğrulandı.
+
+2. **"Yarına bırak" akışı:** Yeni `orders.held` kolonu
+   (`supabase-v15-siparis-erteleme.sql`). Bekleyen bir sipariş kartında
+   "⏸ Yarına bırak" düğmesi — işaretlenince `activeOrders()` (rota hesaplama
+   girdisi) o siparişi ATLAR, ama sipariş "Bekliyor" listesinde kalmaya
+   devam eder ("⏸ Ertelendi — bugünkü rotaya dahil edilmeyecek" notuyla).
+   Sipariş Girişi ekranında da aynı not gösteriliyor (siparişi giren kişi
+   ertelendiğini görebilsin).
+
+   **Kritik bir hata bulunup ANINDA düzeltildi (canlıya çıkmadan yakalandı):**
+   `toRow()`'a `held` alanını koşulsuz eklemek, `orders.held` kolonu henüz
+   Supabase'de yokken (migration çalıştırılmadıysa) HER sipariş yazma
+   işlemini (yeni sipariş dahil!) sessizce başarısız kılıyordu — tarayıcı
+   testinde bir test siparişinin gerçekte hiç kaydedilmediği fark edildi.
+   `cloudOrderUpsert()` artık önce `held` ile dener, başarısız olursa
+   `held` alanı OLMADAN otomatik tekrar dener — migration çalıştırılmamış
+   olsa bile sipariş kaydı asla bozulmaz (erteleme özelliği o ana kadar
+   yalnızca o oturumda/yerelde çalışır, kalıcı olmaz). Düzeltme sonrası
+   gerçek Supabase'e tekrar test edildi, sipariş başarıyla kaydedildi.
+
+**AÇIK KALAN:** `supabase-v15-siparis-erteleme.sql` kullanıcı tarafından
+henüz çalıştırılmadı — çalıştırılana kadar "Yarına bırak" yalnızca o an
+açık olan tarayıcı sekmesinde çalışır, sayfa yenilenince/başka cihazda
+kaybolur (ama hiçbir zaman veri kaybına veya kayıt hatasına yol açmaz).
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
