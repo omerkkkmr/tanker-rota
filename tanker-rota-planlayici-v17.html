@@ -19,7 +19,6 @@ body{font-family:'Instrument Sans',-apple-system,'Segoe UI',Helvetica,Arial,sans
   body{display:block;height:auto;overflow:auto}
   .mainrow{display:block;overflow:visible}
   #side{overflow-y:visible;border-right:0;border-bottom:1px solid var(--line)}
-  #map{height:60vh}
 }
 #side{background:var(--bg);color:var(--ink);overflow-y:auto;border-right:1px solid var(--line)}
 .brand{padding:14px 16px;background:var(--ink);color:var(--htext);display:flex;align-items:baseline;justify-content:space-between;gap:10px}
@@ -264,7 +263,7 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 .info{background:#eaf2fc;border-left:3px solid #4a90d9;padding:9px 12px;margin:10px 16px;font-size:11px;line-height:1.55;border-radius:4px}
 #status{padding:10px 16px;font-family:'IBM Plex Mono';font-size:11px;color:var(--hi-border);display:none}
 #status.on{display:block}
-#map{width:100%;height:100vh;background:#dcd8d0}
+#map{width:100%;flex:1;min-height:0;background:#dcd8d0}
 .numico{color:#fff;border:2px solid #fff;border-radius:50%;font-family:'IBM Plex Mono';font-size:11px;
   font-weight:600;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 5px rgba(0,0,0,.4)}
 .pinico{border:2px solid var(--ink);border-radius:4px;display:flex;align-items:center;justify-content:center;
@@ -275,16 +274,16 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 #legend.on{display:block}
 #legend div{display:flex;align-items:center;gap:7px;margin:3px 0}
 #legend i{width:16px;height:3px;flex:none;border-radius:2px}
-.maprel{position:relative}
+.maprel{position:relative;display:flex;flex-direction:column;min-height:0}
 
 /* ---- durum şeridi (İstatistik çubuğu) ---- */
-#statbar{position:absolute;top:0;left:0;right:0;z-index:800;background:rgba(244,241,234,.96);
+#statbar{flex:none;z-index:800;background:var(--bg);
   border-bottom:1px solid var(--line);display:flex;padding:0 4px}
 #statbar .st{flex:1;padding:11px 10px;text-align:center;border-right:1px solid var(--line)}
 #statbar .st:last-child{border-right:0}
 #statbar .st b{display:block;font-family:'IBM Plex Mono';font-size:17px;font-weight:600;color:var(--ink)}
 #statbar .st span{font-family:'IBM Plex Mono';font-size:8px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
-@media(max-width:900px){#statbar{position:static}}
+@media(max-width:900px){#map{flex:none;height:60vh}}
 </style>
 </head>
 <body>
