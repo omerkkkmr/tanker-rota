@@ -484,6 +484,22 @@ düzelttim:
    Supabase'e yeni müşteri+sipariş eklenip planlayıcıda (madde 2'deki düzeltme
    sayesinde) doğru konumla (garaj koordinatları) göründüğü doğrulandı.
 
+## SİPARİŞ GİRİŞİ EKRANINA HARİTADAN KONUM SEÇME (2026-09-23)
+
+Kullanıcı "konumunu da eklesin" dedi — yeni müşteri artık garaj konumuna
+sabitlenmek ZORUNDA değil. `siparis/index.html`'e Leaflet (CDN) eklendi;
+"Yeni müşteri" seçilince isim alanının altında "📍 Haritadan Konum Seç
+(opsiyonel)" butonu çıkıyor, tıklanınca planlayıcıdaki "Haritadan seç" ile
+aynı görsel dilde (Esri altlık) küçük bir harita (240px) açılıyor, dokunulan
+nokta işaretleniyor, buton "✓ Konum seçildi (lat, lng)" olarak yeşile dönüyor.
+Konum seçilmezse (kullanıcı atlarsa) eskisi gibi garaj koordinatlarına
+düşüyor — bilinçli olarak ZORUNLU yapılmadı, acil bir sipariş girerken
+konum bilinmiyorsa akışı durdurmasın diye.
+
+Gerçek Supabase'e uçtan uca test edildi: haritada bir noktaya dokunulup
+("40.7150, 30.4280") yeni müşteri+sipariş eklendi, veritabanında TAM o
+koordinatlarla kaydedildiği doğrulandı, test kaydı temizlendi.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

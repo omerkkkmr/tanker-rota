@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Sipariş Girişi — Tanker Rota</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 :root{--ink:#1b1917;--bg:#f4f1ea;--card:#ffffff;--line:#e5ddc9;--muted:#8b8377;--muted2:#6d655a;
   --hi:#d9a441;--hi-bg:#e6b558;--hi-border:#a4700f;--diesel:#1f7a44;--alert:#c8402c;--htext:#f3efe7}
@@ -59,6 +60,15 @@ select{cursor:pointer}
   padding:6px 12px;border-radius:999px;font-size:10px;font-family:'IBM Plex Mono'}
 .ocancel:active{border-color:var(--alert);color:var(--alert)}
 .empty{padding:24px 0;text-align:center;color:var(--muted);font-family:'IBM Plex Mono';font-size:12px}
+
+.mappick{background:transparent;border:1px solid var(--line);color:var(--muted2);padding:10px 12px;
+  border-radius:6px;font-family:'IBM Plex Mono';font-size:11px;width:100%;margin-top:8px;text-align:left;
+  display:flex;align-items:center;gap:8px}
+.mappick.have{border-color:var(--diesel);color:var(--diesel)}
+#pickMap{display:none;height:240px;border-radius:6px;margin-top:8px;border:1px solid var(--line)}
+#pickMap.on{display:block}
+.pickhint{font-family:'IBM Plex Mono';font-size:10px;color:var(--muted);text-align:center;margin-top:6px;display:none}
+.pickhint.on{display:block}
 </style>
 </head>
 <body>
@@ -73,6 +83,9 @@ select{cursor:pointer}
     <label>Müşteri</label>
     <select id="osel" onchange="toggleNewCust()"></select>
     <input id="ncname" placeholder="Yeni müşteri adı" style="display:none;margin-top:8px">
+    <button type="button" class="mappick" id="mapPickBtn" style="display:none" onclick="toggleMapPicker()">📍 Haritadan Konum Seç (opsiyonel)</button>
+    <div id="pickMap"></div>
+    <div class="pickhint" id="pickHint">Haritada müşterinin konumuna dokun</div>
     <label>Miktar (L)</label>
     <input id="oqty" type="number" placeholder="Miktar (L)" value="5000">
     <label>Not (opsiyonel)</label>
@@ -85,6 +98,7 @@ select{cursor:pointer}
   <div id="ordlist"></div>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SB_URL='https://vtrtshvfwjjazpvcmfcq.supabase.co';
@@ -120,7 +134,43 @@ function renderCustSelect(){
 function toggleNewCust(){
   const isNew=document.getElementById('osel').value==='__new__';
   document.getElementById('ncname').style.display=isNew?'block':'none';
-  if(isNew)document.getElementById('ncname').focus();
+  document.getElementById('mapPickBtn').style.display=isNew?'flex':'none';
+  if(!isNew){
+    pickedLoc=null;
+    document.getElementById('pickMap').classList.remove('on');
+    document.getElementById('pickHint').classList.remove('on');
+    resetPickBtn();
+  }else{
+    document.getElementById('ncname').focus();
+  }
+}
+
+/* ---------- harita ile konum seçme (opsiyonel, yeni müşteri için) ---------- */
+let pickMap=null, pickMarker=null, pickedLoc=null;
+const DEPOT_LAT=40.7480, DEPOT_LNG=30.3900;
+function resetPickBtn(){
+  const b=document.getElementById('mapPickBtn');
+  b.className='mappick';
+  b.textContent='📍 Haritadan Konum Seç (opsiyonel)';
+}
+function toggleMapPicker(){
+  const box=document.getElementById('pickMap'), hint=document.getElementById('pickHint');
+  const show=!box.classList.contains('on');
+  box.classList.toggle('on',show);
+  hint.classList.toggle('on',show);
+  if(show&&!pickMap){
+    pickMap=L.map('pickMap').setView([DEPOT_LAT,DEPOT_LNG],11);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+      {attribution:'Tiles &copy; Esri',maxZoom:19}).addTo(pickMap);
+    pickMap.on('click',e=>{
+      pickedLoc={lat:e.latlng.lat,lng:e.latlng.lng};
+      if(pickMarker)pickMarker.setLatLng(e.latlng);else pickMarker=L.marker(e.latlng).addTo(pickMap);
+      const btn=document.getElementById('mapPickBtn');
+      btn.className='mappick have';
+      btn.textContent=`✓ Konum seçildi (${pickedLoc.lat.toFixed(4)}, ${pickedLoc.lng.toFixed(4)})`;
+    });
+  }
+  if(show&&pickMap)setTimeout(()=>pickMap.invalidateSize(),150);
 }
 function renderOrders(){
   const open=orderList.filter(o=>o.status==='wait'||o.status==='plan'||o.status==='road');
@@ -142,11 +192,6 @@ function renderOrders(){
   }).join('');
 }
 
-// Sipariş girenler genelde müşterinin haritadaki konumunu bilmez; yeni
-// müşteri buradan yalnızca isimle oluşturulur, garajın konumuyla (geçici)
-// kaydedilir — planlamacı ekranındaki "Haritadan seç" ile sonradan düzeltilir.
-const DEPOT_LAT=40.7480, DEPOT_LNG=30.3900;
-
 async function addOrder(){
   let cid=document.getElementById('osel').value;
   const qty=parseInt(document.getElementById('oqty').value);
@@ -162,15 +207,28 @@ async function addOrder(){
   btn.disabled=true;
   try{
     if(isNew){
-      const{data,error}=await sb.from('customers').insert({name:newName,lat:DEPOT_LAT,lng:DEPOT_LNG}).select().single();
+      // konum haritadan seçildiyse onu kullan, seçilmediyse garaj konumuyla
+      // (geçici) kaydedilir — planlamacı ekranındaki "Haritadan seç" ile
+      // sonradan düzeltilebilir.
+      const loc=pickedLoc||{lat:DEPOT_LAT,lng:DEPOT_LNG};
+      const{data,error}=await sb.from('customers').insert({name:newName,lat:loc.lat,lng:loc.lng}).select().single();
       if(error)throw error;
       cid=data.id;
     }
     const{error}=await sb.from('orders').insert({customer_id:cid,qty,status:'wait',note:note||''});
     if(error)throw error;
     document.getElementById('onote').value='';
-    if(isNew)document.getElementById('ncname').value='';
-    msg.className='msg ok';msg.textContent=isNew?'✓ Yeni müşteri + talep eklendi (konum planlayıcıdan düzeltilmeli)':'✓ Talep eklendi';
+    if(isNew){
+      document.getElementById('ncname').value='';
+      document.getElementById('pickMap').classList.remove('on');
+      document.getElementById('pickHint').classList.remove('on');
+      resetPickBtn();
+    }
+    const hadLoc=isNew&&pickedLoc;
+    pickedLoc=null;
+    if(pickMarker&&pickMap){pickMap.removeLayer(pickMarker);pickMarker=null;}
+    msg.className='msg ok';
+    msg.textContent=isNew?(hadLoc?'✓ Yeni müşteri + talep eklendi':'✓ Yeni müşteri + talep eklendi (konum planlayıcıdan düzeltilmeli)'):'✓ Talep eklendi';
     setTimeout(()=>{msg.textContent='';},3500);
     load();
   }catch(e){
