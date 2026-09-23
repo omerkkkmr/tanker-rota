@@ -917,6 +917,28 @@ doğmuştu). Buton metni "Ekranı temizle" oldu, onay mesajı da "arşivleme
 işlemi zaten otomatik olur" diye netleştirildi. `clearDone()` fonksiyon
 adı ve davranışı hiç değişmedi — yalnızca kullanıcıya gösterilen metin.
 
+## TEŞHİS: v15-v18 SQL HİÇ ÇALIŞTIRILMAMIŞ (2026-09-23)
+
+Kullanıcı "sildiğim teslim sipariş kırmızı görünmedi excelde" dedi.
+Canlı Supabase'e doğrudan REST sorgusuyla (`curl` + publishable key)
+bakıldı: `orders.held`, `teslimat_kayitlari.photo_tank_url`,
+`teslimat_kayitlari.siparis_silindi` kolonları VE `iptal_kayitlari`
+tablosunun HİÇBİRİ mevcut değil — yani v15, v16, v17, v18 SQL
+dosyalarının HİÇBİRİ hâlâ çalıştırılmamış (yalnızca v13/v14
+çalıştırılmıştı, bkz. önceki notlar). Bu, kod hatası değil — kod zaten
+"kolon yoksa sessizce uyar, çökme" deseniyle yazılmıştı
+(`markLogDeleted()`'daki catch), tam da bunun için: `siparis_silindi`
+kolonu yoksa `UPDATE` isteği `42703` hatası alır, konsola uyarı yazılır,
+Excel'deki satır normal (kırmızısız) görünmeye devam eder — kullanıcıya
+hiçbir hata göstermeden.
+
+Kolaylık için `supabase-v15-v18-toplu.sql` eklendi — dört dosyanın
+birleşimi, hepsi `if not exists` korumalı olduğu için TEK seferde SQL
+Editor'e yapıştırılıp çalıştırılabilir. Kullanıcıya bu adım hatırlatıldı;
+çalıştırılınca "held" (ertele) kalıcılığı, teslimat geçmişinde foto
+linkleri, kırmızı "SİLİNDİ" işareti ve İptal Geçmişi sayfası hepsi aynı
+anda aktif olacak.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
