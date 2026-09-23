@@ -424,6 +424,23 @@ Supabase'de henüz çalıştırılmadı — çalıştırılana kadar "Teslimat G
 sayfası boş gelir (diğer iki sayfa normal çalışır). `dolum_fisleri`
 (v13) de hâlâ aynı durumda, açık.
 
+## FOTOĞRAF SIKIŞTIRMA (2026-09-23)
+
+Kullanıcı Supabase ücretsiz depolama alanının (kabaca ~1 GB, kesin rakam
+panelden teyit edilmeli — buradan giriş yapılamıyor) sıkıştırmasız
+fotoğraflarla (teslimat başına 2 + dolum başına 1, telefon kamerası
+1-4 MB/foto) 1-2 haftada dolabileceği hesaplandı, kullanıcı onayladı.
+
+`teslimat/index.html`'e `compressImage()` eklendi: `uploadPhoto()` her
+fotoğrafı (tank/irsaliye/fiş — üçü de aynı fonksiyonu kullanıyor)
+yüklemeden ÖNCE tarayıcıda `createImageBitmap`+canvas ile uzun kenarı
+max 1600px'e küçültüp JPEG q=0.75 olarak yeniden kodluyor. Sıkıştırma
+başarısız olursa (ör. tarayıcı desteği yoksa) orijinal dosya olduğu gibi
+yüklenir — hiçbir zaman yükleme tamamen engellenmez. Tarayıcıda sentetik
+39 MB'lık (rastgele gürültü, JPEG için en kötü senaryo) bir test
+görseliyle doğrulandı: 0,51 MB'a indi (77x küçülme) — gerçek fotoğraflarda
+(gürültü değil, yumuşak geçişli görüntü) oran genelde çok daha iyi çıkar.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

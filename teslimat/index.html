@@ -425,9 +425,32 @@ function extOf(file){
   if(file.type==='image/webp')return 'webp';
   return 'jpg';
 }
+// Supabase depolama alanını korumak için: yüklemeden önce fotoğrafı
+// tarayıcıda küçültüp sıkıştırır (uzun kenar max 1600px, JPEG q=0.75).
+// Sıkıştırma başarısız olursa orijinal dosya olduğu gibi yüklenir.
+async function compressImage(file,maxDim=1600,quality=0.75){
+  try{
+    const bitmap=await createImageBitmap(file);
+    let w=bitmap.width,h=bitmap.height;
+    if(w>maxDim||h>maxDim){
+      if(w>h){h=Math.round(h*maxDim/w);w=maxDim;}else{w=Math.round(w*maxDim/h);h=maxDim;}
+    }
+    const canvas=document.createElement('canvas');
+    canvas.width=w;canvas.height=h;
+    canvas.getContext('2d').drawImage(bitmap,0,0,w,h);
+    bitmap.close?.();
+    const blob=await new Promise(res=>canvas.toBlob(res,'image/jpeg',quality));
+    return blob||file;
+  }catch(e){
+    console.warn('fotoğraf sıkıştırılamadı, orijinal yükleniyor:',e);
+    return file;
+  }
+}
 async function uploadPhoto(file,oid,tag){
-  const path=`teslimat/${session.plate.replace(/\s+/g,'')}/${oid}-${Date.now()}-${tag}.${extOf(file)}`;
-  const{error}=await sb.storage.from('belgeler').upload(path,file,{upsert:false,contentType:file.type||'image/jpeg'});
+  const blob=await compressImage(file);
+  const ext=blob.type==='image/jpeg'?'jpg':extOf(file);
+  const path=`teslimat/${session.plate.replace(/\s+/g,'')}/${oid}-${Date.now()}-${tag}.${ext}`;
+  const{error}=await sb.storage.from('belgeler').upload(path,blob,{upsert:false,contentType:blob.type||file.type||'image/jpeg'});
   if(error)throw error;
   const{data}=sb.storage.from('belgeler').getPublicUrl(path);
   return data.publicUrl;
