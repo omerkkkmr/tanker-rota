@@ -1236,6 +1236,18 @@ Kullanıcı: "ekrana çift tıklayınca yakınlaşıyor". Üç ekranda da `touch
 sıkıştırma/kaydırma çalışmaya devam eder). Not: iOS'ta erişilebilirlik gereği iki parmakla
 sıkıştırma yakınlaşması bazı sürümlerde tamamen kapatılamayabilir; çift dokunma kapalıdır.
 
+## PLANLAYICIDA TESLİM FOTOĞRAFI (2026-09-24)
+
+Kullanıcı: "planlayıcı teslim işlerken foto koyamıyor". Planlayıcıda 3 yerde dolum tankı +
+irsaliye fotoğrafı eklendi/değiştirilebilir: (1) "✓ Teslim işle" penceresi, (2) ✎ Düzenle
+(teslim edilmiş/onay bekleyen siparişte; mevcut foto "(mevcut)" görünür, yalnız yeni seçilen
+değişir), (3) Teslimat sekmesi girişi. Fotoğraflar tarayıcıda küçültülüp `belgeler` deposuna
+(`teslimat/planlayici-…` + `-thumb`) yüklenir; `orders.photos` [{type,url,thumb}] olarak yazılır
+(`log_teslimat` tetikleyicisi kalıcı kayda/Excel linklerine de işler). Not: planlayıcı normalde
+`photos` alanını YAZMAZ — yalnız planlayıcıda fotoğraf değiştiğinde (`_pd` bayrağı) yazılır; böylece
+şoförün yüklediği fotoğraflar planlayıcının eski verisiyle ezilmez. Yükleme başarısızsa uyarı verir,
+kayıt yapılmaz.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
