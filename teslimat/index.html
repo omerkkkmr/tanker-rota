@@ -366,7 +366,7 @@ function openStop(oid){
       </div>
       <div class="dlgbtns">
         <button class="btn-cancel" onclick="closeDlg()">Kapat</button>
-        ${o.status==='onay'?`<button class="btn-save" onclick="editDelivery('${o.id}')">✎ Düzenle</button>`:`<a href="${navUrl(l.lat,l.lng)}" target="_blank" style="flex:1"><button class="btn-save" style="width:100%">Yol Tarifi</button></a>`}
+        ${o.status==='onay'?`<button class="btn-save" onclick="editDelivery('${o.id}')">✎ Düzenle</button>`:''}
       </div>
       ${o.status==='onay'?'<div class="savingNote">Onaylanmadan önce teslim bilgilerini düzeltebilirsin.</div>':'<div class="savingNote">Onaylanmış teslimat — değişiklik için planlayıcıya söyle.</div>'}`;
   }else{
@@ -396,10 +396,7 @@ function openStop(oid){
         <button class="btn-cancel" onclick="closeDlg()">Vazgeç</button>
         <button class="btn-save" id="btnSave" onclick="submitDelivery()" disabled>Teslimi Kaydet</button>
       </div>
-      <div class="savingNote" id="saveNote"></div>
-      <div class="dlgbtns" style="margin-top:8px">
-        <a href="${navUrl(l.lat,l.lng)}" target="_blank" style="flex:1"><button class="btn-cancel" style="width:100%">🧭 Yol Tarifi</button></a>
-      </div>`;
+      <div class="savingNote" id="saveNote"></div>`;
   }
   document.getElementById('dlg').classList.add('on');
 }
@@ -515,7 +512,7 @@ async function compressImage(file,maxDim=1600,quality=0.75){
     canvas.getContext('2d').drawImage(bitmap,0,0,w,h);
     bitmap.close?.();
     const blob=await new Promise(res=>canvas.toBlob(res,'image/jpeg',quality));
-    return blob||file;
+    return (blob&&blob.size<file.size)?blob:file;   // zaten küçük dosyayı büyütme
   }catch(e){
     console.warn('fotoğraf sıkıştırılamadı, orijinal yükleniyor:',e);
     return file;
@@ -525,7 +522,7 @@ async function compressImage(file,maxDim=1600,quality=0.75){
 // "thumb" (önizleme) de yüklenir. Listelerdeki küçük resimler bu thumb'ı
 // kullanır — tam fotoğraf yalnızca tıklanıp açıldığında indirilir.
 async function uploadPhoto(file,oid,tag){
-  const full=await compressImage(file,1600,0.75);
+  const full=await compressImage(file,1280,0.65);
   const thumb=await compressImage(file,220,0.55);
   const stamp=Date.now();
   const base=`teslimat/${session.plate.replace(/\s+/g,'')}/${oid}-${stamp}-${tag}`;

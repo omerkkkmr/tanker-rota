@@ -323,9 +323,9 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 .r-xfer{background:#fff;border-left:0}
 .r-xfer .sq{background:var(--xfer);border-radius:4px;font-size:16px}
 .partial{color:#b06a00}
-.warn{background:#fbeae7;border-left:3px solid var(--alert);margin:0 -16px;padding:12px 16px;font-size:12px;line-height:1.55;border-radius:0;border-bottom:1px solid var(--line)}
-.ok{background:#e8f6ec;border-left:3px solid var(--diesel);margin:0 -16px;padding:12px 16px;font-size:12px;line-height:1.55;border-radius:0;border-bottom:1px solid var(--line)}
-.info{background:#eaf2fc;border-left:3px solid #4a90d9;margin:0 -16px;padding:12px 16px;font-size:12px;line-height:1.55;border-radius:0;border-bottom:1px solid var(--line)}
+div.warn{background:#fbeae7;border-left:3px solid var(--alert);margin:0 -16px;padding:12px 16px;font-size:12px;line-height:1.55;border-radius:0;border-bottom:1px solid var(--line)}
+div.ok{background:#e8f6ec;border-left:3px solid var(--diesel);margin:0 -16px;padding:12px 16px;font-size:12px;line-height:1.55;border-radius:0;border-bottom:1px solid var(--line)}
+div.info{background:#eaf2fc;border-left:3px solid #4a90d9;margin:0 -16px;padding:12px 16px;font-size:12px;line-height:1.55;border-radius:0;border-bottom:1px solid var(--line)}
 #status{padding:10px 16px;font-family:'IBM Plex Mono';font-size:11px;color:var(--hi-border);display:none}
 #status.on{display:block}
 #map{width:100%;flex:1;min-height:0;background:#dcd8d0}
@@ -1285,11 +1285,11 @@ async function compressImage(file,maxDim=1600,quality=0.75){
     if(w>maxDim||h>maxDim){if(w>h){h=Math.round(h*maxDim/w);w=maxDim;}else{w=Math.round(w*maxDim/h);h=maxDim;}}
     const c=document.createElement('canvas');c.width=w;c.height=h;
     c.getContext('2d').drawImage(bmp,0,0,w,h);bmp.close?.();
-    return await new Promise(res=>c.toBlob(b=>res(b||file),'image/jpeg',quality));
+    return await new Promise(res=>c.toBlob(b=>res((b&&b.size<file.size)?b:file),'image/jpeg',quality));   // zaten küçük dosyayı büyütme
   }catch(e){console.warn('foto sıkıştırılamadı, orijinal yüklenecek:',e);return file;}
 }
 async function uploadImage(file,folder){
-  const full=await compressImage(file,1600,0.75),thumb=await compressImage(file,220,0.55);
+  const full=await compressImage(file,1280,0.65),thumb=await compressImage(file,220,0.55);
   const base=`${folder}-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
   const up=async(blob,path)=>{const{error}=await sb.storage.from('belgeler').upload(path,blob,{upsert:false,contentType:'image/jpeg'});if(error)throw error;return sb.storage.from('belgeler').getPublicUrl(path).data.publicUrl;};
   const url=await up(full,base+'.jpg');

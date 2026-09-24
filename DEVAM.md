@@ -1248,6 +1248,20 @@ değişir), (3) Teslimat sekmesi girişi. Fotoğraflar tarayıcıda küçültül
 şoförün yüklediği fotoğraflar planlayıcının eski verisiyle ezilmez. Yükleme başarısızsa uyarı verir,
 kayıt yapılmaz.
 
+## YOL TARİFİ KUTUSU, ÜST ÜSTE BİNEN DÜĞMELER, FOTOĞRAF BOYUTU (2026-09-24)
+
+- **Şoför teslim penceresi:** alttaki "🧭 Yol Tarifi" kutusu (ve teslim edilmiş salt-okunur pencerenin
+  "Yol Tarifi" düğmesi) kaldırıldı — rota satırında zaten "▸ Yol tarifi" var.
+- **Planlayıcı "✓ Onayla" düğmeleri üst üste biniyordu — kök neden:** tasarım turunda `.ok` BANNER
+  sınıfına `margin:0 -16px` (tam genişlik) verilmişti; aynı sınıf adını taşıyan `<button class="ok">`
+  ("✓ Onayla", "✓ Teslim işle") da negatif kenar boşluğu alıp yanındakinin üstüne biniyordu.
+  Banner kuralları `div.ok/div.warn/div.info` olarak daraltıldı; kart düğmelerinde çakışma taraması 0.
+  Ders: genel sınıf adlarıyla (`.ok`, `.warn`, `.info`) hem banner hem düğme stillenmesin.
+- **Fotoğraf boyutu:** tam boyut 1600px/q0.75 → **1280px/q0.65**, küçük önizleme 220px/q0.55 (aynı);
+  sıkıştırma çıktısı orijinalden büyükse orijinal korunur. Ölçüm: 4000×3000 / ~4 MB fotoğraf →
+  ~90 KB tam + ~8 KB önizleme (≈40× küçük). Şoför, planlayıcı ve stok irsaliyesi aynı yolu kullanır;
+  listelerde yalnız önizleme (lazy) indirilir, tam foto tıklanınca açılır.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
