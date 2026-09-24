@@ -51,7 +51,6 @@ select{cursor:pointer}
   font-family:'IBM Plex Mono';font-size:15px;font-weight:600}
 .st-wait .sh-n{background:#8b8377}
 .st-plan .sh-n{background:var(--blue)}
-.st-road .sh-n{background:#d97a00}
 .st-done .sh-n{background:var(--green)}
 .st-onay .sh-n{background:var(--xfer)}
 .sh-t{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
@@ -64,7 +63,6 @@ select{cursor:pointer}
 .obadge{font-family:'IBM Plex Mono';font-size:9px;padding:3px 8px;border-radius:999px;letter-spacing:.06em;white-space:nowrap;border:1px solid;vertical-align:middle}
 .b-wait{color:var(--muted2);border-color:var(--line);background:#efe9dc}
 .b-plan{color:#1f6fd0;border-color:#cfe0f5;background:#eaf2fc}
-.b-road{color:#b06a00;border-color:#f0d9a8;background:#fdf1df}
 .b-done{color:var(--diesel);border-color:#c9e8d2;background:#e8f6ec}
 .b-onay{color:#7a3fa8;border-color:#d9bdec;background:#f3e9fa}
 .sh-note{background:#fff8e1;border-left:3px solid #b06a00;padding:8px 11px;margin-top:8px;font-size:12px;line-height:1.5}
@@ -93,6 +91,7 @@ select{cursor:pointer}
 .dlgbox>h3{margin:0;padding:14px 18px;background:var(--ink);color:#f2f0ec;font-size:14px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
 .dlgbox>.csub{margin:0 0 6px;padding:8px 18px;background:var(--ink2);color:#a39a8c;font-family:'IBM Plex Mono';font-size:11px}
 .dlgbox>input,.dlgbox>select{width:calc(100% - 36px)}
+.dlgbox>#eDateBox input{width:100%}
 .dlgbtns{display:flex;gap:8px;margin-top:18px}
 .dlgbtns button{flex:1;padding:14px;border-radius:4px;font-weight:700;font-size:14px;border:1px solid #cfc6b2;background:#fff;color:var(--muted2)}
 .dlgbtns .save{background:var(--green);border-color:var(--green);color:#fff}
@@ -114,6 +113,8 @@ select{cursor:pointer}
     <button type="button" class="mappick" id="mapPickBtn" style="display:none" onclick="toggleMapPicker()">📍 Haritadan Konum Seç (opsiyonel)</button>
     <div id="pickMap"></div>
     <div class="pickhint" id="pickHint">Haritada müşterinin konumuna dokun</div>
+    <label>Teslim günü (gelecek tarih = ajanda)</label>
+    <input id="odate" type="date">
     <label>Miktar (L)</label>
     <input id="oqty" type="number" placeholder="Miktar (L)" value="5000">
     <label>Not (opsiyonel)</label>
@@ -135,6 +136,7 @@ select{cursor:pointer}
     <div class="csub" id="eSub"></div>
     <label>Müşteri</label>
     <select id="eCust"></select>
+    <div id="eDateBox"><label>Teslim günü</label><input id="eDate" type="date"></div>
     <label>Miktar (L)</label>
     <input id="eQty" type="number" inputmode="numeric">
     <label>Not</label>
@@ -157,7 +159,11 @@ const sb=window.supabase.createClient(SB_URL,SB_KEY);
 const L2=n=>Math.round(n).toLocaleString('tr');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtDT=s=>s?new Date(s).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
-const ST={wait:{lab:'BEKLİYOR',cls:'wait'},plan:{lab:'PLANLANDI',cls:'plan'},road:{lab:'YOLDA',cls:'road'},done:{lab:'TESLİM',cls:'done'},onay:{lab:'ONAY BEKLİYOR',cls:'onay'}};
+const ST={wait:{lab:'BEKLİYOR',cls:'wait'},plan:{lab:'PLANLANDI',cls:'plan'},done:{lab:'TESLİM',cls:'done'},onay:{lab:'ONAY BEKLİYOR',cls:'onay'}};
+const isoDay=d=>{const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');};
+const todayStr=()=>isoDay(new Date());
+const planDay=o=>o.plan_date||isoDay(o.created_at||new Date());
+const fmtDay=iso=>new Date(iso+'T12:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',weekday:'short'});
 
 let customers=[], orderList=[], doneList=[];
 
@@ -248,21 +254,21 @@ function toggleMapPicker(){
   if(show&&pickMap)setTimeout(()=>pickMap.invalidateSize(),150);
 }
 const hm=x=>x?new Date(x).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}):'';
-const GL={wait:'…',plan:'▸',road:'➜',done:'✓',onay:'⏳'};
+const GL={wait:'…',plan:'▸',done:'✓',onay:'⏳'};
 function renderOrders(){
   document.getElementById('openCount').textContent=orderList.length;
   const el=document.getElementById('ordlist');
   if(!orderList.length){el.innerHTML='<div class="empty">Açık sipariş yok</div>';return;}
-  el.innerHTML=orderList.map(o=>{
+  el.innerHTML=orderList.slice().sort((a,b)=>planDay(a).localeCompare(planDay(b))||String(a.created_at).localeCompare(String(b.created_at))).map(o=>{
     const c=customers.find(c=>c.id===o.customer_id);
-    const s=ST[o.status]||ST.wait;
+    const s=ST[o.status==='road'?'plan':o.status]||ST.wait;
     return `<div class="ocard st-${s.cls}">
       <div class="sh-n">${GL[o.status]||'…'}</div>
       <div>
         <div class="sh-t"><b>${c?esc(c.name):'<i>silinmiş müşteri</i>'}</b><span class="sh-time">${hm(o.created_at)}</span></div>
         <div class="sh-info"><span class="sh-vol">${L2(o.qty)} L</span><span class="obadge b-${s.cls}">${s.lab}</span>
           <br>${fmtDT(o.created_at)} girildi</div>
-        ${o.status==='wait'&&o.held?'<div class="sh-note"><b>Ertelendi.</b> Planlamacı bugün göndermeyecek.</div>':''}
+        ${planDay(o)>todayStr()?`<div class="sh-note"><b>📅 Ajanda:</b> ${fmtDay(planDay(o))} — o gün rotaya girer.</div>`:planDay(o)<todayStr()?`<div class="sh-note" style="background:#fbeae7;border-left-color:#c8402c"><b>Gecikmiş:</b> ${fmtDay(planDay(o))} için girilmişti.</div>`:''}
         ${o.note?`<div class="sh-info">Not: ${esc(o.note)}</div>`:''}
         ${o.status==='plan'?'<div class="sh-note">Planlandı — miktarı değiştirirsen rota planlayıcıda yeniden hesaplanınca güncellenir.</div>':''}
         <div class="sh-acts">
@@ -317,7 +323,9 @@ async function addOrder(){
       if(error)throw error;
       cid=data.id;
     }
-    const{error}=await sb.from('orders').insert({customer_id:cid,qty,status:'wait',note:note||''});
+    const pd=(document.getElementById('odate').value||todayStr())<todayStr()?todayStr():(document.getElementById('odate').value||todayStr());
+    let{error}=await sb.from('orders').insert({customer_id:cid,qty,status:'wait',note:note||'',plan_date:pd});
+    if(error&&/plan_date/.test(error.message||''))({error}=await sb.from('orders').insert({customer_id:cid,qty,status:'wait',note:note||''}));
     if(error)throw error;
     document.getElementById('onote').value='';
     if(isNew){
@@ -330,7 +338,7 @@ async function addOrder(){
     pickedLoc=null;
     if(pickMarker&&pickMap){pickMap.removeLayer(pickMarker);pickMarker=null;}
     msg.className='msg ok';
-    msg.textContent=isNew?(hadLoc?'✓ Yeni müşteri + talep eklendi':'✓ Yeni müşteri + talep eklendi (konum planlayıcıdan düzeltilmeli)'):'✓ Talep eklendi';
+    msg.textContent=pd>todayStr()?`✓ Ajandaya eklendi: ${fmtDay(pd)}`:isNew?(hadLoc?'✓ Yeni müşteri + talep eklendi':'✓ Yeni müşteri + talep eklendi (konum planlayıcıdan düzeltilmeli)'):'✓ Talep eklendi';
     setTimeout(()=>{msg.textContent='';},3500);
     load();
   }catch(e){
@@ -348,6 +356,7 @@ function openEdit(id){
   document.getElementById('eCust').innerHTML=customers.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
   document.getElementById('eCust').value=o.customer_id;
   document.getElementById('eQty').value=o.qty;
+  document.getElementById('eDate').value=planDay(o);
   document.getElementById('eNote').value=o.note||'';
   document.getElementById('eMsg').textContent='';
   document.getElementById('edlg').classList.add('on');
@@ -362,8 +371,12 @@ async function saveEdit(){
   const btn=document.getElementById('eSave');btn.disabled=true;
   try{
     // yalnızca hâlâ açık (bekliyor/planlandı) siparişler değiştirilebilir — arada yola çıkmış/teslim edilmişse reddedilir
-    const{data,error}=await sb.from('orders').update({customer_id:cid,qty,note:document.getElementById('eNote').value.trim()})
-      .eq('id',edId).in('status',['wait','plan']).select('id');
+    const upd={customer_id:cid,qty,note:document.getElementById('eNote').value.trim(),plan_date:document.getElementById('eDate').value||todayStr()};
+    const cur=orderList.find(x=>x.id===edId);
+    // gelecek güne alınan planlı sipariş atamasını kaybeder (o gün gelince yeniden atanır)
+    if(cur&&cur.status==='plan'&&upd.plan_date>todayStr()){upd.status='wait';upd.vehicle=null;upd.comp=null;upd.planned_at=null;}
+    let{data,error}=await sb.from('orders').update(upd).eq('id',edId).in('status',['wait','plan']).select('id');
+    if(error&&/plan_date/.test(error.message||'')){delete upd.plan_date;({data,error}=await sb.from('orders').update(upd).eq('id',edId).in('status',['wait','plan']).select('id'));}
     if(error)throw error;
     if(!data||!data.length){msg.textContent='Bu sipariş artık düzenlenemez (yola çıkmış ya da teslim edilmiş).';load();return;}
     closeEdit();load();
@@ -393,6 +406,7 @@ function subscribeRealtime(){
     .subscribe();
 }
 
+document.getElementById('odate').value=todayStr();
 document.getElementById('topDate').textContent=new Date().toLocaleDateString('tr-TR',{day:'2-digit',month:'long',year:'numeric'});
 load();
 // yedek yenileme: realtime bağlantısı sessizce koparsa kendini onarır

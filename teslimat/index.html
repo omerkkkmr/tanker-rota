@@ -232,7 +232,9 @@ async function loadRoute(manual){
     const{data,error}=await sb.from('routes').select('data').eq('id',1).single();
     if(error)throw error;
     const payload=data?.data;
-    myVehicle=(payload?.vehicles||[]).find(v=>v.plate===session.plate)||null;
+    // rota başka bir günün ise (dünkü yayın) bugün için geçersiz
+    const fresh=payload?.ts&&(()=>{const d=new Date(payload.ts),t=new Date();return d.getFullYear()===t.getFullYear()&&d.getMonth()===t.getMonth()&&d.getDate()===t.getDate();})();
+    myVehicle=fresh?(payload?.vehicles||[]).find(v=>v.plate===session.plate)||null:null;
     if(myVehicle){
       const oids=myVehicle.legs.filter(l=>l.kind==='drop').map(l=>l.oid).filter(Boolean);
       if(oids.length){
@@ -737,7 +739,7 @@ async function submitAdhoc(){
       if(error)throw error;
       cid=data.id;
     }
-    // müşterinin açık (wait/plan/road) siparişi varsa aynı teslimatı iki kez saymamak için ona işle
+    // müşterinin açık (wait/plan) siparişi varsa aynı teslimatı iki kez saymamak için ona işle
     let existing=null;
     if(!isNew){
       const{data:open,error:oe}=await sb.from('orders').select('id,qty,status').eq('customer_id',cid)

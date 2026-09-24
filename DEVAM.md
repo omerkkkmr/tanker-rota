@@ -1171,6 +1171,32 @@ Yapılanlar (yalnız planlayıcı, `index.html`):
 - Tüm durum geçişleri (ertele/bugüne al, yola çıktı, geri al, plandan çıkar, onayla, geri aç,
   iptal, düzenle, sil, araç ata) tarayıcıda tek tek tıklanarak doğrulandı.
 
+## TARİHLİ SİPARİŞ + AJANDA + GÜN TAKİBİ (2026-09-24)
+
+Kullanıcı: "yola çıktı işaretlemenin anlamı yok, yarına bırak da gereksiz; elimizde takvim
+yok — siparişi tarihli yapalım, bir ajanda olsun ama atamayı o gün gelince yapalım; sistem
+günü takip etsin, ekran ona göre açılsın, önceki güne de gidebileyim".
+- **Kaldırıldı:** "Yolda" durumu (`road` → eski kayıtlar `plan`'a çevrilir) ve "Yarına bırak"
+  (`held` kullanılmıyor; eski held siparişler ajandada YARIN'a taşınır).
+- **Sipariş günü (`plan_date`):** her siparişin bir teslim günü var (yeni sipariş formunda,
+  planlayıcı düzenleme ve sipariş-giren ekranında tarih alanı; varsayılan bugün). **SQL:
+  `supabase-v20-ajanda.sql` (KULLANICI ÇALIŞTIRMALI, henüz çalıştırılmadı; tekrar çalıştırılabilir).**
+  Çalışmadan da uygulama çökmez: `plan_date` yazımı reddedilirse tarihsiz yedek yazım + bir kez
+  uyarı; tarih o cihazda kalır.
+- **Ajanda:** gelecek tarihli (planDay > bugün) açık siparişler rotaya GİRMEZ (`activeOrders`),
+  "📅 Ajanda" filtresinde gün başlıklarıyla listelenir; günü gelince otomatik bugünün listesine
+  düşer, "Rotayı hesapla" o gün atamayı yapar. Planlı siparişin tarihi ileri alınırsa ataması
+  silinir (bekleyene döner).
+- **Gün takibi:** ekran bugünün tarihiyle açılır; gece yarısı/telefon uyanışında (`checkNewDay`,
+  60 sn + `visibilitychange`) yeni güne geçer; önceki günlerden kalan "planlandı" siparişler
+  (eski rota geçersiz) bekleyene döner (`rolloverPlans`); bugünün listesinde geciken açık
+  siparişler "GECİKMİŞ · gün" rozetiyle görünür; onay bekleyenler her gün görünür.
+- **Gün çubuğu (Siparişler sekmesi):** ‹ Bugün/Dün/Yarın/Geçmiş/Ajanda + tarih › + takvim +
+  "Bugün" düğmesi; geçmiş gün = o gün teslim edilen/planlanan siparişler; rota yalnız bugün için
+  hesaplanır. Şoför ekranı dünün yayınlanmış rotasını (`routes.ts` bugün değil) göstermez.
+- Excel "Siparişler" sayfasına "Plan günü" sütunu eklendi. Tarayıcıda: gün devri, ajanda
+  gruplama, gün gezinmesi, rota (ajanda hariç), ileri tarihli ekleme+yedek yazım, tarih taşıma test edildi.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

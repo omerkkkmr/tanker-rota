@@ -102,9 +102,10 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 .ocard{background:#fff;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:13px 16px;margin:0 -16px;
   display:grid;grid-template-columns:36px 1fr;gap:12px;align-items:start}
 .b-onay{color:#7a3fa8;border-color:#d9bdec;background:#f3e9fa}
+.b-late{color:#b3392a;border-color:#f0cec7;background:#fbeae7}
 .sh-n{width:36px;height:36px;border-radius:50%;background:#8b8377;color:#fff;display:flex;align-items:center;justify-content:center;
   font-family:'IBM Plex Mono';font-size:15px;font-weight:600}
-.st-wait .sh-n{background:#8b8377}.st-plan .sh-n{background:var(--blue)}.st-road .sh-n{background:#d97a00}
+.st-wait .sh-n{background:#8b8377}.st-plan .sh-n{background:var(--blue)}
 .st-done .sh-n{background:var(--green)}.st-onay .sh-n{background:var(--xfer)}.st-canc .sh-n{background:var(--alert)}
 .ocard.st-done{opacity:.9}.ocard.st-canc{opacity:.6}
 .st-done .sh-vol{background:var(--green)}.st-onay .sh-vol{background:var(--xfer)}
@@ -128,7 +129,6 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
   white-space:nowrap;border:1px solid}
 .b-wait{color:var(--muted2);border-color:var(--line);background:#efe9dc}
 .b-plan{color:#1f6fd0;border-color:#cfe0f5;background:#eaf2fc}
-.b-road{color:#b06a00;border-color:#f0d9a8;background:#fdf1df}
 .b-done{color:var(--diesel);border-color:#c9e8d2;background:#e8f6ec}
 .b-canc{color:#b3392a;border-color:#f0cec7;background:#fbeae7}
 .oqtyrow{display:flex;align-items:baseline;gap:7px;margin-top:6px;font-family:'IBM Plex Mono';font-size:11px}
@@ -163,7 +163,8 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 .dlgbox>h3{margin:0;padding:13px 18px;background:var(--ink);color:#f2f0ec;font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
 .dlgbox>.sub{margin:0 0 10px;padding:8px 18px;background:var(--ink2);color:#a39a8c}
 .dlgbox>input,.dlgbox>select,.dlgbox>#eDelBox input,.dlgbox>#eDelBox select{width:calc(100% - 36px)}
-.dlgbox>#eDelBox{margin-left:18px;margin-right:18px}
+.dlgbox>#eDelBox,.dlgbox>#eDateBox{margin-left:18px;margin-right:18px}
+.dlgbox>#eDateBox input{width:100%}
 .dlgbox>#eDelBox input,.dlgbox>#eDelBox select{width:100%}
 .dlgbox h3{font-size:13px}
 .dlgbox .sub{font-family:'IBM Plex Mono';font-size:10px;line-height:1.5}
@@ -171,6 +172,15 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 /* durak taşıma */
 .stop.movable{cursor:pointer}
 .stop.movable:hover{background:#faf7f0}
+.dayhead{background:var(--ink2);color:#c9c0b0;font-size:11px;font-weight:600;letter-spacing:.04em;padding:9px 16px;margin:0 -16px;display:flex;justify-content:space-between}
+.dayhead b{font-family:'IBM Plex Mono';color:#fff}
+.daybar{display:flex;align-items:stretch;gap:6px;margin:0 -16px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line)}
+.daybar button{padding:0 12px;font-size:16px;font-weight:700;border:1px solid #cfc6b2;background:#fff;color:var(--ink);border-radius:4px}
+.daybar .daylab{flex:1;display:flex;flex-direction:column;justify-content:center;min-width:0}
+.daybar .daylab b{font-size:14px}.daybar .daylab span{font-size:11px;color:var(--muted2);font-family:'IBM Plex Mono'}
+.daybar input{width:auto;padding:4px 6px;font-size:11px}
+.daybar #dayToday{font-size:11px;font-weight:700}
+.daynote{margin:0 -16px;padding:8px 16px;background:#fff8e1;border-bottom:1px solid var(--line);font-size:11px;color:#6b5a1f;display:none}
 .alertbox .warn,.alertbox .info{margin:0}
 .alertbox{margin:0 -16px;border-bottom:1px solid var(--line);background:#fff}
 .alertbox>summary{list-style:none;cursor:pointer;padding:11px 16px;font-size:12px;font-weight:700;color:var(--muted2);user-select:none}
@@ -364,14 +374,24 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 
   <div class="sec tabpanel" data-tab="siparisler">
     <div class="body">
+      <div class="daybar">
+        <button onclick="shiftDay(-1)" title="Önceki gün">‹</button>
+        <div class="daylab" id="dayLabel"></div>
+        <button onclick="shiftDay(1)" title="Sonraki gün">›</button>
+        <input type="date" id="dayPick" onchange="setViewDate(this.value)">
+        <button id="dayToday" onclick="setViewDate(todayStr())">Bugün</button>
+      </div>
+      <div class="daynote" id="dayNote"></div>
       <div class="newform">
         <label style="margin-top:0">Yeni sipariş talebi</label>
         <select id="osel"></select>
-        <div class="row">
-          <input id="oqty" type="number" placeholder="Miktar (L)" value="5000" style="flex:2">
-          <button class="ghost hot" onclick="addOrder()" style="flex:1">+ Talep ekle</button>
+        <div class="grid2" style="margin-top:6px">
+          <input id="oqty" type="number" placeholder="Miktar (L)" value="5000">
+          <input id="odate" type="date" title="Teslim günü — gelecek bir tarih seçersen ajandaya girer">
         </div>
         <input id="onote" placeholder="Not (opsiyonel)" style="margin-top:6px">
+        <button class="primary" onclick="addOrder()">+ Talep ekle</button>
+        <div class="hint" style="margin-top:6px">Teslim günü ileri bir tarihse sipariş ajandaya girer; o gün gelince rotaya alınır.</div>
       </div>
       <div class="filters" id="ofilters"></div>
       <div id="ordlist"></div>
@@ -541,6 +561,7 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
     <div class="sub" id="eSub"></div>
     <label>Müşteri</label>
     <select id="eCust"></select>
+    <div id="eDateBox"><label>Teslim günü (ajanda)</label><input id="eDate" type="date"></div>
     <label>Sipariş miktarı (L)</label>
     <input id="eQty" type="number">
     <label>Sipariş notu</label>
@@ -669,6 +690,7 @@ async function load(){
     tankers=tk.data.map(r=>({id:r.id,plate:r.plate,comps:r.comps,
       shift:Number(r.shift_h)||10,lic:r.licensed,pin:r.pin||'',tir:!!r.is_tir}));
     orderList=od.data.map(fromRow);
+    rolloverPlans();
     if(st.data&&st.data.data){
       const d=st.data.data;
       FIELDS.forEach(f=>{if(d[f]!=null&&document.getElementById(f))document.getElementById(f).value=d[f];});
@@ -687,18 +709,29 @@ async function load(){
   updateBal();
 }
 
+/* ---------- gün / ajanda yardımcıları ---------- */
+const isoDay=d=>{const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');};
+const todayStr=()=>isoDay(new Date());
+const addDays=(iso,n)=>{const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+n);return isoDay(d);};
+const planDay=o=>o.planDate||isoDay(o.createdAt||new Date());
+const fmtDay=iso=>new Date(iso+'T12:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',weekday:'long'});
+const fmtDayShort=iso=>new Date(iso+'T12:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'short'});
+
 // sipariş satırı ↔ nesne dönüşümü
 function fromRow(r){
-  return {id:r.id,cid:r.customer_id,qty:r.qty,status:r.status,note:r.note||'',
+  const status=r.status==='road'?'plan':r.status;            // "Yolda" durumu kaldırıldı
+  let planDate=r.plan_date||isoDay(r.created_at||new Date());
+  if(r.held&&status==='wait'){const t=addDays(todayStr(),1);if(planDate<t)planDate=t;}   // eski "yarına bırak" → ajandada yarın
+  return {id:r.id,cid:r.customer_id,qty:r.qty,status,planDate,note:r.note||'',
     lockVeh:r.lock_veh,vehicle:r.vehicle,comp:r.comp,
     deliveredQty:r.delivered_qty,deliverNote:r.deliver_note||'',
-    photos:r.photos||[],gpsLat:r.gps_lat,gpsLng:r.gps_lng,held:!!r.held,
+    photos:r.photos||[],gpsLat:r.gps_lat,gpsLng:r.gps_lng,
     createdAt:r.created_at,plannedAt:r.planned_at,deliveredAt:r.delivered_at};
 }
 function toRow(o){
   return {customer_id:o.cid,qty:o.qty,status:o.status,note:o.note||'',
     lock_veh:o.lockVeh||null,vehicle:o.vehicle||null,comp:o.comp||null,
-    delivered_qty:o.deliveredQty??null,deliver_note:o.deliverNote||'',held:!!o.held,
+    delivered_qty:o.deliveredQty??null,deliver_note:o.deliverNote||'',plan_date:o.planDate||null,
     planned_at:o.plannedAt||null,delivered_at:o.deliveredAt||null};
 }
 function setCloudBadge(ok){
@@ -765,6 +798,7 @@ let tirColWarned=false;
 async function cloudTankDelete(id){
   if(cloudOK&&isUUID(id))try{await sb.from('tankers').delete().eq('id',id);}catch(e){console.warn(e);}
 }
+let planDateWarned=false;
 async function cloudOrderUpsert(o){
   if(!cloudOK)return o.id;
   const row=toRow(o);
@@ -777,12 +811,15 @@ async function cloudOrderUpsert(o){
   try{return await write(row);}
   catch(e){
     console.warn('sipariş kaydı:',e);
-    // "held" kolonu henüz eklenmediyse (supabase-v15 çalıştırılmadıysa) onsuz tekrar dene —
+    // "plan_date" kolonu henüz eklenmediyse (supabase-v20 çalıştırılmadıysa) onsuz tekrar dene —
     // bu olmadan TÜM sipariş yazma işlemleri sessizce başarısız olurdu
-    if('held' in row){
-      const{held,...rowNoHeld}=row;
-      try{return await write(rowNoHeld);}
-      catch(e2){console.warn('yedek deneme de başarısız:',e2);}
+    if('plan_date' in row){
+      const{plan_date,...rowNoDate}=row;
+      try{
+        const r=await write(rowNoDate);
+        if(!planDateWarned){planDateWarned=true;alert('Sipariş günü (ajanda) buluta kaydedilemedi: veritabanında "plan_date" kolonu yok.\n\nSupabase → SQL Editor\'de supabase-v20-ajanda.sql dosyasını çalıştır. Sipariş kaydedildi ama tarihi yalnız bu cihazda kalır.');}
+        return r;
+      }catch(e2){console.warn('yedek deneme de başarısız:',e2);}
     }
     return o.id;
   }
@@ -1008,11 +1045,11 @@ function renderTankConfig(){
    Model (taşımaya hazır — her alan Supabase kolonu olacak):
    {id, cid, qty, status, note, createdAt, plannedAt, deliveredAt,
     deliveredQty, vehicle, comp, deliverNote}
-   status: wait | plan | road | done | canc
+   status: wait | plan | done | onay | canc
 ------------------------------------------------- */
 const ST={
   wait:{lab:'BEKLİYOR',cls:'wait'}, plan:{lab:'PLANLANDI',cls:'plan'},
-  road:{lab:'YOLDA',cls:'road'},    done:{lab:'TESLİM',cls:'done'},
+  done:{lab:'TESLİM',cls:'done'},
   canc:{lab:'İPTAL',cls:'canc'},
   onay:{lab:'ONAY BEKLİYOR',cls:'onay'},
 };
@@ -1026,10 +1063,13 @@ function addOrder(){
   const note=document.getElementById('onote').value.trim();
   if(!cid)return alert('Önce rehbere müşteri ekle.');
   if(!qty||qty<=0)return alert('Geçerli miktar gir.');
-  const o={id:uid(),cid,qty,status:'wait',note,createdAt:nowIso(),
+  let pd=document.getElementById('odate').value||todayStr();
+  if(pd<todayStr())pd=todayStr();
+  const o={id:uid(),cid,qty,status:'wait',planDate:pd,note,createdAt:nowIso(),
     plannedAt:null,deliveredAt:null,deliveredQty:null,vehicle:null,comp:null,deliverNote:''};
   orderList.push(o);
   document.getElementById('onote').value='';
+  if(pd>todayStr()){filter='agenda';alert(`Sipariş ajandaya eklendi: ${fmtDay(pd)}.\nO gün gelince rotaya girer, atama o gün yapılır.`);}
   save();renderOrders();draw();
   cloudOrderUpsert(o);
 }
@@ -1064,6 +1104,9 @@ function openEdit(id){
   document.getElementById('eQty').value=o.qty;
   document.getElementById('eNote').value=o.note||'';
   const del=o.status==='done'||o.status==='onay';
+  const openO=o.status==='wait'||o.status==='plan';
+  document.getElementById('eDateBox').style.display=openO?'block':'none';
+  if(openO)document.getElementById('eDate').value=planDay(o);
   document.getElementById('eDelBox').style.display=del?'block':'none';
   if(del){
     document.getElementById('eDQty').value=o.deliveredQty??o.qty;
@@ -1091,6 +1134,10 @@ function saveEdit(){
   }
   o.cid=document.getElementById('eCust').value;
   o.qty=q;
+  if(o.status==='wait'||o.status==='plan'){
+    const nd=document.getElementById('eDate').value;
+    if(nd){o.planDate=nd;if(nd>todayStr()&&o.status==='plan'){o.status='wait';o.vehicle=null;o.comp=null;o.plannedAt=null;}}
+  }
   o.note=document.getElementById('eNote').value.trim();
   if(del){
     o.deliveredQty=dq;
@@ -1285,16 +1332,15 @@ function saveTeslimatGiris(){
   const when=t?new Date(t).toISOString():nowIso();
   const note=document.getElementById('tNote').value.trim();
   // müşterinin açık siparişi varsa aynı teslimatı iki kez saymamak için ona işle
-  const open=orderList.find(o=>o.cid===cid&&(o.status==='wait'||o.status==='plan'||o.status==='road'));
+  const open=orderList.find(o=>o.cid===cid&&(o.status==='wait'||o.status==='plan'));
   let o=null;
   if(open&&confirm(`Bu müşterinin açık bir siparişi var (${L2(open.qty)} L).\n\nBu teslimat o siparişe işlensin mi?\n\nTamam = o siparişi teslim edildi yap\nİptal = ayrı, yeni bir teslimat kaydı oluştur`))o=open;
   if(o){
     o.status='done';o.deliveredQty=q;o.deliveredAt=when;o.deliverNote=note;
     if(veh)o.vehicle=veh;
-    o.held=false;
   }else{
     o={id:uid(),cid,qty:q,status:'done',note:'Teslimat girişi (planlayıcı)',createdAt:nowIso(),
-      plannedAt:null,deliveredAt:when,deliveredQty:q,vehicle:veh,comp:null,deliverNote:note,lockVeh:null,held:false};
+      plannedAt:null,deliveredAt:when,deliveredQty:q,vehicle:veh,comp:null,deliverNote:note,lockVeh:null};
     orderList.push(o);
   }
   document.getElementById('tQty').value='';document.getElementById('tNote').value='';resetTeslimatTime();
@@ -1321,11 +1367,44 @@ function saveDeliv(){
 }
 
 const byDelivery=(a,b)=>String(b.deliveredAt||'').localeCompare(String(a.deliveredAt||''));
+let viewDate=todayStr(), lastToday=todayStr();
+const dayOf=o=>((o.status==='done'||o.status==='onay')&&o.deliveredAt)?isoDay(o.deliveredAt):planDay(o);
+function inView(o){
+  const d=dayOf(o),t=todayStr();
+  if(viewDate===t){
+    if(o.status==='wait'||o.status==='plan')return d<=t;   // bugün + geciken açık siparişler
+    if(o.status==='onay')return true;                      // onay bekleyen her zaman bugünün işi
+    return d===t;
+  }
+  return d===viewDate;
+}
+const inAgenda=o=>(o.status==='wait'||o.status==='plan')&&planDay(o)>todayStr();
 function visible(){
-  if(filter==='open')return orderList.filter(o=>o.status==='wait'||o.status==='plan'||o.status==='road');
-  if(filter==='all')return orderList;
-  const l=orderList.filter(o=>o.status===filter);
+  if(filter==='agenda')return orderList.filter(inAgenda).sort((a,b)=>planDay(a).localeCompare(planDay(b)));
+  const base=orderList.filter(inView);
+  if(filter==='open')return base.filter(o=>o.status==='wait'||o.status==='plan');
+  if(filter==='all')return base;
+  const l=base.filter(o=>o.status===filter);
   return (filter==='done'||filter==='onay')?l.slice().sort(byDelivery):l;
+}
+function setViewDate(d){
+  if(!d)return;
+  viewDate=d;
+  if(filter==='agenda')filter='open';
+  const od=document.getElementById('odate');if(od)od.value=d>=todayStr()?d:todayStr();
+  renderOrders();
+}
+function shiftDay(n){setViewDate(addDays(viewDate,n));}
+function renderDayBar(){
+  const t=todayStr();
+  const rel=viewDate===t?'Bugün':viewDate===addDays(t,-1)?'Dün':viewDate===addDays(t,1)?'Yarın':viewDate<t?'Geçmiş':'Ajanda';
+  const lab=document.getElementById('dayLabel');if(!lab)return;
+  lab.innerHTML=`<b>${rel}</b><span>${fmtDay(viewDate)}</span>`;
+  document.getElementById('dayPick').value=viewDate;
+  document.getElementById('dayToday').style.display=viewDate===t?'none':'';
+  const note=document.getElementById('dayNote');
+  note.style.display=viewDate===t?'none':'block';
+  note.textContent=viewDate<t?'Geçmiş gün — o gün teslim edilen ve o güne planlanan siparişler.':'Ajanda günü — bu gün gelince siparişler rotaya girer, atama o gün yapılır.';
 }
 function approveOrder(id){setOrdStatus(id,'done');}
 function rejectOrder(id){
@@ -1335,27 +1414,55 @@ function rejectOrder(id){
   setOrdStatus(id,'plan');
 }
 function setFilter(f){filter=f;renderOrders();}
+// önceki günlerden kalan "planlandı" siparişler bugünün rotasına aday: bekleyene dön (eski rota geçersiz)
+function rolloverPlans(){
+  const t=todayStr(),ch=[];
+  orderList.forEach(o=>{
+    if(o.status==='road')o.status='plan';
+    if(o.status==='plan'&&planDay(o)<t){o.status='wait';o.vehicle=null;o.comp=null;o.plannedAt=null;ch.push(o);}
+  });
+  if(ch.length){save();ch.forEach(cloudOrderUpsert);}
+  return ch.length;
+}
+// gün değişimini izle: ekran yeni güne açılsın
+function checkNewDay(){
+  const t=todayStr();if(t===lastToday)return;
+  const wasToday=viewDate===lastToday;
+  lastToday=t;if(wasToday)viewDate=t;
+  const od=document.getElementById('odate');if(od&&od.value<t)od.value=t;
+  rolloverPlans();renderOrders();draw();
+}
+setInterval(checkNewDay,60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkNewDay();});
 
 function renderOrders(){
+  renderDayBar();
+  const base=orderList.filter(inView);
   const cnt={};Object.keys(ST).forEach(k=>cnt[k]=0);
-  orderList.forEach(o=>cnt[o.status]!=null&&cnt[o.status]++);
-  const open=cnt.wait+cnt.plan+cnt.road;
+  base.forEach(o=>cnt[o.status]!=null&&cnt[o.status]++);
+  const open=cnt.wait+cnt.plan;
+  const agendaN=orderList.filter(inAgenda).length;
   const F=[['open','Açık',open],['onay','Onay bekleyen',cnt.onay],['wait','Bekleyen',cnt.wait],['plan','Planlanan',cnt.plan],
-           ['road','Yolda',cnt.road],['done','Teslim',cnt.done],['canc','İptal',cnt.canc],['all','Tümü',orderList.length]];
+           ['done','Teslim',cnt.done],['canc','İptal',cnt.canc],['all','Tümü',base.length],['agenda','📅 Ajanda',agendaN]];
   document.getElementById('ofilters').innerHTML=F.filter(f=>f[2]||f[0]==='open'||f[0]==='all')
     .map(([k,l,n])=>`<button class="fbtn${k==='onay'?' pend':''}${filter===k?' act':''}" onclick="setFilter('${k}')">${l} <b>${n}</b></button>`).join('');
 
   const list=visible();
-  document.getElementById('ordcount').textContent=(open||cnt.onay)?`(${open}${cnt.onay?` · ⏳${cnt.onay}`:''})`:'';
+  const openToday=orderList.filter(o=>(o.status==='wait'||o.status==='plan')&&planDay(o)<=todayStr()).length;
+  const onayN=orderList.filter(o=>o.status==='onay').length;
+  document.getElementById('ordcount').textContent=(openToday||onayN)?`(${openToday}${onayN?` · ⏳${onayN}`:''})`:'';
 
   const el=document.getElementById('ordlist');
   if(!list.length){el.innerHTML='<div class="empty">Bu filtrede sipariş yok</div>';updateStatBar();refreshTeslimatGiris();return;}
+  let lastHead='';
   el.innerHTML=list.map(o=>{
+    let head='';
+    if(filter==='agenda'&&planDay(o)!==lastHead){lastHead=planDay(o);head=`<div class="dayhead">📅 ${fmtDay(lastHead)} <b>${list.filter(x=>planDay(x)===lastHead).length}</b></div>`;}
     const c=customers.find(c=>c.id===o.cid), s=ST[o.status];
     const dlv=o.status==='done'||o.status==='onay';
     const short=dlv&&o.deliveredQty<o.qty;
     const extra=dlv&&o.deliveredQty>o.qty;
-    const GL={wait:'…',plan:'▸',road:'➜',done:'✓',canc:'✕',onay:'⏳'};
+    const GL={wait:'…',plan:'▸',done:'✓',canc:'✕',onay:'⏳'};
     const hm=x=>x?new Date(x).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}):'';
     const q=`'${o.id}'`;
     const B=(cls,click,label,title)=>`<button${cls?` class="${cls}"`:''} onclick="${click}"${title?` title="${title}"`:''}>${label}</button>`;
@@ -1363,13 +1470,12 @@ function renderOrders(){
     const edit=B('',`openEdit(${q})`,'✎ Düzenle','Sipariş ve teslimat bilgilerini düzenle');
     const del=B('no',`delOrder(${q})`,'Sil');
     let prim='',menu='';
-    if(o.status==='wait'){prim=edit;menu=B('',`toggleHold(${q})`,o.held?'▶ Bugüne al':'⏸ Yarına bırak',"Bugünkü 'Rotayı hesapla' bu siparişi görmezden gelir")+cancel;}
-    else if(o.status==='plan'){prim=B('ok',`openDlg(${q})`,'✓ Teslim işle');menu=edit+B('',`setOrdStatus(${q},'road')`,'Yola çıktı')+B('',`unplanOrder(${q})`,'⏸ Plandan çıkar','Plandan çıkar, açıkta bekletmeye al')+cancel;}
-    else if(o.status==='road'){prim=B('ok',`openDlg(${q})`,'✓ Teslim işle');menu=edit+B('',`setOrdStatus(${q},'plan')`,'Geri al')+cancel;}
+    if(o.status==='wait'){prim=edit;menu=cancel;}
+    else if(o.status==='plan'){prim=B('ok',`openDlg(${q})`,'✓ Teslim işle');menu=edit+B('',`unplanOrder(${q})`,'Plandan çıkar','Plandan çıkar, beklemeye al')+cancel;}
     else if(o.status==='onay'){prim=B('ok',`approveOrder(${q})`,'✓ Onayla')+B('no',`rejectOrder(${q})`,'Reddet');menu=edit;}
     else if(o.status==='done'){prim=edit;menu=B('',`setOrdStatus(${q},'plan')`,'Geri aç');}
     else if(o.status==='canc'){prim=B('',`setOrdStatus(${q},'wait')`,'Geri aç');}
-    const canLock=o.status==='wait'||o.status==='plan'||o.status==='road';
+    const canLock=o.status==='wait'||o.status==='plan';
     const lock=canLock?`<label class="lockrow"><span>${o.lockVeh?'🔒':'⚙'} Araç ata</span>
         <select onchange="setLock('${o.id}',this.value)">
           <option value=""${o.lockVeh?'':' selected'}>otomatik</option>
@@ -1378,13 +1484,13 @@ function renderOrders(){
         </select></label>`:'';
     const where=o.vehicle?`${esc(o.vehicle)}${o.comp?` · göz ${o.comp}`:''}`:'';
     const note=[o.note?`Not: ${esc(o.note)}`:'',o.deliverNote?`Şoför: ${esc(o.deliverNote)}`:''].filter(Boolean).join(' · ');
-    return `<div class="ocard st-${s.cls}">
+    return head+`<div class="ocard st-${s.cls}">
       <div class="sh-n">${GL[o.status]||'…'}</div>
       <div>
       <div class="sh-t"><b>${c?esc(c.name):'<i>silinmiş müşteri</i>'}${o.lockVeh?' <span style="color:var(--hi-border);font-size:11px" title="Araç kilitli">🔒</span>':''}</b>
         <span class="sh-time">${hm(dlv?o.deliveredAt:o.createdAt)}</span></div>
       <div class="sh-info">
-        <span class="sh-vol${short?' part':''}">${L2(dlv?o.deliveredQty:o.qty)} L</span><span class="obadge b-${s.cls}">${s.lab}</span>${o.status==='wait'&&o.held?' <span class="obadge b-wait">⏸ ERTELENDİ</span>':''}
+        <span class="sh-vol${short?' part':''}">${L2(dlv?o.deliveredQty:o.qty)} L</span><span class="obadge b-${s.cls}">${s.lab}</span>${(o.status==='wait'||o.status==='plan')&&planDay(o)<todayStr()?` <span class="obadge b-late">GECİKMİŞ · ${fmtDayShort(planDay(o))}</span>`:''}
         ${short?`<span style="color:#b06a00"> · eksik ${L2(o.qty-o.deliveredQty)} L</span>`:''}
         ${where?`<br>${where}`:''}${note?`<br>${note}`:''}
       </div>
@@ -1473,12 +1579,12 @@ async function exportExcel(btn){
       custRows.push([c.name,c.lat,c.lng]);
     });
 
-    const ordRows=[['Sipari\u015f','M\u00fc\u015fteri','Enlem','Boylam','Sipari\u015f L','B\u0131rak\u0131lan L','Durum','Girildi','Planland\u0131','Teslim','Ara\u00e7','G\u00f6z','Not','\u015eof\u00f6r notu','Dolum tank\u0131 foto\u011fraf\u0131','\u0130rsaliye foto\u011fraf\u0131']];
+    const ordRows=[['Sipari\u015f','M\u00fc\u015fteri','Enlem','Boylam','Sipari\u015f L','B\u0131rak\u0131lan L','Durum','Plan g\u00fcn\u00fc','Girildi','Planland\u0131','Teslim','Ara\u00e7','G\u00f6z','Not','\u015eof\u00f6r notu','Dolum tank\u0131 foto\u011fraf\u0131','\u0130rsaliye foto\u011fraf\u0131']];
     orderList.slice().sort((a,b)=>String(b.deliveredAt||b.createdAt||'').localeCompare(String(a.deliveredAt||a.createdAt||''))).forEach(o=>{
       const c=customers.find(c=>c.id===o.cid);
       const tankUrl=o.photos?.find(p=>p.type==='tank')?.url||'';
       const irsUrl=o.photos?.find(p=>p.type==='irsaliye')?.url||'';
-      ordRows.push([o.id,c?c.name:'\u2014',c?c.lat:'',c?c.lng:'',o.qty,o.deliveredQty??'',ST[o.status].lab,
+      ordRows.push([o.id,c?c.name:'\u2014',c?c.lat:'',c?c.lng:'',o.qty,o.deliveredQty??'',ST[o.status].lab,planDay(o),
         fmtDT(o.createdAt),fmtDT(o.plannedAt),fmtDT(o.deliveredAt),o.vehicle??'',o.comp??'',o.note??'',o.deliverNote??'',linkCell(tankUrl,'Dolum tankı — aç'),linkCell(irsUrl,'İrsaliye — aç')]);
     });
 
@@ -1531,25 +1637,20 @@ async function exportExcel(btn){
 function activeOrders(){
   const out=[];
   orderList.forEach(o=>{
-    if(o.status!=='wait'&&o.status!=='plan'&&o.status!=='road')return;
-    if(o.status==='wait'&&o.held)return;   // ertelenmiş: bugünkü rotaya dahil değil
+    if(o.status!=='wait'&&o.status!=='plan')return;
+    if(planDay(o)>todayStr())return;       // ajandada: günü gelince rotaya girer
     const c=customers.find(c=>c.id===o.cid);
     if(c)out.push({name:c.name,lat:c.lat,lng:c.lng,qty:o.qty,id:out.length,oid:o.id,lockVeh:o.lockVeh||null});
   });
   return out;
-}
-function toggleHold(id){
-  const o=byId(id);if(!o)return;
-  o.held=!o.held;
-  save();renderOrders();cloudOrderUpsert(o);
 }
 // rota hesaplanıp bir araca atanmış (plan) bir siparişi geri açığa/bekletmeye
 // al — "herkese atadım ama birini açıkta bırakmam gerekti" senaryosu
 function unplanOrder(id){
   const o=byId(id);if(!o)return;
   const c=customers.find(c=>c.id===o.cid);
-  if(!confirm(`${c?c.name:'Bu'} siparişi plandan çıkarılıp beklemeye alınsın mı?\n\nRota yeniden hesaplanana kadar hiçbir araca atanmayacak (görev formundan/mevcut haritadan silinmez, "Rotayı hesapla" tekrar çalıştırılınca güncellenir).`))return;
-  o.status='wait';o.held=true;o.vehicle=null;o.comp=null;o.plannedAt=null;
+  if(!confirm(`${c?c.name:'Bu'} siparişi plandan çıkarılıp beklemeye alınsın mı?\n\n"Rotayı hesapla" tekrar çalışınca yeniden atanır. Bugün gönderilmeyecekse ✎ Düzenle'den gününü ajandada başka bir güne al.`))return;
+  o.status='wait';o.vehicle=null;o.comp=null;o.plannedAt=null;
   save();renderOrders();draw();cloudOrderUpsert(o);
 }
 
@@ -2250,7 +2351,7 @@ function draw(){
     L.marker([g.lat,g.lng],{icon:L.divIcon({className:'',html:'<div class="pinico" style="width:26px;height:26px;background:#ffd400">🅿</div>',iconSize:[26,26],iconAnchor:[13,13]})}).bindTooltip('Garaj').addTo(layers);}catch(e){}
   try{const p=coord('plant','Tesis');
     L.marker([p.lat,p.lng],{icon:L.divIcon({className:'',html:'<div class="pinico" style="width:26px;height:26px;background:#2f8f4f">⛽</div>',iconSize:[26,26],iconAnchor:[13,13]})}).bindTooltip('Dolum Tesisi').addTo(layers);}catch(e){}
-  const COL={wait:'#ffffff',plan:'#7ab8ff',road:'#ffc06a',done:'#6fd39a',canc:'#6b7580',onay:'#c9a0e8'};
+  const COL={wait:'#ffffff',plan:'#7ab8ff',done:'#6fd39a',canc:'#6b7580',onay:'#c9a0e8'};
   customers.forEach(c=>{
     const os=orderList.filter(o=>o.cid===c.id&&o.status!=='canc');
     const act=os.find(o=>o.status!=='done')||os[0];
@@ -2478,7 +2579,7 @@ function showTab(t){
 
 /* ---------- üst durum şeridi ---------- */
 function updateStatBar(){
-  const open=orderList.filter(o=>o.status==='wait'||o.status==='plan'||o.status==='road');
+  const open=orderList.filter(o=>(o.status==='wait'||o.status==='plan')&&planDay(o)<=todayStr());
   const openL=open.reduce((s,o)=>s+o.qty,0);
   const g=id=>document.getElementById(id);
   if(g('stOpen'))g('stOpen').textContent=open.length;
@@ -2511,6 +2612,7 @@ async function softRefresh(){
     customers=cs.data.map(r=>({id:r.id,name:r.name,lat:r.lat,lng:r.lng}));
     orderList=od.data.map(fromRow);
     if(!cloudOK){cloudOK=true;setCloudBadge(true);}
+    rolloverPlans();
     localSave();renderCust();renderOrders();
     if(!curPlan||!lastRun)draw();
     subscribeRealtime();
@@ -2521,6 +2623,7 @@ setInterval(softRefresh,45000);
 /* ---------- init ---------- */
 (async()=>{
   await load();
+  const od0=document.getElementById('odate');if(od0)od0.value=todayStr();
   renderFleet();renderCust();renderOrders();draw();
   updateJumpButtons();
   subscribeRealtime();
