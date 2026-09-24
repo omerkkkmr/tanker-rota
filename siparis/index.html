@@ -60,6 +60,8 @@ select{cursor:pointer}
 .b-plan{color:#1f6fd0;border-color:#cfe0f5;background:#eaf2fc}
 .b-road{color:#b06a00;border-color:#f0d9a8;background:#fdf1df}
 .b-done{color:var(--diesel);border-color:#c9e8d2;background:#e8f6ec}
+.b-onay{color:#7a3fa8;border-color:#d9bdec;background:#f3e9fa}
+.ocard.st-onay{border-left-color:#8b3fb5}
 .ocard.st-done{border-left-color:var(--diesel);opacity:.9}
 .ophotos{display:flex;gap:6px;margin-top:8px}
 .ophotos img{width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
@@ -122,7 +124,7 @@ const sb=window.supabase.createClient(SB_URL,SB_KEY);
 const L2=n=>Math.round(n).toLocaleString('tr');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtDT=s=>s?new Date(s).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
-const ST={wait:{lab:'BEKLİYOR',cls:'wait'},plan:{lab:'PLANLANDI',cls:'plan'},road:{lab:'YOLDA',cls:'road'},done:{lab:'TESLİM',cls:'done'}};
+const ST={wait:{lab:'BEKLİYOR',cls:'wait'},plan:{lab:'PLANLANDI',cls:'plan'},road:{lab:'YOLDA',cls:'road'},done:{lab:'TESLİM',cls:'done'},onay:{lab:'ONAY BEKLİYOR',cls:'onay'}};
 
 let customers=[], orderList=[], doneList=[];
 
@@ -130,7 +132,7 @@ async function load(){
   const[cs,od,dn]=await Promise.all([
     sb.from('customers').select('id,name').order('name'),
     sb.from('orders').select('*').in('status',['wait','plan','road']).order('created_at',{ascending:false}),
-    sb.from('orders').select('*').eq('status','done').order('delivered_at',{ascending:false}).limit(15),
+    sb.from('orders').select('*').in('status',['done','onay']).order('delivered_at',{ascending:false}).limit(15),
   ]);
   if(cs.data)customers=cs.data;
   if(od.data)orderList=od.data;
@@ -237,10 +239,11 @@ function renderDone(){
   if(!doneList.length){el.innerHTML='<div class="empty">Henüz teslim yok</div>';return;}
   el.innerHTML=doneList.map(o=>{
     const c=customers.find(c=>c.id===o.customer_id);
-    return `<div class="ocard st-done">
+    const pend=o.status==='onay';
+    return `<div class="ocard st-${pend?'onay':'done'}">
       <div class="otop">
-        <div class="oname">${c?esc(c.name):'<i>silinmiş müşteri</i>'}<small>${fmtDT(o.delivered_at)} teslim edildi</small></div>
-        <span class="obadge b-done">TESLİM</span>
+        <div class="oname">${c?esc(c.name):'<i>silinmiş müşteri</i>'}<small>${fmtDT(o.delivered_at)} ${pend?'teslim girildi':'teslim edildi'}</small></div>
+        <span class="obadge b-${pend?'onay':'done'}">${pend?'ONAY BEKLİYOR':'TESLİM'}</span>
       </div>
       <div class="oqty">${L2(o.delivered_qty??o.qty)} L</div>
       ${o.photos&&o.photos.length?`<div class="ophotos">${o.photos.map(p=>

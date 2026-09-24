@@ -1020,6 +1020,32 @@ ExcelJS gibi ağır bir kütüphane ister) — link tıklanınca tam boyutlu fot
 açılır. Not: v16 öncesi loglanan eski teslimatlarda foto linki yoktur
 (backfill yalnızca orders'ta hâlâ duran kayıtlara uygulanabildi).
 
+## TESLİMAT ONAY AKIŞI (2026-09-24)
+
+Kullanıcı önerdi: "teslimatlar onaya düşsün, onaydan sonra kaydedilsin, teslim
+tarihine göre sıralansın". Yeni sipariş durumu **`onay` (ONAY BEKLİYOR)**:
+- **Şoför** teslimi (rota durağı VEYA plan dışı) girince sipariş `status='onay'`
+  olur (litre, foto, GPS, saat hepsi yazılır) ama henüz `done` değildir. Kalıcı
+  kayıt (`teslimat_kayitlari` tetikleyicisi yalnız `done`'da çalışır) ve Excel
+  geçmişi bu yüzden ONAYDAN SONRA oluşur — kod değişikliği gerekmedi, mevcut
+  tetikleyici zaten böyle davranıyor. Şoför ekranında rozet "⏳ Onayda", teslim
+  sonrası "Teslimat gönderildi — onaydan sonra kaydedilecek" bildirimi çıkar.
+- **Planlayıcı** Siparişler sekmesinde mor "Onay bekleyen N" filtresi + sekme
+  başlığında "N onay bekliyor". Kart: teslim edilen litre, foto, saat + **✓ Onayla**
+  (→`done`, kalıcı kayda işlenir), **Düzelt** (mevcut diyalog; litre/saat düzeltip
+  onaylar), **Reddet** (→`plan`, şoför ekranında tekrar "Bekliyor" olur, yeniden
+  girilebilir). Planlayıcının kendi girdiği teslim/satış doğrudan `done` (planlayıcı
+  zaten onaylayan taraf).
+- **Sıralama:** Teslim ve Onay filtreleri teslim tarihine göre (yeni→eski); Excel
+  "Siparişler" sayfası teslim tarihine göre; "Teslimat Geçmişi" zaten
+  `delivered_at` azalan. Stok özetinde onay bekleyenler teslim sayılır.
+- Sipariş giriş ekranındaki "Son teslim edilenler" onay bekleyenleri de "ONAY
+  BEKLİYOR" rozetiyle gösterir.
+- Veritabanı değişikliği YOK (`orders.status` serbest metin). Not: onay bekleyen
+  bir sipariş planlayıcı onaylamadıkça Excel geçmişine girmez.
+Tarayıcıda doğrulandı (planlayıcı: filtre/sıralama/onayla/reddet; şoför: `onay`
+yazımı, rozet, sayaç, bildirim).
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

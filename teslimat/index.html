@@ -68,6 +68,9 @@ header button:active{border-color:var(--hi);color:var(--hi)}
   text-transform:uppercase;flex-shrink:0}
 .stop-badge.wait{background:#fbf1d9;color:var(--hi-border)}
 .stop-badge.done{background:#e8f6ec;color:var(--diesel)}
+.stop-badge.onay{background:#f3e9fa;color:#7a3fa8}
+.stop.onay{opacity:.85;border-color:#8b3fb5}
+.stop.onay .stop-n{border-color:#8b3fb5;color:#8b3fb5}
 .adhocRow{padding:4px 16px 8px}
 .adhocBtn{width:100%;padding:13px;background:var(--card);border:1.5px dashed var(--hi-border);color:var(--hi-border);
   border-radius:12px;font-weight:700;font-size:14px}
@@ -164,6 +167,7 @@ let session=null;        // {id,plate}
 let myVehicle=null;      // routes.data.vehicles[] içindeki kendi kaydı
 let orderStatus={};      // oid -> orders satırı (status/delivered_qty/photos/...)
 let rtChannel=null;
+const isSent=o=>o&&(o.status==='done'||o.status==='onay');   // şoför girdi (onay bekliyor ya da onaylandı)
 let extraDone=[];        // bugün bu araçla teslim edilip rotada görünmeyenler (plan dışı / rotadan çıkmış)
 let adhocMode=false, adhocGps=null;
 
@@ -232,7 +236,7 @@ async function loadRoute(manual){
     }
     const t0=new Date();t0.setHours(0,0,0,0);
     const{data:ex,error:ee}=await sb.from('orders').select('*, customers(name,lat,lng)')
-      .eq('vehicle',session.plate).eq('status','done').gte('delivered_at',t0.toISOString())
+      .eq('vehicle',session.plate).in('status',['done','onay']).gte('delivered_at',t0.toISOString())
       .order('delivered_at',{ascending:false});
     if(ee)throw ee;
     const routeOids=new Set((myVehicle?.legs||[]).filter(l=>l.kind==='drop').map(l=>l.oid));
@@ -255,20 +259,20 @@ function subscribeRealtime(){
 function extraHtml(){
   if(!extraDone.length)return '';
   return `<div class="secTitle">✓ Tamamlanan — plan dışı / rotadan çıkan</div>`+extraDone.map(o=>`
-    <div class="leg"><div class="stop done" onclick="openDone('${o.id}')">
-      <div class="stop-n">✓</div>
+    <div class="leg"><div class="stop ${o.status==='onay'?'onay':'done'}" onclick="openDone('${o.id}')">
+      <div class="stop-n">${o.status==='onay'?'⏳':'✓'}</div>
       <div class="stop-body">
         <div class="stop-name">${esc(o.customers?.name||'—')}</div>
         <div class="stop-meta">${L2(o.delivered_qty||0)} L · ${o.delivered_at?new Date(o.delivered_at).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}):''}</div>
       </div>
-      <div class="stop-badge done">✓ Teslim</div>
+      <div class="stop-badge ${o.status==='onay'?'onay':'done'}">${o.status==='onay'?'⏳ Onayda':'✓ Teslim'}</div>
     </div></div>`).join('');
 }
 function render(){
   const tl=document.getElementById('timeline');
   const drops=myVehicle?myVehicle.legs.filter(l=>l.kind==='drop'):[];
-  const doneCount=drops.filter(l=>orderStatus[l.oid]?.status==='done').length+extraDone.length;
-  const volDone=drops.reduce((s,l)=>{const o=orderStatus[l.oid];return s+(o?.status==='done'?(o.delivered_qty||0):0);},0)
+  const doneCount=drops.filter(l=>isSent(orderStatus[l.oid])).length+extraDone.length;
+  const volDone=drops.reduce((s,l)=>{const o=orderStatus[l.oid];return s+(isSent(o)?(o.delivered_qty||0):0);},0)
     +extraDone.reduce((s,o)=>s+(o.delivered_qty||0),0);
   document.getElementById('sTot').textContent=drops.length+extraDone.length;
   document.getElementById('sDone').textContent=doneCount;
@@ -294,15 +298,15 @@ function render(){
     if(l.kind!=='drop')return '';
     n++;
     const o=orderStatus[l.oid];
-    const isDone=o?.status==='done';
+    const isDone=isSent(o), isPend=o?.status==='onay';
     return `<div class="leg">
-      <div class="stop${isDone?' done':''}" onclick="openStop('${l.oid}')">
+      <div class="stop${isPend?' onay':isDone?' done':''}" onclick="openStop('${l.oid}')">
         <div class="stop-n">${n}</div>
         <div class="stop-body">
           <div class="stop-name">${esc(l.name)}</div>
           <div class="stop-meta">planlanan ${L2(l.give)} L · ${hhmm(l.time)}${l.comp?' · göz '+l.comp:''}</div>
         </div>
-        <div class="stop-badge ${isDone?'done':'wait'}">${isDone?'✓ Teslim':'Bekliyor'}</div>
+        <div class="stop-badge ${isPend?'onay':isDone?'done':'wait'}">${isPend?'⏳ Onayda':isDone?'✓ Teslim':'Bekliyor'}</div>
       </div>
     </div>`;
   }).join('')+extraHtml();
@@ -320,12 +324,12 @@ function openStop(oid){
   curLeg=l;photoTank=null;photoIrs=null;
   const o=orderStatus[oid];
   const box=document.getElementById('dlgBox');
-  if(o&&o.status==='done'){
+  if(isSent(o)){
     const photos=o.photos||[];
     const tank=photos.find(p=>p.type==='tank'), irs=photos.find(p=>p.type==='irsaliye');
     box.innerHTML=`
       <h3>${esc(l.name)}</h3>
-      <div class="csub">Teslim edildi · ${o.delivered_at?new Date(o.delivered_at).toLocaleString('tr-TR'):''}</div>
+      <div class="csub">${o.status==='onay'?'⏳ Onay bekliyor':'Teslim edildi'} · ${o.delivered_at?new Date(o.delivered_at).toLocaleString('tr-TR'):''}</div>
       <div class="readonly-block">
         Planlanan: <b>${L2(l.give)} L</b><br>
         Bırakılan: <b>${L2(o.delivered_qty||0)} L</b>
@@ -521,7 +525,7 @@ function openDone(oid){
   const c=o.customers;
   document.getElementById('dlgBox').innerHTML=`
     <h3>${esc(c?.name||'—')}</h3>
-    <div class="csub">Teslim edildi · ${o.delivered_at?new Date(o.delivered_at).toLocaleString('tr-TR'):''}</div>
+    <div class="csub">${o.status==='onay'?'⏳ Onay bekliyor':'Teslim edildi'} · ${o.delivered_at?new Date(o.delivered_at).toLocaleString('tr-TR'):''}</div>
     <div class="readonly-block">
       Bırakılan: <b>${L2(o.delivered_qty||0)} L</b>
       ${o.deliver_note?`<br>Not: ${esc(o.deliver_note)}`:''}
@@ -656,7 +660,7 @@ async function submitAdhoc(){
     ]);
     noteEl.textContent='Kaydediliyor…';
     const done={
-      status:'done',
+      status:'onay',
       vehicle:session.plate,
       delivered_qty:Math.round(litre),
       deliver_note:('[Plan dışı] '+note).trim(),
@@ -674,6 +678,7 @@ async function submitAdhoc(){
     if(error)throw error;
     closeDlg();
     loadRoute(false);
+    toast('Teslimat gönderildi — planlayıcı onayından sonra kaydedilecek');
   }catch(e){
     console.warn(e);
     noteEl.textContent='Hata: kaydedilemedi. Sinyal kontrol edip tekrar deneyin (girdikleriniz kaybolmadı).';
@@ -698,7 +703,7 @@ async function submitDelivery(){
     ]);
     noteEl.textContent='Kaydediliyor…';
     const{error}=await sb.from('orders').update({
-      status:'done',
+      status:'onay',
       delivered_qty:Math.round(litre),
       deliver_note:note||null,
       photos:[{type:'tank',url:tankRes.url,thumb:tankRes.thumb},{type:'irsaliye',url:irsRes.url,thumb:irsRes.thumb}],
@@ -709,11 +714,19 @@ async function submitDelivery(){
     if(error)throw error;
     closeDlg();
     loadRoute(false);
+    toast('Teslimat gönderildi — planlayıcı onayından sonra kaydedilecek');
   }catch(e){
     console.warn(e);
     noteEl.textContent='Hata: kaydedilemedi. Sinyal kontrol edip tekrar deneyin (girdikleriniz kaybolmadı).';
     btn.disabled=false;
   }
+}
+function toast(msg){
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1b1917;color:#f3efe7;padding:12px 18px;border-radius:12px;font-size:13px;font-weight:600;z-index:5000;box-shadow:0 6px 18px rgba(27,25,23,.35);max-width:88vw;text-align:center';
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),4000);
 }
 
 /* ---------- başlangıç ---------- */

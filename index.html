@@ -106,6 +106,10 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 .ocard.st-road{border-left-color:#d97a00}
 .ocard.st-done{border-left-color:var(--diesel);opacity:.85}
 .ocard.st-canc{border-left-color:var(--alert);opacity:.55}
+.ocard.st-onay{border-left-color:#8b3fb5;background:#fcf8ff}
+.b-onay{color:#7a3fa8;border-color:#d9bdec;background:#f3e9fa}
+.fbtn.pend{border-color:#8b3fb5;color:#7a3fa8}
+.fbtn.pend.act{background:#8b3fb5;color:#fff;border-color:#8b3fb5}
 .otop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .oname{font-size:13px;font-weight:600;line-height:1.3;min-width:0}
 .oname small{display:block;font-family:'IBM Plex Mono';font-size:9px;color:var(--muted);font-weight:400;margin-top:2px}
@@ -899,6 +903,7 @@ const ST={
   wait:{lab:'BEKLİYOR',cls:'wait'}, plan:{lab:'PLANLANDI',cls:'plan'},
   road:{lab:'YOLDA',cls:'road'},    done:{lab:'TESLİM',cls:'done'},
   canc:{lab:'İPTAL',cls:'canc'},
+  onay:{lab:'ONAY BEKLİYOR',cls:'onay'},
 };
 let filter='open';
 const nowIso=()=>new Date().toISOString();
@@ -1043,10 +1048,19 @@ function saveDeliv(){
   }
 }
 
+const byDelivery=(a,b)=>String(b.deliveredAt||'').localeCompare(String(a.deliveredAt||''));
 function visible(){
   if(filter==='open')return orderList.filter(o=>o.status==='wait'||o.status==='plan'||o.status==='road');
   if(filter==='all')return orderList;
-  return orderList.filter(o=>o.status===filter);
+  const l=orderList.filter(o=>o.status===filter);
+  return (filter==='done'||filter==='onay')?l.slice().sort(byDelivery):l;
+}
+function approveOrder(id){setOrdStatus(id,'done');}
+function rejectOrder(id){
+  const o=byId(id);if(!o)return;
+  const c=customers.find(c=>c.id===o.cid);
+  if(!confirm(`${c?c.name:'Bu'} teslimatı reddedilsin mi?\n\nSipariş "Planlandı"ya döner, şoför ekranında tekrar "Bekliyor" görünür ve yeniden girilebilir.`))return;
+  setOrdStatus(id,'plan');
 }
 function setFilter(f){filter=f;renderOrders();}
 
@@ -1054,21 +1068,22 @@ function renderOrders(){
   const cnt={};Object.keys(ST).forEach(k=>cnt[k]=0);
   orderList.forEach(o=>cnt[o.status]!=null&&cnt[o.status]++);
   const open=cnt.wait+cnt.plan+cnt.road;
-  const F=[['open','Açık',open],['wait','Bekleyen',cnt.wait],['plan','Planlanan',cnt.plan],
+  const F=[['open','Açık',open],['onay','Onay bekleyen',cnt.onay],['wait','Bekleyen',cnt.wait],['plan','Planlanan',cnt.plan],
            ['road','Yolda',cnt.road],['done','Teslim',cnt.done],['canc','İptal',cnt.canc],['all','Tümü',orderList.length]];
   document.getElementById('ofilters').innerHTML=F.filter(f=>f[2]||f[0]==='open'||f[0]==='all')
-    .map(([k,l,n])=>`<button class="fbtn${filter===k?' act':''}" onclick="setFilter('${k}')">${l} <b>${n}</b></button>`).join('');
+    .map(([k,l,n])=>`<button class="fbtn${k==='onay'?' pend':''}${filter===k?' act':''}" onclick="setFilter('${k}')">${l} <b>${n}</b></button>`).join('');
 
   const list=visible();
   const openL=orderList.filter(o=>o.status==='wait'||o.status==='plan'||o.status==='road').reduce((s,o)=>s+o.qty,0);
-  document.getElementById('ordcount').textContent=open?`(${open} açık · ${L2(openL)} L)`:(orderList.length?'(açık yok)':'');
+  document.getElementById('ordcount').textContent=(open?`(${open} açık · ${L2(openL)} L`:(orderList.length?'(açık yok':''))+(cnt.onay?`${open||orderList.length?' · ':'('}${cnt.onay} onay bekliyor`:'')+(open||orderList.length||cnt.onay?')':'');
 
   const el=document.getElementById('ordlist');
   if(!list.length){el.innerHTML='<div class="empty">Bu filtrede sipariş yok</div>';return;}
   el.innerHTML=list.map(o=>{
     const c=customers.find(c=>c.id===o.cid), s=ST[o.status];
-    const short=o.status==='done'&&o.deliveredQty<o.qty;
-    const extra=o.status==='done'&&o.deliveredQty>o.qty;
+    const dlv=o.status==='done'||o.status==='onay';
+    const short=dlv&&o.deliveredQty<o.qty;
+    const extra=dlv&&o.deliveredQty>o.qty;
     return `<div class="ocard st-${s.cls}">
       <div class="otop">
         <div class="oname">${c?esc(c.name):'<i>silinmiş müşteri</i>'}${o.lockVeh?' <span style="color:var(--hi-border);font-size:10px" title="Araç kilitli">🔒</span>':''}
@@ -1077,7 +1092,7 @@ function renderOrders(){
       </div>
       ${o.status==='wait'&&o.held?`<div class="ometa" style="color:var(--hi-border)">⏸ Ertelendi — bugünkü rotaya dahil edilmeyecek</div>`:''}
       <div class="oqtyrow">
-        ${o.status==='done'
+        ${dlv
           ? `<span class="obig ${short?'oshort':(extra?'':'odone')}">${L2(o.deliveredQty)} L</span>
              <span style="color:var(--muted)">bırakıldı / ${L2(o.qty)} L sipariş</span>`
           : `<span class="obig">${L2(o.qty)} L</span>
@@ -1090,10 +1105,11 @@ function renderOrders(){
         ${o.deliveredAt?`<span class="lg">Teslim:</span> ${fmtDT(o.deliveredAt)}<br>`:''}
         ${o.deliverNote?`<span class="lg">Şoför notu:</span> ${esc(o.deliverNote)}`:''}
       </div>
-      ${o.status==='done'&&o.photos&&o.photos.length?`<div style="display:flex;gap:6px;margin-top:8px">
+      ${dlv&&o.photos&&o.photos.length?`<div style="display:flex;gap:6px;margin-top:8px">
         ${o.photos.map(p=>`<a href="${p.url}" target="_blank"><img src="${p.thumb||p.url}" loading="lazy" title="${p.type==='tank'?'Dolum tankı':p.type==='irsaliye'?'İrsaliye':p.type}" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:1px solid var(--line)"></a>`).join('')}
       </div>`:''}
-      ${o.status!=='done'&&o.status!=='canc'?`
+      ${o.status==='onay'?`<div class="ometa" style="color:#7a3fa8">⏳ Şoför teslimi girdi — onaylayınca kalıcı kayıtlara (Excel geçmişi) işlenir.</div>`:''}
+      ${o.status!=='done'&&o.status!=='canc'&&o.status!=='onay'?`
       <div class="lockrow">
         <span>${o.lockVeh?'🔒':'⚙'}</span>
         <select onchange="setLock('${o.id}',this.value)">
@@ -1109,6 +1125,9 @@ function renderOrders(){
                              <button onclick="setOrdStatus('${o.id}','road')">Yola çıktı</button>`:''}
         ${o.status==='road'?`<button onclick="setOrdStatus('${o.id}','plan')">Geri al</button>`:''}
         ${(o.status==='plan'||o.status==='road')?`<button class="ok" onclick="openDlg('${o.id}')">Teslim işle</button>`:''}
+        ${o.status==='onay'?`<button class="ok" onclick="approveOrder('${o.id}')">✓ Onayla</button>
+                             <button onclick="openDlg('${o.id}')">Düzelt</button>
+                             <button class="no" onclick="rejectOrder('${o.id}')">Reddet</button>`:''}
         ${o.status==='done'?`<button onclick="openDlg('${o.id}')">Teslimi düzelt</button>
                              <button onclick="setOrdStatus('${o.id}','plan')">Geri aç</button>`:''}
         ${o.status==='canc'?`<button onclick="setOrdStatus('${o.id}','wait')">Geri aç</button>`:''}
@@ -1175,7 +1194,7 @@ async function exportExcel(btn){
       if(o.status==='canc'||!o.vehicle)return;
       const v=byVeh[o.vehicle]||(byVeh[o.vehicle]={durak:0,tamam:0,planlanan:0,teslim:0,bekleyen:0});
       v.durak++;v.planlanan+=o.qty;
-      if(o.status==='done'){v.tamam++;v.teslim+=o.deliveredQty||0;}
+      if(o.status==='done'||o.status==='onay'){v.tamam++;v.teslim+=o.deliveredQty||0;}
       else v.bekleyen+=o.qty;
     });
     const stokRows=[['Plaka','Durak (Tamam/Toplam)','Y\u00fcklenmesi Planlanan (L)','Teslim Edilen (L)','Bekleyen/Yolda (L)']];
@@ -1190,7 +1209,7 @@ async function exportExcel(btn){
     });
 
     const ordRows=[['Sipari\u015f','M\u00fc\u015fteri','Enlem','Boylam','Sipari\u015f L','B\u0131rak\u0131lan L','Durum','Girildi','Planland\u0131','Teslim','Ara\u00e7','G\u00f6z','Not','\u015eof\u00f6r notu','Dolum tank\u0131 foto\u011fraf\u0131','\u0130rsaliye foto\u011fraf\u0131']];
-    orderList.forEach(o=>{
+    orderList.slice().sort((a,b)=>String(b.deliveredAt||b.createdAt||'').localeCompare(String(a.deliveredAt||a.createdAt||''))).forEach(o=>{
       const c=customers.find(c=>c.id===o.cid);
       const tankUrl=o.photos?.find(p=>p.type==='tank')?.url||'';
       const irsUrl=o.photos?.find(p=>p.type==='irsaliye')?.url||'';
@@ -1944,7 +1963,7 @@ function draw(){
     L.marker([g.lat,g.lng],{icon:L.divIcon({className:'',html:'<div class="pinico" style="width:26px;height:26px;background:#ffd400">🅿</div>',iconSize:[26,26],iconAnchor:[13,13]})}).bindTooltip('Garaj').addTo(layers);}catch(e){}
   try{const p=coord('plant','Tesis');
     L.marker([p.lat,p.lng],{icon:L.divIcon({className:'',html:'<div class="pinico" style="width:26px;height:26px;background:#2f8f4f">⛽</div>',iconSize:[26,26],iconAnchor:[13,13]})}).bindTooltip('Dolum Tesisi').addTo(layers);}catch(e){}
-  const COL={wait:'#ffffff',plan:'#7ab8ff',road:'#ffc06a',done:'#6fd39a',canc:'#6b7580'};
+  const COL={wait:'#ffffff',plan:'#7ab8ff',road:'#ffc06a',done:'#6fd39a',canc:'#6b7580',onay:'#c9a0e8'};
   customers.forEach(c=>{
     const os=orderList.filter(o=>o.cid===c.id&&o.status!=='canc');
     const act=os.find(o=>o.status!=='done')||os[0];
