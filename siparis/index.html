@@ -162,6 +162,7 @@ const fmtDT=s=>s?new Date(s).toLocaleString('tr-TR',{day:'2-digit',month:'2-digi
 const ST={wait:{lab:'BEKLİYOR',cls:'wait'},plan:{lab:'PLANLANDI',cls:'plan'},done:{lab:'TESLİM',cls:'done'},onay:{lab:'ONAY BEKLİYOR',cls:'onay'}};
 const isoDay=d=>{const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');};
 const todayStr=()=>isoDay(new Date());
+const addDays1=()=>{const d=new Date();d.setDate(d.getDate()+1);return isoDay(d);};   // yeni siparişte varsayılan teslim günü: yarın
 const planDay=o=>o.plan_date||isoDay(o.created_at||new Date());
 const fmtDay=iso=>new Date(iso+'T12:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',weekday:'short'});
 
@@ -328,6 +329,7 @@ async function addOrder(){
     if(error&&/plan_date/.test(error.message||''))({error}=await sb.from('orders').insert({customer_id:cid,qty,status:'wait',note:note||''}));
     if(error)throw error;
     document.getElementById('onote').value='';
+    document.getElementById('odate').value=addDays1();
     if(isNew){
       document.getElementById('ncname').value='';
       document.getElementById('pickMap').classList.remove('on');
@@ -406,7 +408,7 @@ function subscribeRealtime(){
     .subscribe();
 }
 
-document.getElementById('odate').value=todayStr();
+document.getElementById('odate').value=addDays1();
 document.getElementById('topDate').textContent=new Date().toLocaleDateString('tr-TR',{day:'2-digit',month:'long',year:'numeric'});
 load();
 // yedek yenileme: realtime bağlantısı sessizce koparsa kendini onarır

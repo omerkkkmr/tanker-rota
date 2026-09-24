@@ -391,7 +391,7 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
         </div>
         <input id="onote" placeholder="Not (opsiyonel)" style="margin-top:6px">
         <button class="primary" onclick="addOrder()">+ Talep ekle</button>
-        <div class="hint" style="margin-top:6px">Teslim günü ileri bir tarihse sipariş ajandaya girer; o gün gelince rotaya alınır.</div>
+        <div class="hint" id="oHint" style="margin-top:6px">Teslim günü varsayılan olarak yarın. Bugüne eklemek için tarihi bugün yap; ileri tarih ajandaya girer.</div>
       </div>
       <div class="filters" id="ofilters"></div>
       <div id="ordlist"></div>
@@ -713,6 +713,7 @@ async function load(){
 const isoDay=d=>{const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');};
 const todayStr=()=>isoDay(new Date());
 const addDays=(iso,n)=>{const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+n);return isoDay(d);};
+const nextDay=()=>addDays(todayStr(),1);   // yeni siparişte varsayılan teslim günü: yarın
 const planDay=o=>o.planDate||isoDay(o.createdAt||new Date());
 const fmtDay=iso=>new Date(iso+'T12:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',weekday:'long'});
 const fmtDayShort=iso=>new Date(iso+'T12:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'short'});
@@ -1057,6 +1058,7 @@ let filter='open';
 const nowIso=()=>new Date().toISOString();
 const fmtDT=s=>s?new Date(s).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
 
+const HINT0='Teslim günü varsayılan olarak yarın. Bugüne eklemek için tarihi bugün yap; ileri tarih ajandaya girer.';
 function addOrder(){
   const cid=document.getElementById('osel').value;
   const qty=parseInt(document.getElementById('oqty').value);
@@ -1069,7 +1071,9 @@ function addOrder(){
     plannedAt:null,deliveredAt:null,deliveredQty:null,vehicle:null,comp:null,deliverNote:''};
   orderList.push(o);
   document.getElementById('onote').value='';
-  if(pd>todayStr()){filter='agenda';alert(`Sipariş ajandaya eklendi: ${fmtDay(pd)}.\nO gün gelince rotaya girer, atama o gün yapılır.`);}
+  document.getElementById('odate').value=nextDay();
+  const hint=document.getElementById('oHint');
+  if(hint){hint.textContent=pd>todayStr()?`✓ Ajandaya eklendi: ${fmtDay(pd)} — o gün rotaya girer`:'✓ Bugüne eklendi';hint.style.color='var(--diesel)';setTimeout(()=>{hint.textContent=HINT0;hint.style.color='';},3500);}
   save();renderOrders();draw();
   cloudOrderUpsert(o);
 }
@@ -1391,7 +1395,6 @@ function setViewDate(d){
   if(!d)return;
   viewDate=d;
   if(filter==='agenda')filter='open';
-  const od=document.getElementById('odate');if(od)od.value=d>=todayStr()?d:todayStr();
   renderOrders();
 }
 function shiftDay(n){setViewDate(addDays(viewDate,n));}
@@ -1429,7 +1432,7 @@ function checkNewDay(){
   const t=todayStr();if(t===lastToday)return;
   const wasToday=viewDate===lastToday;
   lastToday=t;if(wasToday)viewDate=t;
-  const od=document.getElementById('odate');if(od&&od.value<t)od.value=t;
+  const od=document.getElementById('odate');if(od)od.value=nextDay();
   rolloverPlans();renderOrders();draw();
 }
 setInterval(checkNewDay,60000);
@@ -2623,7 +2626,7 @@ setInterval(softRefresh,45000);
 /* ---------- init ---------- */
 (async()=>{
   await load();
-  const od0=document.getElementById('odate');if(od0)od0.value=todayStr();
+  const od0=document.getElementById('odate');if(od0)od0.value=nextDay();
   renderFleet();renderCust();renderOrders();draw();
   updateJumpButtons();
   subscribeRealtime();

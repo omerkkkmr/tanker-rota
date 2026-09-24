@@ -1197,6 +1197,17 @@ günü takip etsin, ekran ona göre açılsın, önceki güne de gidebileyim".
 - Excel "Siparişler" sayfasına "Plan günü" sütunu eklendi. Tarayıcıda: gün devri, ajanda
   gruplama, gün gezinmesi, rota (ajanda hariç), ileri tarihli ekleme+yedek yazım, tarih taşıma test edildi.
 
+## YENİ SİPARİŞTE VARSAYILAN GÜN = YARIN (2026-09-24)
+
+Kullanıcı: "ekranda sipariş girerken her zaman bir sonraki gün default seçili gelsin".
+Planlayıcı yeni sipariş formu ve sipariş-giren ekranında teslim günü her zaman YARIN
+(`nextDay()` / `addDays1()`) gelir; gün çubuğunda başka güne gidilse de, sipariş
+eklendikten sonra da, gece yarısı devrinde de yarına döner. Her eklemede çıkan
+"ajandaya eklendi" uyarısı (alert) ve filtreyi ajandaya zorlama kaldırıldı — yerine
+form altında 3,5 sn'lik yeşil bilgi satırı ("✓ Ajandaya eklendi: 25 Eylül Cuma").
+SQL durumu (canlı sorguyla doğrulandı): `tankers.is_tir` VAR, `stok_girisleri` (bayi
+kolonuyla) VAR; tek bekleyen: `supabase-v20-ajanda.sql`.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
