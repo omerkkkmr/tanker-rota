@@ -1083,6 +1083,28 @@ düzenleyebilsin; planlayıcı hem siparişi hem teslimatı".
 Tarayıcıda üç ekran da taklit kayıtlarla doğrulandı (alanlar, kısmi foto
 değişimi, prefix, yarış durumu, düğme görünürlükleri).
 
+## STOK DEFTERİ: GİREN / ÇIKAN / KALAN (2026-09-24)
+
+Kullanıcı: "excelde giren çıkan kalan sütunları olmalı, stoğu takip etmeliyim,
+gelen stoğu da girebilmeliyim". Merkezi stok defteri kuruldu:
+- **Giren:** yeni `stok_girisleri` tablosu (`supabase-v19-stok.sql` — KULLANICI
+  ÇALIŞTIRMALI, henüz çalıştırılmadı). Planlayıcıda yeni **Stok** sekmesi: gelen
+  stok formu (litre, tarih/saat, kaynak/tedarikçi, belge no, not; ilk giriş
+  "Açılış stoğu" olarak girilmeli) + silme (onaylı).
+- **Çıkan:** ayrıca girilmez — ONAYLANMIŞ teslimatlar (`teslimat_kayitlari`)
+  otomatik çıkış sayılır. Aynı siparişin düzeltme satırları çift sayılmaz
+  (sipariş başına en son kayıt geçerli); silinen siparişin teslimatı "(sipariş
+  silindi)" notuyla yine düşülür (yakıt fiilen çıktı). Onay bekleyenler stoktan
+  düşülmez; sekmede "N teslimat onay bekliyor" bilgisi gösterilir.
+- **Kalan** = Σ giren − Σ çıkan (kronolojik yürüyen bakiye). Negatifse kırmızı.
+- **Excel:** yeni "Stok Hareketleri" sayfası (Tarih, Hareket, Müşteri/Kaynak, Araç,
+  Belge no, Not, Giren, Çıkan, Kalan + TOPLAM satırı) ve "Günlük Stok" (Açılış,
+  Giren, Çıkan, Kapanış) — eskiden yeniye sıralı. Mevcut araç bazlı "Stok Özeti
+  (bugün)" korundu. Tablo yoksa Excel yine çıkar, giren boş kalır ve sayfada uyarı yazar.
+- Kapsam notu: ürün ayrımı (motorin/benzin) ve tanker gözlerindeki anlık yakıt
+  (Filo "mevcut L") bu defterden BAĞIMSIZ; tek bir merkezi stok tutulur. Tarayıcıda
+  taklit veriyle hesap (düzeltme çift sayımı, silindi, negatif kalan) doğrulandı.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

@@ -109,6 +109,17 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 .ocard.st-onay{border-left-color:#8b3fb5;background:#fcf8ff}
 .b-onay{color:#7a3fa8;border-color:#d9bdec;background:#f3e9fa}
 .fbtn.pend{border-color:#8b3fb5;color:#7a3fa8}
+.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.statgrid div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center;box-shadow:var(--sh-sm)}
+.statgrid b{display:block;font-family:'IBM Plex Mono';font-size:15px;font-weight:600}
+.statgrid span{font-family:'IBM Plex Mono';font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.statgrid .neg b{color:var(--alert)}
+.mv{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:8px 0;border-top:1px solid var(--line);font-size:12px}
+.mv:first-child{border-top:0}
+.mv .l{font-weight:600}.mv .l small{display:block;font-family:'IBM Plex Mono';font-size:9px;color:var(--muted);font-weight:400}
+.mv .r{text-align:right;font-family:'IBM Plex Mono';font-size:12px;font-weight:600}
+.mv .r small{display:block;font-size:9px;color:var(--muted);font-weight:400}
+.mv .in{color:var(--diesel)}.mv .out{color:var(--alert)}
 .fbtn.pend.act{background:#8b3fb5;color:#fff;border-color:#8b3fb5}
 .otop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .oname{font-size:13px;font-weight:600;line-height:1.3;min-width:0}
@@ -323,6 +334,7 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
   <div class="tabbar" id="tabbar">
     <button class="tabbtn act" data-tab="siparisler" onclick="showTab('siparisler')">Siparişler <b id="ordcount"></b></button>
     <button class="tabbtn" data-tab="teslimatgir" onclick="showTab('teslimatgir')">Teslimat girişi</button>
+    <button class="tabbtn" data-tab="stok" onclick="showTab('stok')">Stok</button>
     <button class="tabbtn" data-tab="musteriler" onclick="showTab('musteriler')">Müşteriler <b id="custcount"></b></button>
     <button class="tabbtn" data-tab="plan" onclick="showTab('plan')">Plan</button>
     <button class="tabbtn" data-tab="filo" onclick="showTab('filo')">Filo <b id="fleetcount"></b></button>
@@ -370,6 +382,32 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
       </div>
       <label>Son teslimatlar</label>
       <div id="tRecent"></div>
+    </div>
+  </div>
+
+  <div class="sec tabpanel" data-tab="stok" style="display:none">
+    <div class="body">
+      <div class="statgrid" id="stokSummary"></div>
+      <div id="stokPending"></div>
+      <div class="newform">
+        <label style="margin-top:0">Gelen stok girişi</label>
+        <div class="grid2">
+          <div><label>Miktar (L)</label><input id="sLitre" type="number" placeholder="Litre"></div>
+          <div><label>Tarih / saat</label><input id="sTarih" type="datetime-local"></div>
+        </div>
+        <label>Kaynak / tedarikçi</label>
+        <input id="sKaynak" list="sKaynakList" placeholder="ör. rafineri, depo, Açılış stoğu">
+        <datalist id="sKaynakList"></datalist>
+        <div class="grid2">
+          <div><label>Belge no</label><input id="sBelge" placeholder="irsaliye/fatura"></div>
+          <div><label>Not</label><input id="sNot" placeholder="opsiyonel"></div>
+        </div>
+        <button class="primary" onclick="saveStokGiris()">Stok girişini kaydet</button>
+        <div class="hint" id="sMsg" style="min-height:14px;text-align:center"></div>
+      </div>
+      <label>Stok hareketleri (son 20)</label>
+      <div id="stokList"></div>
+      <button class="ghost" style="width:100%;margin-top:8px" onclick="exportExcel(this)">Excel indir (tüm hareketler)</button>
     </div>
   </div>
 
@@ -1076,6 +1114,73 @@ function openDlg(id){
   document.getElementById('dlg').classList.add('on');
   document.getElementById('dQty').focus();
 }
+/* ---------- STOK DEFTERİ ----------
+   Giren: stok_girisleri (elle). Çıkan: onaylanmış teslimatlar (teslimat_kayitlari,
+   sipariş başına en son kayıt — düzeltmeler çift sayılmasın). Kalan = giren − çıkan. */
+async function buildStokLedger(){
+  if(!cloudOK)return{err:'Bulut bağlantısı yok — stok defteri yalnızca çevrimiçi çalışır.',moves:[]};
+  const moves=[];let err=null;
+  const gi=await sb.from('stok_girisleri').select('*').order('tarih');
+  if(gi.error){err='Stok tablosu kurulu değil — Supabase SQL Editor\'de supabase-v19-stok.sql dosyasını çalıştır.';}
+  else(gi.data||[]).forEach(r=>moves.push({t:new Date(r.tarih).getTime(),type:'in',id:r.id,name:r.kaynak||'—',veh:'',doc:r.belge_no||'',note:r.aciklama||'',qty:r.litre}));
+  const tk=await sb.from('teslimat_kayitlari').select('order_id,customer_name,delivered_qty,vehicle,delivered_at,logged_at,siparis_silindi,deliver_note').order('logged_at');
+  if(tk.error){err=(err?err+' ':'')+'Teslimat kayıtları okunamadı.';}
+  else{
+    const last=new Map();
+    (tk.data||[]).forEach(r=>last.set(r.order_id||r.logged_at,r));   // aynı siparişin düzeltmeleri: sonuncu geçerli
+    last.forEach(r=>{
+      const q=r.delivered_qty||0;if(q<=0)return;
+      moves.push({t:new Date(r.delivered_at||r.logged_at).getTime(),type:'out',name:(r.customer_name||'—')+(r.siparis_silindi?' (sipariş silindi)':''),veh:r.vehicle||'',doc:'',note:r.deliver_note||'',qty:q});
+    });
+  }
+  moves.sort((a,b)=>a.t-b.t||(a.type==='in'?-1:1));
+  let bal=0;moves.forEach(m=>{bal+=m.type==='in'?m.qty:-m.qty;m.bal=bal;});
+  return{err,moves};
+}
+let stokMoves=[];
+async function renderStok(){
+  const sum=document.getElementById('stokSummary');if(!sum)return;
+  if(!document.getElementById('sTarih').value){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());document.getElementById('sTarih').value=d.toISOString().slice(0,16);}
+  const{err,moves}=await buildStokLedger();
+  stokMoves=moves;
+  const gir=moves.filter(m=>m.type==='in').reduce((s,m)=>s+m.qty,0);
+  const cik=moves.filter(m=>m.type==='out').reduce((s,m)=>s+m.qty,0);
+  const kal=gir-cik;
+  sum.innerHTML=`<div><b>${L2(gir)}</b><span>Giren L</span></div><div><b>${L2(cik)}</b><span>Çıkan L</span></div><div class="${kal<0?'neg':''}"><b>${L2(kal)}</b><span>Kalan L</span></div>`;
+  const pend=orderList.filter(o=>o.status==='onay');
+  const pl=pend.reduce((s,o)=>s+(o.deliveredQty||0),0);
+  document.getElementById('stokPending').innerHTML=(err?`<div class="warn" style="margin:0 0 10px">${esc(err)}</div>`:'')+
+    (pend.length?`<div class="info" style="margin:0 0 10px">⏳ ${pend.length} teslimat onay bekliyor (${L2(pl)} L) — onaylanınca stoktan düşülür.</div>`:'');
+  document.getElementById('sKaynakList').innerHTML=[...new Set(moves.filter(m=>m.type==='in').map(m=>m.name))].map(n=>`<option value="${esc(n)}">`).join('');
+  const recent=moves.slice(-20).reverse();
+  document.getElementById('stokList').innerHTML=recent.length?recent.map(m=>`
+    <div class="mv"><div class="l">${esc(m.name)}<small>${fmtDT(m.t)}${m.veh?' · '+esc(m.veh):''}${m.doc?' · '+esc(m.doc):''}${m.note?' · '+esc(m.note):''}</small></div>
+      <div class="r ${m.type}">${m.type==='in'?'+':'−'}${L2(m.qty)} L<small>kalan ${L2(m.bal)}${m.type==='in'?` · <a href="#" onclick="delStokGiris('${m.id}');return false" style="color:var(--alert)">sil</a>`:''}</small></div></div>`).join('')
+    :'<div class="empty">Henüz hareket yok — önce açılış stoğunu gir</div>';
+}
+async function saveStokGiris(){
+  const q=parseInt(document.getElementById('sLitre').value);
+  const m=document.getElementById('sMsg');
+  if(!q||q<=0){m.style.color='var(--alert)';m.textContent='Geçerli litre gir.';return;}
+  if(!cloudOK){m.style.color='var(--alert)';m.textContent='Bulut bağlantısı yok.';return;}
+  const t=document.getElementById('sTarih').value;
+  const{error}=await sb.from('stok_girisleri').insert({
+    litre:q,tarih:t?new Date(t).toISOString():nowIso(),
+    kaynak:document.getElementById('sKaynak').value.trim(),
+    belge_no:document.getElementById('sBelge').value.trim(),
+    aciklama:document.getElementById('sNot').value.trim()});
+  if(error){console.warn(error);m.style.color='var(--alert)';m.textContent='Kaydedilemedi — supabase-v19-stok.sql çalıştırıldı mı?';return;}
+  ['sLitre','sBelge','sNot'].forEach(i=>document.getElementById(i).value='');
+  m.style.color='var(--diesel)';m.textContent='✓ Stok girişi kaydedildi';setTimeout(()=>{m.textContent='';},3000);
+  renderStok();
+}
+async function delStokGiris(id){
+  if(!confirm('Bu stok girişi silinsin mi? (Kalan stok buna göre azalır)'))return;
+  const{error}=await sb.from('stok_girisleri').delete().eq('id',id);
+  if(error){alert('Silinemedi.');return;}
+  renderStok();
+}
+
 function renderTeslimatGiris(){
   const cs=document.getElementById('tCust');if(!cs)return;
   const prev=cs.value;
@@ -1315,7 +1420,22 @@ async function exportExcel(btn){
         fmtDT(o.createdAt),fmtDT(o.plannedAt),fmtDT(o.deliveredAt),o.vehicle??'',o.comp??'',o.note??'',o.deliverNote??'',linkCell(tankUrl,'Dolum tankı — aç'),linkCell(irsUrl,'İrsaliye — aç')]);
     });
 
+    // stok defteri: giren / \u00e7\u0131kan / kalan (Kalan negatifse k\u0131rm\u0131z\u0131)
+    const stk=await buildStokLedger();
+    const NEG={font:{color:{rgb:'C8402C'},bold:true}};
+    const ledRows=[['Tarih','Hareket','M\u00fc\u015fteri / Kaynak','Ara\u00e7','Belge no','Not','Giren (L)','\u00c7\u0131kan (L)','Kalan (L)']];
+    stk.moves.forEach(m=>ledRows.push([fmtDT(m.t),m.type==='in'?'Giri\u015f':'\u00c7\u0131k\u0131\u015f',m.name,m.veh,m.doc,m.note,
+      m.type==='in'?m.qty:'',m.type==='out'?m.qty:'',m.bal<0?{v:m.bal,t:'n',s:NEG}:m.bal]));
+    const totIn=stk.moves.filter(m=>m.type==='in').reduce((a,m)=>a+m.qty,0), totOut=stk.moves.filter(m=>m.type==='out').reduce((a,m)=>a+m.qty,0);
+    ledRows.push(['','','','','','TOPLAM',totIn,totOut,totIn-totOut]);
+    if(stk.err)ledRows.push(['\u26a0 '+stk.err]);
+    const dayMap=new Map();
+    stk.moves.forEach(m=>{const d=new Date(m.t).toLocaleDateString('tr-TR');const r=dayMap.get(d)||{gir:0,cik:0,bal:0};if(m.type==='in')r.gir+=m.qty;else r.cik+=m.qty;r.bal=m.bal;dayMap.set(d,r);});
+    const dayRows=[['Tarih','A\u00e7\u0131l\u0131\u015f (L)','Giren (L)','\u00c7\u0131kan (L)','Kapan\u0131\u015f / Kalan (L)']];
+    let prev=0;dayMap.forEach((r,d)=>{dayRows.push([d,prev,r.gir,r.cik,r.bal<0?{v:r.bal,t:'n',s:NEG}:r.bal]);prev=r.bal;});
     const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ledRows),'Stok Hareketleri');
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(dayRows),'G\u00fcnl\u00fck Stok');
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(logRows),'Teslimat Ge\u00e7mi\u015fi');
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(cancRows),'\u0130ptal Ge\u00e7mi\u015fi');
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(stokRows),'Stok \u00d6zeti (bug\u00fcn)');
@@ -2277,6 +2397,7 @@ async function run(){
 /* ---------- sekmeler ---------- */
 function showTab(t){
   if(t==='teslimatgir')renderTeslimatGiris();
+  if(t==='stok')renderStok();
   document.querySelectorAll('.tabpanel').forEach(el=>{el.style.display=el.dataset.tab===t?'block':'none';});
   document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('act',b.dataset.tab===t));
 }
