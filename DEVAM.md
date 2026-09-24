@@ -1262,6 +1262,15 @@ kayıt yapılmaz.
   ~90 KB tam + ~8 KB önizleme (≈40× küçük). Şoför, planlayıcı ve stok irsaliyesi aynı yolu kullanır;
   listelerde yalnız önizleme (lazy) indirilir, tam foto tıklanınca açılır.
 
+## "EKRANI TEMİZLE" KALDIRILDI (2026-09-24)
+
+Kullanıcı: ajanda/gün gezinmesi geldiği için "Ekranı temizle" gereksiz ve işlevi bozar. Doğru:
+düğme teslim+iptal siparişleri `orders` tablosundan KALICI siler; artık gün gezinmesiyle geçmiş
+günlerin siparişleri (ve iptaller, ajanda) bu tablodan okunuyor — silinince geçmiş gün boşalırdı.
+Düğme ve `clearDone()` kaldırıldı. Ekran zaten günlük görünümle sade kalıyor (bugün + geciken +
+onay bekleyen); tek tek silme kartlardaki "⋯ → Sil"de duruyor. Kalıcı teslimat/iptal kayıtları
+(Excel geçmişi) bundan bağımsızdı, etkilenmez.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

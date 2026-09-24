@@ -409,7 +409,6 @@ html,body,*{touch-action:manipulation}
       <div class="filters" id="ofilters"></div>
       <div id="ordlist"></div>
       <div class="row">
-        <button class="ghost" onclick="clearDone()">Ekranı temizle</button>
         <button class="ghost" onclick="exportExcel(this)">Excel indir</button>
       </div>
       <button class="primary" id="go" onclick="run()">Rotayı hesapla</button>
@@ -1195,18 +1194,6 @@ function setOrdStatus(id,s){
   if(s!=='done'){o.deliveredAt=null;o.deliveredQty=null;}
   save();renderOrders();draw();cloudOrderUpsert(o);
 }
-function clearDone(){
-  const done=orderList.filter(o=>o.status==='done').length;
-  const canc=orderList.filter(o=>o.status==='canc').length;
-  const n=done+canc;
-  if(!n)return alert('Temizlenecek teslim/iptal yok.');
-  if(!confirm(`${n} kayıt (${done} teslim, ${canc} iptal) listeden kalıcı olarak silinsin mi?\n\nİkisi de "Excel indir"deki Teslimat Geçmişi / İptal Geçmişi sekmelerinde HER ZAMAN kalır — bu yalnız uygulamadaki listeyi temizler, arşivleme işlemi zaten otomatik olur.`))return;
-  const gone=orderList.filter(o=>o.status==='done'||o.status==='canc').map(o=>o.id);
-  orderList=orderList.filter(o=>o.status!=='done'&&o.status!=='canc');
-  save();renderOrders();draw();
-  gone.forEach(cloudOrderDelete);
-}
-
 /* teslim diyaloğu */
 let dlgId=null;
 function openDlg(id){
