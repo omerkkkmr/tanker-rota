@@ -398,10 +398,18 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
         <label>Kaynak / tedarikçi</label>
         <input id="sKaynak" list="sKaynakList" placeholder="ör. rafineri, depo, Açılış stoğu">
         <datalist id="sKaynakList"></datalist>
+        <label>İrsaliye bilgisi</label>
         <div class="grid2">
-          <div><label>Belge no</label><input id="sBelge" placeholder="irsaliye/fatura"></div>
-          <div><label>Not</label><input id="sNot" placeholder="opsiyonel"></div>
+          <div><input id="sBayi" list="sBayiList" placeholder="Bayi adı (irsaliyede yazan)"></div>
+          <div><select id="sTur"><option value="">Satış türü seç…</option><option value="ic">İç satış</option><option value="dis">Dış satış</option></select></div>
         </div>
+        <datalist id="sBayiList"></datalist>
+        <div class="grid2" style="margin-top:6px">
+          <div><input id="sBelge" placeholder="İrsaliye no"></div>
+          <div><input id="sNot" placeholder="Not (opsiyonel)"></div>
+        </div>
+        <button class="ghost" id="sFotoBtn" style="width:100%;margin-top:6px" onclick="document.getElementById('sFoto').click()">📷 İrsaliye fotoğrafı çek / seç</button>
+        <input type="file" id="sFoto" accept="image/*" capture="environment" style="display:none" onchange="onStokFoto(this)">
         <button class="primary" onclick="saveStokGiris()">Stok girişini kaydet</button>
         <div class="hint" id="sMsg" style="min-height:14px;text-align:center"></div>
       </div>
@@ -1023,7 +1031,6 @@ async function markLogDeleted(orderId){
   try{await sb.from('teslimat_kayitlari').update({siparis_silindi:true}).eq('order_id',orderId);}
   catch(e){console.warn('"silindi" işareti yazılamadı (supabase-v17-silinen-teslimat-isaretle.sql çalıştırılmış mı?):',e);}
 }
-function setQty(id,v){const o=byId(id),q=parseInt(v);if(o&&q>0){o.qty=q;save();renderOrders();draw();cloudOrderUpsert(o);}}
 let edId=null;
 function openEdit(id){
   const o=byId(id);if(!o)return;
@@ -1122,7 +1129,8 @@ async function buildStokLedger(){
   const moves=[];let err=null;
   const gi=await sb.from('stok_girisleri').select('*').order('tarih');
   if(gi.error){err='Stok tablosu kurulu değil — Supabase SQL Editor\'de supabase-v19-stok.sql dosyasını çalıştır.';}
-  else(gi.data||[]).forEach(r=>moves.push({t:new Date(r.tarih).getTime(),type:'in',id:r.id,name:r.kaynak||'—',veh:'',doc:r.belge_no||'',note:r.aciklama||'',qty:r.litre}));
+  else(gi.data||[]).forEach(r=>moves.push({t:new Date(r.tarih).getTime(),type:'in',id:r.id,name:r.kaynak||'—',veh:'',doc:r.belge_no||'',note:r.aciklama||'',qty:r.litre,
+    bayi:r.bayi||'',tur:r.satis_turu==='ic'?'İç satış':r.satis_turu==='dis'?'Dış satış':'',foto:r.irsaliye_foto_url||'',thumb:r.irsaliye_foto_thumb||''}));
   const tk=await sb.from('teslimat_kayitlari').select('order_id,customer_name,delivered_qty,vehicle,delivered_at,logged_at,siparis_silindi,deliver_note').order('logged_at');
   if(tk.error){err=(err?err+' ':'')+'Teslimat kayıtları okunamadı.';}
   else{
@@ -1151,26 +1159,69 @@ async function renderStok(){
   const pl=pend.reduce((s,o)=>s+(o.deliveredQty||0),0);
   document.getElementById('stokPending').innerHTML=(err?`<div class="warn" style="margin:0 0 10px">${esc(err)}</div>`:'')+
     (pend.length?`<div class="info" style="margin:0 0 10px">⏳ ${pend.length} teslimat onay bekliyor (${L2(pl)} L) — onaylanınca stoktan düşülür.</div>`:'');
+  document.getElementById('sBayiList').innerHTML=[...new Set(moves.filter(m=>m.bayi).map(m=>m.bayi))].map(n=>`<option value="${esc(n)}">`).join('');
   document.getElementById('sKaynakList').innerHTML=[...new Set(moves.filter(m=>m.type==='in').map(m=>m.name))].map(n=>`<option value="${esc(n)}">`).join('');
   const recent=moves.slice(-20).reverse();
   document.getElementById('stokList').innerHTML=recent.length?recent.map(m=>`
-    <div class="mv"><div class="l">${esc(m.name)}<small>${fmtDT(m.t)}${m.veh?' · '+esc(m.veh):''}${m.doc?' · '+esc(m.doc):''}${m.note?' · '+esc(m.note):''}</small></div>
+    <div class="mv"><div class="l">${esc(m.name)}<small>${fmtDT(m.t)}${m.bayi?' · Bayi: '+esc(m.bayi):''}${m.tur?' · '+m.tur:''}${m.veh?' · '+esc(m.veh):''}${m.doc?' · '+esc(m.doc):''}${m.note?' · '+esc(m.note):''}</small>${m.thumb?`<a href="${m.foto}" target="_blank"><img src="${m.thumb}" loading="lazy" style="width:44px;height:44px;object-fit:cover;border-radius:7px;border:1px solid var(--line);margin-top:4px"></a>`:''}</div>
       <div class="r ${m.type}">${m.type==='in'?'+':'−'}${L2(m.qty)} L<small>kalan ${L2(m.bal)}${m.type==='in'?` · <a href="#" onclick="delStokGiris('${m.id}');return false" style="color:var(--alert)">sil</a>`:''}</small></div></div>`).join('')
     :'<div class="empty">Henüz hareket yok — önce açılış stoğunu gir</div>';
+}
+let stokFoto=null;
+function onStokFoto(input){
+  const f=input.files[0];if(!f)return;
+  stokFoto=f;
+  const b=document.getElementById('sFotoBtn');
+  b.textContent='✓ İrsaliye fotoğrafı alındı (değiştirmek için dokun)';
+  b.style.borderColor='var(--diesel)';b.style.color='var(--diesel)';
+}
+// yüklemeden önce fotoğrafı küçültür (depolama/veri tasarrufu): uzun kenar max maxDim, JPEG
+async function compressImage(file,maxDim=1600,quality=0.75){
+  try{
+    const bmp=await createImageBitmap(file);
+    let w=bmp.width,h=bmp.height;
+    if(w>maxDim||h>maxDim){if(w>h){h=Math.round(h*maxDim/w);w=maxDim;}else{w=Math.round(w*maxDim/h);h=maxDim;}}
+    const c=document.createElement('canvas');c.width=w;c.height=h;
+    c.getContext('2d').drawImage(bmp,0,0,w,h);bmp.close?.();
+    return await new Promise(res=>c.toBlob(b=>res(b||file),'image/jpeg',quality));
+  }catch(e){console.warn('foto sıkıştırılamadı, orijinal yüklenecek:',e);return file;}
+}
+async function uploadStokFoto(file){
+  const full=await compressImage(file,1600,0.75),thumb=await compressImage(file,220,0.55);
+  const base=`stok/irsaliye-${Date.now()}`;
+  const up=async(blob,path)=>{const{error}=await sb.storage.from('belgeler').upload(path,blob,{upsert:false,contentType:'image/jpeg'});if(error)throw error;return sb.storage.from('belgeler').getPublicUrl(path).data.publicUrl;};
+  const url=await up(full,base+'.jpg');
+  let th=url;try{th=await up(thumb,base+'-thumb.jpg');}catch(e){}
+  return{url,thumb:th};
 }
 async function saveStokGiris(){
   const q=parseInt(document.getElementById('sLitre').value);
   const m=document.getElementById('sMsg');
-  if(!q||q<=0){m.style.color='var(--alert)';m.textContent='Geçerli litre gir.';return;}
-  if(!cloudOK){m.style.color='var(--alert)';m.textContent='Bulut bağlantısı yok.';return;}
+  const bad=t=>{m.style.color='var(--alert)';m.textContent=t;};
+  if(!q||q<=0)return bad('Geçerli litre gir.');
+  if(!cloudOK)return bad('Bulut bağlantısı yok.');
+  const bayi=document.getElementById('sBayi').value.trim(), tur=document.getElementById('sTur').value;
+  if(!bayi)return bad('İrsaliyedeki bayi adını yaz.');
+  if(!tur)return bad('Satış türünü seç: iç satış / dış satış.');
+  if(!stokFoto&&!confirm('İrsaliye fotoğrafı eklenmedi. Yine de kaydedilsin mi?'))return;
   const t=document.getElementById('sTarih').value;
-  const{error}=await sb.from('stok_girisleri').insert({
-    litre:q,tarih:t?new Date(t).toISOString():nowIso(),
-    kaynak:document.getElementById('sKaynak').value.trim(),
-    belge_no:document.getElementById('sBelge').value.trim(),
-    aciklama:document.getElementById('sNot').value.trim()});
-  if(error){console.warn(error);m.style.color='var(--alert)';m.textContent='Kaydedilemedi — supabase-v19-stok.sql çalıştırıldı mı?';return;}
-  ['sLitre','sBelge','sNot'].forEach(i=>document.getElementById(i).value='');
+  const btn=document.querySelector('[onclick="saveStokGiris()"]');btn.disabled=true;
+  try{
+    let foto=null;
+    if(stokFoto){m.style.color='var(--muted)';m.textContent='Fotoğraf yükleniyor…';foto=await uploadStokFoto(stokFoto);}
+    const{error}=await sb.from('stok_girisleri').insert({
+      litre:q,tarih:t?new Date(t).toISOString():nowIso(),
+      kaynak:document.getElementById('sKaynak').value.trim(),
+      bayi,satis_turu:tur,
+      belge_no:document.getElementById('sBelge').value.trim(),
+      aciklama:document.getElementById('sNot').value.trim(),
+      irsaliye_foto_url:foto?foto.url:null,irsaliye_foto_thumb:foto?foto.thumb:null});
+    if(error)throw error;
+  }catch(e){console.warn(e);bad('Kaydedilemedi — supabase-v19-stok.sql (güncel hali) çalıştırıldı mı?');btn.disabled=false;return;}
+  btn.disabled=false;
+  ['sLitre','sBelge','sNot','sBayi'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('sTur').value='';stokFoto=null;document.getElementById('sFoto').value='';
+  const fb=document.getElementById('sFotoBtn');fb.textContent='📷 İrsaliye fotoğrafı çek / seç';fb.style.borderColor='';fb.style.color='';
   m.style.color='var(--diesel)';m.textContent='✓ Stok girişi kaydedildi';setTimeout(()=>{m.textContent='';},3000);
   renderStok();
 }
@@ -1295,8 +1346,7 @@ function renderOrders(){
         ${dlv
           ? `<span class="obig ${short?'oshort':(extra?'':'odone')}">${L2(o.deliveredQty)} L</span>
              <span style="color:var(--muted)">bırakıldı / ${L2(o.qty)} L sipariş</span>`
-          : `<span class="obig">${L2(o.qty)} L</span>
-             <input class="ordqty" style="width:74px;margin-left:auto" type="number" value="${o.qty}" onchange="setQty('${o.id}',this.value)">`}
+          : `<span class="obig">${L2(o.qty)} L</span>`}
       </div>
       ${short?`<div class="ometa" style="color:#b06a00">Eksik ${L2(o.qty-o.deliveredQty)} L (%${Math.round(o.deliveredQty/o.qty*100)})</div>`:''}
       <div class="ometa">
@@ -1423,11 +1473,12 @@ async function exportExcel(btn){
     // stok defteri: giren / \u00e7\u0131kan / kalan (Kalan negatifse k\u0131rm\u0131z\u0131)
     const stk=await buildStokLedger();
     const NEG={font:{color:{rgb:'C8402C'},bold:true}};
-    const ledRows=[['Tarih','Hareket','M\u00fc\u015fteri / Kaynak','Ara\u00e7','Belge no','Not','Giren (L)','\u00c7\u0131kan (L)','Kalan (L)']];
-    stk.moves.forEach(m=>ledRows.push([fmtDT(m.t),m.type==='in'?'Giri\u015f':'\u00c7\u0131k\u0131\u015f',m.name,m.veh,m.doc,m.note,
+    const ledRows=[['Tarih','Hareket','M\u00fc\u015fteri / Kaynak','Bayi (irsaliye)','Sat\u0131\u015f t\u00fcr\u00fc','Ara\u00e7','\u0130rsaliye no','Not','\u0130rsaliye foto\u011fraf\u0131','Giren (L)','\u00c7\u0131kan (L)','Kalan (L)']];
+    stk.moves.forEach(m=>ledRows.push([fmtDT(m.t),m.type==='in'?'Giri\u015f':'\u00c7\u0131k\u0131\u015f',m.name,m.bayi||'',m.tur||'',m.veh,m.doc,m.note,
+      m.foto?{v:'\u0130rsaliye \u2014 a\u00e7',t:'s',l:{Target:m.foto,Tooltip:m.foto},s:{font:{color:{rgb:'0563C1'},underline:true}}}:'',
       m.type==='in'?m.qty:'',m.type==='out'?m.qty:'',m.bal<0?{v:m.bal,t:'n',s:NEG}:m.bal]));
     const totIn=stk.moves.filter(m=>m.type==='in').reduce((a,m)=>a+m.qty,0), totOut=stk.moves.filter(m=>m.type==='out').reduce((a,m)=>a+m.qty,0);
-    ledRows.push(['','','','','','TOPLAM',totIn,totOut,totIn-totOut]);
+    ledRows.push(['','','','','','','','','TOPLAM',totIn,totOut,totIn-totOut]);
     if(stk.err)ledRows.push(['\u26a0 '+stk.err]);
     const dayMap=new Map();
     stk.moves.forEach(m=>{const d=new Date(m.t).toLocaleDateString('tr-TR');const r=dayMap.get(d)||{gir:0,cik:0,bal:0};if(m.type==='in')r.gir+=m.qty;else r.cik+=m.qty;r.bal=m.bal;dayMap.set(d,r);});
@@ -1863,7 +1914,10 @@ function schedule(plan,T,D,cfg){
     // FULL DOLUM: tanker tesise girdiyse kullandığı gözleri sonuna kadar doldurur.
     const usedComps=new Set();
     tr.items.forEach(a=>(a.parts||[{comp:a.comp}]).forEach(p=>usedComps.add(p.comp-1)));
-    const fullLoad=[...usedComps].reduce((s,ci)=>s+(v.caps[ci]||0),0);
+    // TIR (besleyici) tesise gidince HER ZAMAN tam doldurur: kalan yakıtsız tüm gözler
+    const fullLoad=v.tir
+      ? v.caps.reduce((s,c,ci)=>s+(v.cur[ci]>0?0:c),0)
+      : [...usedComps].reduce((s,ci)=>s+(v.caps[ci]||0),0);
     const delivered=tr.items.reduce((s,a)=>s+a.give,0);
     const fv=fullLoad;
     leftover+=Math.max(0,fullLoad-delivered);
@@ -1886,13 +1940,16 @@ function schedule(plan,T,D,cfg){
     const hop2=n=>{const dt=T[c2][n];t2+=dt;d2+=D[c2][n];c2=n;return dt;};
     legs2.push({kind:'garage',label:'Garajdan çıkış',time:t2});
     const dtp=hop2(P);const totVol=gaveTo.reduce((s,x)=>s+x.vol,0);
-    legs2.push({kind:'plant',time:t2,drive:dtp,mins:tLoad(cfg),vol:totVol,trip:1,nth:null});
+    // besleyici tesise gidince tam doldurur (yalnız dağıttığı kadar değil); fazlası tankerde kalır
+    const fullCap=v.caps.reduce((s,c,ci)=>s+(v.cur[ci]>0?0:c),0);
+    const loadVol=Math.max(totVol,fullCap);
+    legs2.push({kind:'plant',time:t2,drive:dtp,mins:tLoad(cfg),vol:loadVol,delivered:totVol,trip:1,nth:null});
     t2+=tLoad(cfg);
     const dtg=hop2(G);t2+=dtg;
     legs2.push({kind:'feedout',time:t2,items:gaveTo,mins:tXfer(totVol,cfg),vol:totVol,drive:dtg});
     t2+=tXfer(totVol,cfg);
     return {veh:v,legs:legs2,total:t2-cfg.start,end:t2,dist:d2,drops:0,
-      trips:1,vol:totVol,parked:false,feeder:true};
+      trips:1,vol:totVol,parked:false,feeder:true,leftover:Math.max(0,loadVol-totVol)};
   }
   return {veh:v,legs,total:t-cfg.start,end:t,dist,drops:drops.length,
     trips:plan.trips.length,vol:drops.reduce((s,l)=>s+l.a.give,0),parked:plan.parked,
@@ -2237,7 +2294,7 @@ async function render(routes,extra,cfg,garage,plant,orders){
         else if(l.kind==='plant')fh+=`<div class="stop r-plant"><div class="sq">⛽</div><div><div class="sname">Dolum tesisi</div><div class="smeta">${dur(l.drive)} sürüş · ${L2(l.vol)} L alınıyor · ${dur(l.mins)}</div></div><div class="stime">${hhmm(l.time)}</div></div>`;
         else if(l.kind==='feedout')fh+=`<div class="stop r-xfer"><div class="sq">⇄</div><div><div class="sname">Garajda besleme</div><div class="smeta">${l.items.map(t=>`${t.to} → ${L2(t.vol)} L`).join('<br>')}<br>toplam ${L2(l.vol)} L · ${dur(l.mins)}</div></div><div class="stime">${hhmm(l.time)}</div></div>`;
       }
-      html+=`<div class="veh"><div class="vhead"><div class="vname"><span class="chip" style="background:${r.veh.color}"></span>${r.veh.id}${tags}</div><div class="vstat">besleyici · ${L2(r.vol)} L<br>${r.dist.toFixed(0)} km · ${dur(r.total)}</div></div><div class="stops">${fh}</div></div>`;
+      html+=`<div class="veh"><div class="vhead"><div class="vname"><span class="chip" style="background:${r.veh.color}"></span>${r.veh.id}${tags}</div><div class="vstat">besleyici · ${L2(r.vol)} L dağıtım${r.leftover>0?`<br><span style="color:#7a3fa8">tam dolum · araçta kalan: ${L2(r.leftover)} L</span>`:''}<br>${r.dist.toFixed(0)} km · ${dur(r.total)}</div></div><div class="stops">${fh}</div></div>`;
       // besleyici rotası: garaj → tesis → garaj
       const geo=await geometry([garage,plant,garage]);
       if(geo)L.polyline(geo,{color:r.veh.color,weight:3,opacity:.7,dashArray:'2,6'}).addTo(layers);

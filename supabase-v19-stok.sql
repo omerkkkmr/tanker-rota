@@ -10,10 +10,20 @@ create table if not exists stok_girisleri (
   tarih       timestamptz not null default now(),
   litre       int not null check (litre > 0),
   kaynak      text default '',      -- tedarikçi / kaynak (ör. "Açılış stoğu")
-  belge_no    text default '',      -- irsaliye / fatura no
+  belge_no    text default '',      -- irsaliye no
   aciklama    text default '',
+  bayi        text default '',      -- irsaliyede yazan bayi adı
+  satis_turu  text,                 -- 'ic' (iç satış) | 'dis' (dış satış)
+  irsaliye_foto_url   text,
+  irsaliye_foto_thumb text,
   created_at  timestamptz default now()
 );
+
+-- tablo daha önce (eski haliyle) kurulduysa yeni kolonları ekle
+alter table stok_girisleri add column if not exists bayi text default '';
+alter table stok_girisleri add column if not exists satis_turu text;
+alter table stok_girisleri add column if not exists irsaliye_foto_url text;
+alter table stok_girisleri add column if not exists irsaliye_foto_thumb text;
 
 alter table stok_girisleri enable row level security;
 

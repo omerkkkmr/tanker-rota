@@ -1105,6 +1105,26 @@ gelen stoğu da girebilmeliyim". Merkezi stok defteri kuruldu:
   (Filo "mevcut L") bu defterden BAĞIMSIZ; tek bir merkezi stok tutulur. Tarayıcıda
   taklit veriyle hesap (düzeltme çift sayımı, silindi, negatif kalan) doğrulandı.
 
+## KART DÜZENLEME + BESLEYİCİ TAM DOLUM + İRSALİYELİ STOK GİRİŞİ (2026-09-24)
+
+1. **Planlayıcı kartında satır içi düzenleme kalktı:** sipariş kartındaki miktar
+   kutusu (`setQty`) "Düzenle'ye basmasan da düzenleyebiliyorsun" diye karıştırıcıydı;
+   kaldırıldı (`setQty` silindi). Bilgi düzenleme YALNIZ "✎ Düzenle" diyaloğundan.
+   Kartta kalan tek kontrol araç atama listesi (⚙/🔒 — planlama aksiyonu, bilgi değil).
+2. **Besleyici (TIR) tesise gidince HER ZAMAN tam doldurur:** motor (`schedule`)
+   — saf besleyici rotasında plant leg hacmi artık dağıtılan değil tam boş kapasite
+   (kalan yakıtlı gözler hariç); fazlası "araçta kalan" (`leftover`, mevcut "Günü
+   kapat" akışıyla ertesi güne aktarılır). TIR kendi dağıtımına gidiyorsa da tüm
+   boş gözleri doldurur (diğer araçlar eskisi gibi yalnız kullandığı gözleri).
+   Kart: "besleyici · X L dağıtım · tam dolum · araçta kalan: Y L". Yerelde doğrulandı
+   (33.750 L kapasiteli TIR her iki senaryoda 33.750 L yükledi).
+3. **Stok girişi irsaliye bilgisiyle:** Stok sekmesi girişine bayi adı (irsaliyede
+   yazan), satış türü (İç/Dış satış, ZORUNLU), irsaliye no, irsaliye fotoğrafı (küçültülüp
+   `belgeler` deposuna; yoksa onay sorulur) eklendi. Excel "Stok Hareketleri"nde yeni
+   sütunlar: Bayi, Satış türü, İrsaliye no, İrsaliye fotoğrafı (tıklanabilir link).
+   Çıkışlar hâlâ teslim edilen (onaylı) siparişlerden otomatik. `supabase-v19-stok.sql`
+   yeni kolonlarla güncellendi (tablo henüz kurulmamıştı → tek seferde çalışır).
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
