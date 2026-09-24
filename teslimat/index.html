@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Teslimat — Tanker Rota</title>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -115,6 +115,9 @@ header button:active{border-color:var(--hi);color:var(--hi)}
 .readonly-block{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:12px;margin-top:6px;font-family:'IBM Plex Mono';font-size:12px;line-height:1.8}
 .readonly-photos{display:flex;gap:8px;margin-top:8px}
 .readonly-photos a img{width:70px;height:70px;object-fit:cover;border-radius:4px;border:1px solid var(--line)}
+
+/* çift dokunmayla yakınlaşmayı kapat (kaydırma/harita hareketi etkilenmez) */
+html,body,*{touch-action:manipulation}
 </style>
 </head>
 <body>

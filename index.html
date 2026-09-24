@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Tanker Rota Planlayıcı v4</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -358,6 +358,9 @@ input[type=date],input[type=datetime-local]{-webkit-appearance:none;appearance:n
 .newform input,.newform select,.dlgbox input,.dlgbox select{min-height:40px}
 input[type=date]::-webkit-date-and-time-value,input[type=datetime-local]::-webkit-date-and-time-value{text-align:left;margin:0;min-height:1.2em}
 input::-webkit-calendar-picker-indicator{opacity:.6}
+
+/* çift dokunmayla yakınlaşmayı kapat (kaydırma/harita hareketi etkilenmez) */
+html,body,*{touch-action:manipulation}
 </style>
 </head>
 <body>

@@ -1228,6 +1228,14 @@ kolonuyla) VAR; tek bekleyen: `supabase-v20-ajanda.sql`.
   fotoğraflar + "sipariş X L" görünür; yenileme 45→20 sn, sekmeye dönünce anında (ayrıca realtime).
   Planlayıcı yedek yenileme 45→30 sn + sekmeye dönünce.
 
+## ÇİFT DOKUNMA YAKINLAŞMASI KAPATILDI (2026-09-24)
+
+Kullanıcı: "ekrana çift tıklayınca yakınlaşıyor". Üç ekranda da `touch-action:manipulation`
+(çift dokunma zoom'unu kapatır, kaydırma ve dokunma hareketleri etkilenmez) + viewport'a
+`user-scalable=no` eklendi. Leaflet haritası kendi `touch-action:none`ını koruyor (harita
+sıkıştırma/kaydırma çalışmaya devam eder). Not: iOS'ta erişilebilirlik gereği iki parmakla
+sıkıştırma yakınlaşması bazı sürümlerde tamamen kapatılamayabilir; çift dokunma kapalıdır.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
