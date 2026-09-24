@@ -95,6 +95,11 @@ select{cursor:pointer}
 .dlgbtns{display:flex;gap:8px;margin-top:18px}
 .dlgbtns button{flex:1;padding:14px;border-radius:4px;font-weight:700;font-size:14px;border:1px solid #cfc6b2;background:#fff;color:var(--muted2)}
 .dlgbtns .save{background:var(--green);border-color:var(--green);color:#fff}
+
+/* tarih alanı: iOS Safari bunu farklı yükseklikte/ortalı çizer — diğer alanlarla hizala */
+input,select{min-height:48px}
+input[type=date]{-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%;text-align:left;line-height:normal}
+input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0;min-height:1.2em}
 </style>
 </head>
 <body>
@@ -293,7 +298,7 @@ function renderDone(){
       <div>
         <div class="sh-t"><b>${c?esc(c.name):'<i>silinmiş müşteri</i>'}</b><span class="sh-time">${hm(o.delivered_at)}</span></div>
         <div class="sh-info"><span class="sh-vol">${L2(o.delivered_qty??o.qty)} L</span><span class="obadge b-${k}">${pend?'ONAY BEKLİYOR':'TESLİM'}</span>
-          <br>${fmtDT(o.delivered_at)} ${pend?'teslim girildi':'teslim edildi'}</div>
+          <br>${fmtDT(o.delivered_at)} ${pend?'teslim girildi':'teslim edildi'} · sipariş ${L2(o.qty)} L${o.vehicle?` · ${esc(o.vehicle)}`:''}</div>
         ${o.photos&&o.photos.length?`<div class="ophotos">${o.photos.map(p=>
           `<a href="${p.url}" target="_blank"><img src="${p.thumb||p.url}" loading="lazy" title="${p.type==='tank'?'Dolum tankı':p.type==='irsaliye'?'İrsaliye':p.type}"></a>`).join('')}</div>`:''}
       </div>
@@ -412,7 +417,8 @@ document.getElementById('odate').value=addDays1();
 document.getElementById('topDate').textContent=new Date().toLocaleDateString('tr-TR',{day:'2-digit',month:'long',year:'numeric'});
 load();
 // yedek yenileme: realtime bağlantısı sessizce koparsa kendini onarır
-setInterval(load,45000);
+setInterval(load,20000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)load();});
 </script>
 </body>
 </html>

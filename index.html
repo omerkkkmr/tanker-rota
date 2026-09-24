@@ -351,6 +351,13 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 @media(max-width:900px){
   input,textarea,select,.queue-val,.ordqty,.tplate,.cin,.shift-in,.lockrow select{font-size:16px}
 }
+
+/* tarih/saat alanları: iOS Safari bunları farklı yükseklikte/ortalı çizer — diğer alanlarla hizala */
+input[type=date],input[type=datetime-local]{-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%;
+  text-align:left;line-height:normal}
+.newform input,.newform select,.dlgbox input,.dlgbox select{min-height:40px}
+input[type=date]::-webkit-date-and-time-value,input[type=datetime-local]::-webkit-date-and-time-value{text-align:left;margin:0;min-height:1.2em}
+input::-webkit-calendar-picker-indicator{opacity:.6}
 </style>
 </head>
 <body>
@@ -421,8 +428,9 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
         <button class="primary" onclick="saveTeslimatGiris()">Teslimatı kaydet</button>
         <div class="hint" id="tMsg" style="color:var(--diesel);min-height:14px;text-align:center"></div>
       </div>
-      <label>Son teslimatlar</label>
+      <div class="dayhead" style="margin-top:14px">Teslimatlar — en yeni üstte <b id="tCount"></b></div>
       <div id="tRecent"></div>
+      <button class="ghost" id="tMore" style="width:100%;margin-top:10px;display:none" onclick="tesLimit+=40;loadTesLog(true)">Daha eski teslimatları göster</button>
     </div>
   </div>
 
@@ -1311,16 +1319,75 @@ function renderTeslimatGiris(){
     .map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
   if(customers.some(c=>c.id===prev))cs.value=prev;
   const vs=document.getElementById('tVeh'),pv=vs.value;
-  vs.innerHTML='<option value="">— belirtilmedi —</option>'+tankers.map(t=>`<option value="${esc(t.plate)}">${esc(t.plate)}</option>`).join('');
+  vs.innerHTML='<option value="">—</option>'+tankers.map(t=>`<option value="${esc(t.plate)}">${esc(t.plate)}</option>`).join('');
   vs.value=pv;
   if(!document.getElementById('tTime').value)resetTeslimatTime();
-  const recent=orderList.filter(o=>o.status==='done'||o.status==='onay').slice().sort(byDelivery).slice(0,8);
-  document.getElementById('tRecent').innerHTML=recent.length?recent.map(o=>{
-    const c=customers.find(c=>c.id===o.cid);
-    return `<div class="cust"><b>${c?esc(c.name):'<i>silinmiş müşteri</i>'}</b>
-      <small>${L2(o.deliveredQty||o.qty)} L${o.vehicle?' · '+esc(o.vehicle):''} · ${fmtDT(o.deliveredAt)}</small>
-      <span class="obadge b-${ST[o.status].cls}">${ST[o.status].lab}</span></div>`;
-  }).join(''):'<div class="empty">Henüz teslimat yok</div>';
+  renderTesList();loadTesLog();
+}
+/* ---------- Teslimat sekmesi: tüm teslimatlar (yeni üstte) ----------
+   Onay bekleyenler + teslim edilenler (kalıcı kayıt teslimat_kayitlari, sipariş başına en son kayıt).
+   Litre = TESLİM EDİLEN miktar (sipariş miktarı değil). */
+let tesLog=[],tesLogAt=0,tesLimit=40,tesLogBusy=false;
+async function loadTesLog(force){
+  if(!cloudOK||tesLogBusy)return;
+  if(!force&&Date.now()-tesLogAt<8000)return;
+  tesLogBusy=true;
+  try{
+    const{data,error}=await sb.from('teslimat_kayitlari')
+      .select('order_id,customer_name,delivered_qty,vehicle,delivered_at,logged_at,siparis_silindi,deliver_note,photo_tank_url,photo_irsaliye_url')
+      .order('delivered_at',{ascending:false}).limit(tesLimit*3);
+    if(error)throw error;
+    const seen=new Map();
+    (data||[]).forEach(r=>{const k=r.order_id||r.logged_at,p=seen.get(k);if(!p||String(r.logged_at)>String(p.logged_at))seen.set(k,r);});
+    tesLog=[...seen.values()];tesLogAt=Date.now();
+  }catch(e){console.warn('teslimat kayıtları okunamadı:',e);}
+  finally{tesLogBusy=false;}
+  renderTesList();
+}
+const thumbOf=u=>u?u.replace(/\.(jpe?g|png|webp)$/i,'-thumb.$1'):'';
+function tesItems(){
+  const items=[],have=new Set();
+  orderList.filter(o=>o.status==='done'||o.status==='onay').forEach(o=>{
+    have.add(o.id);
+    const c=customers.find(x=>x.id===o.cid);
+    items.push({pend:o.status==='onay',name:c?c.name:'silinmiş müşteri',qty:o.deliveredQty??o.qty,veh:o.vehicle||'',t:o.deliveredAt,note:o.deliverNote||'',
+      photos:(o.photos||[]).map(p=>({type:p.type,url:p.url,thumb:p.thumb||p.url})),gone:false});
+  });
+  tesLog.forEach(r=>{
+    if(r.order_id&&have.has(r.order_id))return;
+    items.push({pend:false,name:r.customer_name||'—',qty:r.delivered_qty||0,veh:r.vehicle||'',t:r.delivered_at||r.logged_at,note:r.deliver_note||'',
+      photos:[['tank',r.photo_tank_url],['irsaliye',r.photo_irsaliye_url]].filter(x=>x[1]).map(x=>({type:x[0],url:x[1],thumb:thumbOf(x[1])})),gone:!!r.siparis_silindi});
+  });
+  return items.filter(i=>i.qty>0||i.pend).sort((a,b)=>String(b.t||'').localeCompare(String(a.t||'')));
+}
+function renderTesList(){
+  const el=document.getElementById('tRecent');if(!el)return;
+  const all=tesItems(),list=all.slice(0,tesLimit);
+  document.getElementById('tCount').textContent=all.length?`(${all.length})`:'';
+  document.getElementById('tMore').style.display=(all.length>tesLimit||tesLog.length>=tesLimit*3)?'':'none';
+  if(!list.length){el.innerHTML='<div class="empty">Henüz teslimat yok</div>';return;}
+  const hm=x=>x?new Date(x).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}):'';
+  let last='';
+  el.innerHTML=list.map(i=>{
+    const d=i.t?isoDay(i.t):'',t=todayStr();
+    let head='';
+    if(d!==last){
+      last=d;
+      const grp=list.filter(x=>(x.t?isoDay(x.t):'')===d);
+      const rel=d===t?'Bugün':d===addDays(t,-1)?'Dün':'';
+      head=`<div class="dayhead" style="margin-top:0">${rel?rel+' · ':''}${d?fmtDay(d):'—'} <b>${grp.length} teslimat · ${L2(grp.reduce((a,x)=>a+x.qty,0))} L</b></div>`;
+    }
+    const k=i.pend?'onay':'done';
+    return head+`<div class="ocard st-${k}">
+      <div class="sh-n">${i.pend?'⏳':'✓'}</div>
+      <div>
+        <div class="sh-t"><b>${esc(i.name)}</b><span class="sh-time">${hm(i.t)}</span></div>
+        <div class="sh-info"><span class="sh-vol">${L2(i.qty)} L</span><span class="obadge b-${k}">${i.pend?'ONAY BEKLİYOR':'TESLİM'}</span>${i.gone?' <span class="obadge b-late">SİPARİŞ SİLİNDİ</span>':''}
+          ${i.veh?`<br>${esc(i.veh)}`:''}${i.note?`<br>${esc(i.note)}`:''}</div>
+        ${i.photos.length?`<div class="ophotos">${i.photos.map(p=>`<a href="${p.url}" target="_blank"><img src="${p.thumb}" loading="lazy" onerror="this.onerror=null;this.src='${p.url}'" title="${p.type==='tank'?'Dolum tankı':'İrsaliye'}"></a>`).join('')}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
 }
 function resetTeslimatTime(){
   const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
@@ -1349,6 +1416,7 @@ function saveTeslimatGiris(){
   }
   document.getElementById('tQty').value='';document.getElementById('tNote').value='';resetTeslimatTime();
   save();renderOrders();draw();cloudOrderUpsert(o);
+  setTimeout(()=>loadTesLog(true),900);
   const m=document.getElementById('tMsg');m.textContent='✓ Teslimat kaydedildi';setTimeout(()=>{m.textContent='';},3000);
 }
 function closeDlg(){document.getElementById('dlg').classList.remove('on');dlgId=null;}
@@ -1409,7 +1477,7 @@ function renderDayBar(){
   note.style.display=viewDate===t?'none':'block';
   note.textContent=viewDate<t?'Geçmiş gün — o gün teslim edilen ve o güne planlanan siparişler.':'Ajanda günü — bu gün gelince siparişler rotaya girer, atama o gün yapılır.';
 }
-function approveOrder(id){setOrdStatus(id,'done');}
+function approveOrder(id){setOrdStatus(id,'done');setTimeout(()=>loadTesLog(true),900);}
 function rejectOrder(id){
   const o=byId(id);if(!o)return;
   const c=customers.find(c=>c.id===o.cid);
@@ -1509,7 +1577,7 @@ function renderOrders(){
   refreshTeslimatGiris();
 }
 function refreshTeslimatGiris(){
-  if(document.querySelector('.tabpanel[data-tab="teslimatgir"]')?.style.display==='block')renderTeslimatGiris();
+  if(document.querySelector('.tabpanel[data-tab="teslimatgir"]')?.style.display==='block'){renderTesList();loadTesLog();}
 }
 
 function exportCsv(){
@@ -2621,7 +2689,8 @@ async function softRefresh(){
     subscribeRealtime();
   }catch(e){console.warn('yedek yenileme başarısız:',e);}
 }
-setInterval(softRefresh,45000);
+setInterval(softRefresh,30000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&typeof softRefresh==='function')softRefresh();});
 
 /* ---------- init ---------- */
 (async()=>{

@@ -1208,6 +1208,26 @@ form altında 3,5 sn'lik yeşil bilgi satırı ("✓ Ajandaya eklendi: 25 Eylül
 SQL durumu (canlı sorguyla doğrulandı): `tankers.is_tir` VAR, `stok_girisleri` (bayi
 kolonuyla) VAR; tek bekleyen: `supabase-v20-ajanda.sql`.
 
+## MOBİL HİZALAMA DENETİMİ + TESLİMAT SEKMESİ LİSTESİ (2026-09-24)
+
+- **Tarih kutucuğu:** iOS Safari `type=date/datetime-local` alanlarını farklı yükseklikte/ortalı
+  çizer. `appearance:none`, `text-align:left`, `::-webkit-date-and-time-value` sıfırlama ve
+  alan yükseklikleri eşitlendi (planlayıcı formu 40px, sipariş ekranı 48px — önceden 46/48).
+- **Denetim (375px):** her sekme/ekran/diyalog için yatay taşma + yan yana alan yükseklik
+  taramasıyla kontrol edildi. Bulunan GERÇEK hata: şoför ekranı "Plan dışı teslimat" penceresinde
+  müşteri listesi (`#aCust`) satır içi `width:100%` yüzünden 18px sağa taşıyordu — kaldırıldı.
+  Diğer bulgular kapalı `<details>` içindeki elemanların yanlış alarmıydı. Araç seçim etiketi
+  "— belirtilmedi —" → "—" (kesiliyordu).
+- **Planlayıcı "Teslimat" sekmesi:** üstte giriş formu, altında TÜM teslimatlar yeni→eski,
+  gün başlıklı (Bugün/Dün/tarih + gün toplamı). Litre = TESLİM EDİLEN miktar. Kaynak: onay
+  bekleyenler + sipariş listesindeki teslimler + kalıcı kayıt (`teslimat_kayitlari`, sipariş
+  başına en son kayıt; silinen siparişler "SİPARİŞ SİLİNDİ" rozetiyle). Fotoğraflar küçük önizleme
+  (kalıcı kayıtta thumb adresi `-thumb` kuralıyla türetilir, yoksa tam foto). 40'ar 40'ar
+  "Daha eski teslimatları göster"; onay/kayıt sonrası liste otomatik tazelenir.
+- **Sipariş ekranı güncelliği:** teslim/onay gelince "Son teslim edilenler"de teslim edilen litre +
+  fotoğraflar + "sipariş X L" görünür; yenileme 45→20 sn, sekmeye dönünce anında (ayrıca realtime).
+  Planlayıcı yedek yenileme 45→30 sn + sekmeye dönünce.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

@@ -665,7 +665,7 @@ async function openAdhoc(){
     <div class="csub">Rotada olmayan bir yere yaptığın teslimat</div>
 
     <label>Müşteri</label>
-    <select id="aCust" onchange="onAdhocCust()" style="width:100%;padding:12px;background:var(--bg);border:1px solid var(--line);border-radius:8px;font-family:'IBM Plex Mono';font-size:16px;color:var(--ink)">
+    <select id="aCust" onchange="onAdhocCust()">
       <option value="">— seç —</option>
       ${custs.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}
       <option value="__new__">➕ Yeni müşteri (bulunduğum konum)</option>
