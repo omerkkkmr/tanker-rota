@@ -1125,6 +1125,34 @@ gelen stoğu da girebilmeliyim". Merkezi stok defteri kuruldu:
    Çıkışlar hâlâ teslim edilen (onaylı) siparişlerden otomatik. `supabase-v19-stok.sql`
    yeni kolonlarla güncellendi (tablo henüz kurulmamıştı → tek seferde çalışır).
 
+## TASARIM: "ŞOFÖR GÖREV FORMU" DİLİ 3 EKRANA UYGULANDI (2026-09-24)
+
+Kullanıcı: rastgele sipariş oluştur, Plan → Şoför görev formunu aç, dizaynını adım
+adım incele, aynısını 3 ekrana uygula. İnceleme sonucu (görev formunun tasarım dili):
+- **Kabuk:** koyu üst çubuk (#1b1917, büyük harf/aralıklı başlık, çerçeveli hayalet
+  butonlar); altında koyu-sıcak sekme şeridi (#2a2621; aktif sekme = koyu zemin +
+  beyaz yazı + 3px renkli alt çizgi).
+- **Başlık bloğu:** beyaz; büyük mono plaka, mono gri alt satır, 1px çizgili KPI ızgarası
+  (büyük mono rakam + küçük büyük-harf etiket); altında **2px koyu ayraç**.
+- **Satırlar:** tam genişlik beyaz, 1px ince çizgiyle ayrılmış (kart/gölge/yuvarlaklık YOK),
+  `36px ikon | içerik` ızgarası. İkon: durak = siyah numaralı DAİRE (bitti = yeşil ✓);
+  garaj = altın, tesis = yeşil, aktarım = mor KARE (4px).
+- **İçerik:** sol başlık 16px/600 + sağda mono 15px/600 saat; mono 12px gri bilgi satırı;
+  siyah litre etiketi (kısmi = amber); sarı zeminli sol çizgili not kutusu.
+- **Aksiyonlar:** düz dolgulu 4px butonlar — mavi = yol tarifi/gezinme, yeşil = onay/teslim,
+  gri = detay, kırmızı çerçeve = tehlikeli; hiçbir gölge/yükselme yok.
+Uygulama: **teslimat** (şoför) ekranı görev formunun birebir aynısı (başlık bloğu + adım
+satırları, "✓ Teslim gir" yeşil, "▸ Yol tarifi" mavi, koyu başlıklı modal); **siparis**
+ekranı (form bloğu + koyu bölüm şeritleri + durum renkli ikon daireli sipariş satırları);
+**index** (planlayıcı) — koyu sekme şeridi, tam genişlik sipariş/tanker satırları, plan
+listesi (araç blokları arası 2px ayraç, siyah numaralı daireler, renkli kare ikonlar),
+banner'lar kare/tam genişlik, koyu başlıklı diyaloglar, yeşil birincil buton. Önceki turun
+büyük köşe yuvarlaklıkları ve gölgeleri (`--sh-*` artık `none`) kaldırıldı; kontroller 4px.
+Yazı tipleri (Manrope + IBM Plex Mono) ve renk paleti aynı. Sekme sayaçları kısaltıldı
+("(8 açık · 1 onay)"). Görev formunun kendi ölçüleri (önceki turda bozulan 4px köşeler)
+orijinaline döndürüldü. Tarayıcıda 375px mobil + masaüstünde 3 ekran ve diyaloglar
+doğrulandı; tüm sipariş durumlarının kartları/düğmeleri regresyon kontrolünden geçti.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

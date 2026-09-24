@@ -6,13 +6,11 @@
 <title>Teslimat — Tanker Rota</title>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#1b1917;--bg:#f4f1ea;--card:#ffffff;--line:#e5ddc9;--muted:#8b8377;--muted2:#6d655a;
+:root{--ink:#1b1917;--ink2:#2a2621;--bg:#f4f1ea;--card:#ffffff;--line:#e5ddc9;--muted:#8b8377;--muted2:#6d655a;
   --hi:#d9a441;--hi-bg:#e6b558;--hi-border:#a4700f;--diesel:#1f7a44;--alert:#c8402c;--xfer:#8b3fb5;--htext:#f3efe7;
-  --sh-sm:0 1px 2px rgba(27,25,23,.05),0 1px 3px rgba(27,25,23,.06);
-  --sh-md:0 4px 14px rgba(27,25,23,.09),0 1px 3px rgba(27,25,23,.07)}
+  --blue:#1f6fd0;--green:#2f8f4f}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-button,input,select,textarea,.stop,.plateBtn,.photobtn,.dlgbtns button{
-  transition:box-shadow .15s ease,border-color .15s ease,background-color .15s ease,transform .1s ease,color .15s ease}
+button,input,select,textarea{transition:border-color .15s ease,background-color .15s ease,color .15s ease}
 html,body{height:100%}
 body{font-family:'Manrope',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
 input,button,select,textarea{font-family:inherit;font-size:15px}
@@ -21,94 +19,102 @@ button{cursor:pointer}
 
 /* ---- giriş ekranı ---- */
 #login{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:18px}
-#login h1{font-size:22px;font-weight:800;letter-spacing:.01em}
+#login h1{font-size:14px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
 #login .sub{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);text-align:center;line-height:1.6}
-.plateList{width:280px;max-width:85vw;display:flex;flex-direction:column;gap:10px}
-.plateBtn{width:100%;padding:18px;background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:12px;
-  font-family:'IBM Plex Mono';font-size:18px;font-weight:600;letter-spacing:.04em;text-align:center;box-shadow:var(--sh-sm)}
-.plateBtn:active{border-color:var(--hi-border);color:var(--hi-border);box-shadow:var(--sh-md);transform:translateY(-1px)}
+.plateList{width:300px;max-width:88vw;display:flex;flex-direction:column;border:1px solid var(--line);background:var(--card)}
+.plateBtn{width:100%;padding:18px;background:var(--card);border:0;border-bottom:1px solid var(--line);color:var(--ink);border-radius:0;
+  font-family:'IBM Plex Mono';font-size:20px;font-weight:600;letter-spacing:.04em;text-align:center}
+.plateBtn:last-child{border-bottom:0}
+.plateBtn:active{background:var(--ink);color:#fff}
 #loginErr{color:#b3392a;font-family:'IBM Plex Mono';font-size:11px;min-height:14px;text-align:center}
 
-/* ---- ana ekran ---- */
-#app{display:none;min-height:100vh;flex-direction:column}
+/* ---- ana ekran: şoför görev formu düzeni ---- */
+#app{display:none;min-height:100vh;flex-direction:column;max-width:560px;margin:0 auto;width:100%}
 #app.on{display:flex}
-header{position:sticky;top:0;z-index:10;background:var(--ink);color:var(--htext);
-  padding:14px 16px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 0 rgba(0,0,0,.15)}
-header .plate{font-family:'IBM Plex Mono';font-size:19px;font-weight:600;letter-spacing:.03em}
-header .sub{font-family:'IBM Plex Mono';font-size:9px;color:#b7ada0;margin-top:2px}
-header button{background:transparent;border:1px solid #4a4032;color:#cdc5b8;padding:8px 12px;border-radius:7px;
-  font-family:'IBM Plex Mono';font-size:10px;letter-spacing:.05em}
+header{position:sticky;top:0;z-index:10;background:var(--ink);color:#f2f0ec;
+  padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+header .plate{font-family:'IBM Plex Mono';font-size:20px;font-weight:600;letter-spacing:.04em}
+header .sub{font-family:'IBM Plex Mono';font-size:10px;color:#b7ada0;margin-top:2px}
+header button{background:transparent;border:1px solid #4a5665;color:#c3cad2;padding:7px 12px;border-radius:4px;
+  font-size:12px;font-weight:600}
 header button:active{border-color:var(--hi);color:var(--hi)}
 
-#summary{display:flex;gap:1px;background:var(--line)}
-#summary .cell{flex:1;background:var(--card);padding:12px 8px;text-align:center}
-#summary .cell b{display:block;font-family:'IBM Plex Mono';font-size:18px;font-weight:600;color:var(--ink)}
-#summary .cell span{font-family:'IBM Plex Mono';font-size:9px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase}
-
-#refreshRow{padding:8px 16px;display:flex;justify-content:space-between;align-items:center}
-#refreshRow button{background:transparent;border:1px solid var(--line);color:var(--muted2);padding:6px 10px;
-  border-radius:7px;font-family:'IBM Plex Mono';font-size:10px}
+.sh-head{background:#fff;border-bottom:2px solid var(--ink);padding:14px 16px 12px}
+#summary{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+#summary .cell{background:#fff;padding:9px 4px;text-align:center}
+#summary .cell b{display:block;font-family:'IBM Plex Mono';font-size:16px;font-weight:600;color:var(--ink)}
+#summary .cell span{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#6e6a63}
+.adhocRow{margin-top:12px}
+.adhocBtn{width:100%;padding:12px;background:#fff;border:1.5px dashed var(--hi-border);color:var(--hi-border);
+  border-radius:4px;font-weight:700;font-size:13px}
+.adhocBtn:active{background:#fbf1d9}
+#refreshRow{margin-top:10px;display:flex;justify-content:space-between;align-items:center}
+#refreshRow button{background:transparent;border:1px solid var(--line);color:var(--muted2);padding:5px 10px;
+  border-radius:4px;font-family:'IBM Plex Mono';font-size:10px}
 #lastSync{font-family:'IBM Plex Mono';font-size:9px;color:var(--muted)}
 
-#timeline{flex:1;padding:0 12px 40px;overflow-y:auto}
-.leg{margin:10px 0}
-.leg-info{background:var(--card);border-left:3px solid var(--line);border-radius:8px;padding:10px 12px;
-  font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);line-height:1.6}
-.leg-info b{color:var(--ink)}
-.stop{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;
-  align-items:center;gap:12px;box-shadow:var(--sh-sm)}
-.stop.done{opacity:.75;border-color:var(--diesel)}
-.stop-n{width:30px;height:30px;border-radius:50%;background:var(--ink);border:2px solid var(--hi);color:var(--hi);
-  display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono';font-weight:600;font-size:12px;flex-shrink:0}
-.stop.done .stop-n{border-color:var(--diesel);color:var(--diesel)}
-.stop-body{flex:1;min-width:0}
-.stop-name{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.stop-meta{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);margin-top:3px}
-.stop-badge{font-family:'IBM Plex Mono';font-size:9px;padding:3px 7px;border-radius:5px;letter-spacing:.05em;
-  text-transform:uppercase;flex-shrink:0}
-.stop-badge.wait{background:#fbf1d9;color:var(--hi-border)}
-.stop-badge.done{background:#e8f6ec;color:var(--diesel)}
-.stop-badge.onay{background:#f3e9fa;color:#7a3fa8}
-.stop.onay{opacity:.85;border-color:#8b3fb5}
-.stop.onay .stop-n{border-color:#8b3fb5;color:#8b3fb5}
-.adhocRow{padding:4px 16px 8px}
-.adhocBtn{width:100%;padding:13px;background:var(--card);border:1.5px dashed var(--hi-border);color:var(--hi-border);
-  border-radius:12px;font-weight:700;font-size:14px}
-.adhocBtn:active{background:#fbf1d9}
+#timeline{flex:1;overflow-y:auto;padding-bottom:40px}
+.sh-step{background:#fff;border-bottom:1px solid var(--line);padding:13px 16px;display:grid;
+  grid-template-columns:36px 1fr;gap:12px;align-items:start}
+.sh-n{width:36px;height:36px;border-radius:50%;background:var(--ink);color:#fff;display:flex;
+  align-items:center;justify-content:center;font-family:'IBM Plex Mono';font-size:14px;font-weight:600}
+.sh-n.sq{border-radius:4px;font-size:16px}
+.sh-n.plant{background:var(--green)}
+.sh-n.garage{background:var(--hi-bg);color:var(--ink)}
+.sh-n.xfer{background:var(--xfer)}
+.sh-n.ok{background:var(--green)}
+.sh-n.pend{background:var(--xfer)}
+.sh-t{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sh-t b{font-size:16px;font-weight:600;line-height:1.25}
+.sh-time{font-family:'IBM Plex Mono';font-size:15px;font-weight:600;white-space:nowrap}
+.sh-info{font-family:'IBM Plex Mono';font-size:12px;color:#4a4741;margin-top:5px;line-height:1.6}
+.sh-vol{display:inline-block;background:var(--ink);color:#fff;padding:2px 8px;border-radius:4px;
+  font-family:'Manrope';font-weight:700;font-size:13px;margin-right:4px}
+.sh-vol.ok{background:var(--green)}
+.sh-vol.pend{background:var(--xfer)}
+.sh-note{background:#fff8e1;border-left:3px solid #b06a00;padding:8px 11px;margin-top:8px;font-size:12px;line-height:1.5}
+.sh-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.sh-btn{display:inline-flex;align-items:center;gap:6px;color:#fff;border:0;text-decoration:none;padding:9px 14px;
+  border-radius:4px;font-weight:600;font-size:12px;background:var(--blue)}
+.sh-btn:active{filter:brightness(.9)}
+.sh-btn.green{background:var(--green)}
+.sh-btn.grey{background:#6e6a63}
+.sh-btn.purple{background:var(--xfer)}
+.sh-btn.line{background:#fff;color:var(--ink);border:1px solid #cfc6b2}
+.secBand{background:var(--ink2);color:#c9c0b0;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:10px 16px}
+.empty{padding:40px 16px;text-align:center;color:var(--muted);font-family:'IBM Plex Mono';font-size:12px;line-height:1.8;background:#fff}
 .gpsInfo{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);margin-top:8px}
 .gpsInfo.ok{color:var(--diesel)}
 .gpsInfo.err{color:var(--alert)}
-.secTitle{font-family:'IBM Plex Mono';font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2);margin:18px 2px 8px}
-.empty{padding:40px 16px;text-align:center;color:var(--muted);font-family:'IBM Plex Mono';font-size:12px;line-height:1.8}
 
-/* ---- teslim modalı ---- */
+/* ---- modal: koyu başlık şeritli ---- */
 .dlg{position:fixed;inset:0;background:rgba(27,25,23,.6);z-index:3000;display:none;align-items:flex-end;justify-content:center}
 .dlg.on{display:flex}
-.dlgbox{background:var(--card);border-radius:20px 20px 0 0;padding:18px 18px 26px;width:100%;max-width:480px;
-  max-height:92vh;overflow-y:auto;box-shadow:0 -8px 30px rgba(27,25,23,.25)}
-.dlgbox h3{font-size:16px;font-weight:700;margin-bottom:2px}
-.dlgbox .csub{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);margin-bottom:16px}
+.dlgbox{background:#fff;border-radius:0;padding:0 0 22px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto}
+.dlgbox>*{margin-left:18px;margin-right:18px}
+.dlgbox>h3{margin:0;padding:14px 18px;background:var(--ink);color:#f2f0ec;font-size:14px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.dlgbox>.csub{margin:0 0 6px;padding:8px 18px;background:var(--ink2);color:#a39a8c;font-family:'IBM Plex Mono';font-size:11px}
+.dlgbox>input,.dlgbox>select,.dlgbox>.photobtn{width:calc(100% - 36px)}
 .dlgbox label{display:block;font-family:'IBM Plex Mono';font-size:10px;color:var(--muted);letter-spacing:.06em;
-  text-transform:uppercase;margin:14px 0 6px}
-.dlgbox input[type=number],.dlgbox input[type=text]{width:100%;padding:12px;background:var(--bg);
-  border:1px solid var(--line);color:var(--ink);border-radius:8px;font-family:'IBM Plex Mono';font-size:16px}
-.photobtn{display:flex;align-items:center;gap:10px;width:100%;padding:12px;background:var(--bg);
-  border:1px dashed var(--line);color:var(--muted2);border-radius:8px;font-family:'IBM Plex Mono';font-size:11px;text-align:left}
-.photobtn.have{border-style:solid;border-color:var(--diesel);color:var(--diesel)}
-.photobtn img{width:36px;height:36px;object-fit:cover;border-radius:6px;flex-shrink:0}
+  text-transform:uppercase;margin-top:14px;margin-bottom:6px}
+.dlgbox input[type=number],.dlgbox input[type=text],.dlgbox select{padding:12px;background:var(--bg);
+  border:1px solid var(--line);color:var(--ink);border-radius:4px;font-family:'IBM Plex Mono';font-size:16px}
+.dlgbox input:focus,.dlgbox select:focus{outline:2px solid var(--hi);outline-offset:-1px;border-color:var(--hi)}
+.photobtn{display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg);
+  border:1px dashed #cfc6b2;color:var(--muted2);border-radius:4px;font-family:'IBM Plex Mono';font-size:11px;text-align:left}
+.photobtn.have{border-style:solid;border-color:var(--green);color:var(--diesel)}
+.photobtn img{width:36px;height:36px;object-fit:cover;border-radius:4px;flex-shrink:0}
 .photobtn .icon{width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
-  background:#efe9dc;border-radius:6px;font-size:16px}
+  background:#efe9dc;border-radius:4px;font-size:16px}
 .dlgbtns{display:flex;gap:8px;margin-top:20px}
-.dlgbtns button{flex:1;padding:14px;border-radius:9px;font-weight:700;letter-spacing:0;text-transform:none;
-  font-size:13px;border:0}
-.btn-cancel{background:transparent!important;border:1px solid var(--line)!important;color:var(--muted2)}
-.btn-save{background:var(--hi-bg);color:var(--ink);border:1px solid var(--hi-border);box-shadow:var(--sh-sm)}
-.btn-save:active{box-shadow:var(--sh-md);transform:translateY(-1px)}
-.btn-save:disabled{background:#e5ddc9;color:#a89f8f;border-color:#e5ddc9;box-shadow:none;transform:none}
+.dlgbtns button{flex:1;padding:14px;border-radius:4px;font-weight:700;font-size:13px;border:0}
+.btn-cancel{background:#fff!important;border:1px solid #cfc6b2!important;color:var(--muted2)}
+.btn-save{background:var(--green);color:#fff}
+.btn-save:disabled{background:#e5ddc9;color:#a89f8f}
 .savingNote{font-family:'IBM Plex Mono';font-size:10px;color:var(--muted);margin-top:10px;text-align:center;min-height:14px}
-.readonly-block{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;margin-top:6px;font-family:'IBM Plex Mono';font-size:11px;line-height:1.8}
+.readonly-block{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:12px;margin-top:6px;font-family:'IBM Plex Mono';font-size:12px;line-height:1.8}
 .readonly-photos{display:flex;gap:8px;margin-top:8px}
-.readonly-photos a img{width:70px;height:70px;object-fit:cover;border-radius:7px;border:1px solid var(--line)}
+.readonly-photos a img{width:70px;height:70px;object-fit:cover;border-radius:4px;border:1px solid var(--line)}
 </style>
 </head>
 <body>
@@ -129,17 +135,17 @@ header button:active{border-color:var(--hi);color:var(--hi)}
     <button onclick="doLogout()">Çıkış</button>
   </header>
 
-  <div id="summary">
-    <div class="cell"><b id="sTot">0</b><span>Durak</span></div>
-    <div class="cell"><b id="sDone">0</b><span>Tamam</span></div>
-    <div class="cell"><b id="sVol">0</b><span>Teslim L</span></div>
-  </div>
-
-  <div class="adhocRow"><button class="adhocBtn" onclick="openAdhoc()">➕ Plan dışı teslimat</button></div>
-
-  <div id="refreshRow">
-    <span id="lastSync" class="mono"></span>
-    <button onclick="loadRoute(true)">↻ Yenile</button>
+  <div class="sh-head">
+    <div id="summary">
+      <div class="cell"><b id="sTot">0</b><span>Durak</span></div>
+      <div class="cell"><b id="sDone">0</b><span>Tamam</span></div>
+      <div class="cell"><b id="sVol">0</b><span>Teslim L</span></div>
+    </div>
+    <div class="adhocRow"><button class="adhocBtn" onclick="openAdhoc()">➕ Plan dışı teslimat</button></div>
+    <div id="refreshRow">
+      <span id="lastSync" class="mono"></span>
+      <button onclick="loadRoute(true)">↻ Yenile</button>
+    </div>
   </div>
 
   <div id="timeline"></div>
@@ -259,15 +265,16 @@ function subscribeRealtime(){
 /* ---------- görünüm ---------- */
 function extraHtml(){
   if(!extraDone.length)return '';
-  return `<div class="secTitle">✓ Tamamlanan — plan dışı / rotadan çıkan</div>`+extraDone.map(o=>`
-    <div class="leg"><div class="stop ${o.status==='onay'?'onay':'done'}" onclick="openDone('${o.id}')">
-      <div class="stop-n">${o.status==='onay'?'⏳':'✓'}</div>
-      <div class="stop-body">
-        <div class="stop-name">${esc(o.customers?.name||'—')}</div>
-        <div class="stop-meta">${L2(o.delivered_qty||0)} L · ${o.delivered_at?new Date(o.delivered_at).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}):''}</div>
-      </div>
-      <div class="stop-badge ${o.status==='onay'?'onay':'done'}">${o.status==='onay'?'⏳ Onayda':'✓ Teslim'}</div>
-    </div></div>`).join('');
+  return `<div class="secBand">✓ Tamamlanan — plan dışı / rotadan çıkan</div>`+extraDone.map(o=>{
+    const pend=o.status==='onay';
+    return `<div class="sh-step">
+      <div class="sh-n ${pend?'pend':'ok'}">${pend?'⏳':'✓'}</div>
+      <div>
+        <div class="sh-t"><b>${esc(o.customers?.name||'—')}</b><span class="sh-time">${o.delivered_at?new Date(o.delivered_at).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}):''}</span></div>
+        <div class="sh-info"><span class="sh-vol ${pend?'pend':'ok'}">${L2(o.delivered_qty||0)} L</span> ${pend?'onay bekliyor':'teslim edildi'}</div>
+        <div class="sh-acts"><button class="sh-btn ${pend?'purple':'grey'}" onclick="openDone('${o.id}')">${pend?'✎ Detay / düzenle':'Detay'}</button></div>
+      </div></div>`;
+  }).join('');
 }
 function render(){
   const tl=document.getElementById('timeline');
@@ -285,29 +292,41 @@ function render(){
 
   let n=0;
   tl.innerHTML=myVehicle.legs.map((l,i)=>{
-    if(l.kind==='garage')return `<div class="leg"><div class="leg-info">🏁 <b>${esc(l.label)}</b> · ${hhmm(l.time)}</div></div>`;
+    if(l.kind==='garage')return `<div class="sh-step"><div class="sh-n garage sq">🅿</div><div>
+      <div class="sh-t"><b>${esc(l.label)}</b><span class="sh-time">${hhmm(l.time)}</span></div></div></div>`;
     if(l.kind==='plant'){
       const done=fisUploaded[i];
-      return `<div class="leg"><div class="leg-info">⛽ <b>Tesiste dolum</b> · ${hhmm(l.time)} · ${L2(l.vol)} L
-        <div style="margin-top:8px">${done
-          ?`<span style="color:var(--diesel)">✓ Fiş yüklendi</span>`
-          :`<button class="photobtn" style="width:auto;display:inline-flex" onclick="openFis(${i},${l.vol})"><span class="icon">🧾</span><span>Fiş Yükle</span></button>`}</div>
-        </div></div>`;
+      return `<div class="sh-step"><div class="sh-n plant sq">⛽</div><div>
+        <div class="sh-t"><b>Tesiste dolum</b><span class="sh-time">${hhmm(l.time)}</span></div>
+        <div class="sh-info"><b>${L2(l.vol)} L full doldur</b></div>
+        <div class="sh-acts">${done
+          ?`<span class="sh-info" style="margin:0;color:var(--diesel)">✓ Fiş yüklendi</span>`
+          :`<button class="sh-btn green" onclick="openFis(${i},${l.vol})">🧾 Fiş yükle</button>`}</div>
+      </div></div>`;
     }
-    if(l.kind==='xfer')return `<div class="leg"><div class="leg-info">⇄ <b>Garajda aktarım</b> · ${hhmm(l.time)}<br>${(l.items||[]).map(t=>t.to===session.plate?`<b>${esc(t.from)}</b>'den ${L2(t.vol)} L alındı`:`<b>${esc(t.to)}</b>'e ${L2(t.vol)} L verildi`).join('<br>')}</div></div>`;
-    if(l.kind==='feedout')return `<div class="leg"><div class="leg-info">📤 <b>Besleme (garajda aktarım)</b> · ${hhmm(l.time)} · ${L2(l.vol)} L dağıtıldı</div></div>`;
+    if(l.kind==='xfer')return `<div class="sh-step"><div class="sh-n xfer sq">⇄</div><div>
+      <div class="sh-t"><b>Garajda aktarım</b><span class="sh-time">${hhmm(l.time)}</span></div>
+      <div class="sh-info">${(l.items||[]).map(t=>t.to===session.plate?`<b>${esc(t.from)}</b>'den ${L2(t.vol)} L alındı`:`<b>${esc(t.to)}</b>'e ${L2(t.vol)} L verildi`).join('<br>')}</div></div></div>`;
+    if(l.kind==='feedout')return `<div class="sh-step"><div class="sh-n xfer sq">📤</div><div>
+      <div class="sh-t"><b>Besleme (garajda aktarım)</b><span class="sh-time">${hhmm(l.time)}</span></div>
+      <div class="sh-info">${L2(l.vol)} L dağıtıldı</div></div></div>`;
     if(l.kind!=='drop')return '';
     n++;
     const o=orderStatus[l.oid];
     const isDone=isSent(o), isPend=o?.status==='onay';
-    return `<div class="leg">
-      <div class="stop${isPend?' onay':isDone?' done':''}" onclick="openStop('${l.oid}')">
-        <div class="stop-n">${n}</div>
-        <div class="stop-body">
-          <div class="stop-name">${esc(l.name)}</div>
-          <div class="stop-meta">planlanan ${L2(l.give)} L · ${hhmm(l.time)}${l.comp?' · göz '+l.comp:''}</div>
+    const cls=isPend?'pend':isDone?'ok':'';
+    return `<div class="sh-step">
+      <div class="sh-n ${cls}">${isPend?'⏳':isDone?'✓':n}</div>
+      <div>
+        <div class="sh-t"><b>${esc(l.name)}</b><span class="sh-time">${hhmm(l.time)}</span></div>
+        <div class="sh-info">
+          <span class="sh-vol ${cls}">${L2(isDone?(o.delivered_qty||0):l.give)} L</span>${l.comp?` Göz ${l.comp}`:''}
+          <br>${isPend?'⏳ onay bekliyor · planlanan '+L2(l.give)+' L':isDone?'✓ teslim edildi · planlanan '+L2(l.give)+' L':'planlanan '+L2(l.give)+' L'}
         </div>
-        <div class="stop-badge ${isPend?'onay':isDone?'done':'wait'}">${isPend?'⏳ Onayda':isDone?'✓ Teslim':'Bekliyor'}</div>
+        <div class="sh-acts">
+          <a class="sh-btn" href="${navUrl(l.lat,l.lng)}" target="_blank" rel="noopener">▸ Yol tarifi</a>
+          <button class="sh-btn ${isPend?'purple':isDone?'grey':'green'}" onclick="openStop('${l.oid}')">${isPend?'✎ Detay / düzenle':isDone?'Detay':'✓ Teslim gir'}</button>
+        </div>
       </div>
     </div>`;
   }).join('')+extraHtml();
