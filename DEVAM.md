@@ -1153,6 +1153,24 @@ Yazı tipleri (Manrope + IBM Plex Mono) ve renk paleti aynı. Sekme sayaçları 
 orijinaline döndürüldü. Tarayıcıda 375px mobil + masaüstünde 3 ekran ve diyaloglar
 doğrulandı; tüm sipariş durumlarının kartları/düğmeleri regresyon kontrolünden geçti.
 
+## PLANLAYICI SADELEŞTİRME (2026-09-24)
+
+Kullanıcı: "planlayıcının ekranı çok karışık oldu". Sorun: her sipariş kartında 5 satır
+metin + araç listesi + 5-6 düğme, 7 büyük harfli sekme, Plan sekmesinde 4-5 dolu banner.
+Yapılanlar (yalnız planlayıcı, `index.html`):
+- **Sipariş kartı:** 3 satır (ad+saat / litre+durum rozeti / araç·göz + varsa not).
+  Durum başına TEK birincil düğme (Bekliyor→Düzenle, Planlandı/Yolda→✓ Teslim işle,
+  Onay bekliyor→✓ Onayla + Reddet, Teslim→Düzenle, İptal→Geri aç) + "⋯" menüsü
+  (`<details>`; Araç ata, Yola çıktı, Plandan çıkar, Yarına bırak, İptal, Geri al/aç, Sil).
+  "girildi" tarih satırı ve tekrarlayan not kutuları kalktı (saat sağda zaten var).
+- **Sekmeler:** büyük harf/aralık kaldırıldı, 12px; "Teslimat girişi"→"Teslimat"; Siparişler
+  sayacı "(8 · ⏳1)".
+- **Plan sekmesi:** uyarı/bilgi bannerları tek katlanır "Uyarılar ve notlar (N)" kutusunda
+  (kapalı; uyarı varsa başlık kırmızı); yeşil özet + iki düğme görünür kalır. Araç başlığı:
+  plaka + opt/📋 üst satır, istatistik alt satır.
+- Tüm durum geçişleri (ertele/bugüne al, yola çıktı, geri al, plandan çıkar, onayla, geri aç,
+  iptal, düzenle, sil, araç ata) tarayıcıda tek tek tıklanarak doğrulandı.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

@@ -43,8 +43,7 @@ body{font-family:'Manrope',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;b
     align-items:center;gap:8px;font-weight:700;font-size:12px;box-shadow:0 6px 18px rgba(27,25,23,.35)}
 }
 .tabbtn{background:transparent;border:0;border-bottom:3px solid transparent;color:#a39a8c;border-radius:0;
-  padding:12px 13px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;
-  display:flex;align-items:center;gap:5px}
+  padding:12px 11px;font-size:12px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:5px}
 .tabbtn b{font-family:'IBM Plex Mono';font-size:9px;color:#8b8377;font-weight:400}
 .tabbtn.act{color:#f2f0ec;background:var(--ink);border-bottom-color:var(--hi)}
 .tabbtn.act b{color:var(--hi)}
@@ -138,7 +137,18 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 .oshort{color:#b06a00;font-weight:600}
 .ometa{font-family:'IBM Plex Mono';font-size:9px;color:var(--muted);margin-top:5px;line-height:1.7}
 .ometa .lg{color:var(--muted2)}
-.oacts{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+.oacts{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap;align-items:center}
+.ophotos{display:flex;gap:6px;margin-top:8px}
+.ophotos img{width:48px;height:48px;object-fit:cover;border-radius:4px;border:1px solid var(--line)}
+.more{margin-left:auto}
+.more[open]{flex-basis:100%;margin-left:0}
+.more>summary{list-style:none;cursor:pointer;padding:7px 12px;border:1px solid #cfc6b2;border-radius:4px;font-weight:700;font-size:14px;line-height:1;color:var(--muted2);background:#fff;user-select:none}
+.more>summary::-webkit-details-marker{display:none}
+.more[open]>summary{margin-left:auto;width:max-content;background:var(--bg)}
+.moremenu{margin-top:8px;padding:10px;background:var(--bg);border:1px solid var(--line);border-radius:4px}
+.moreb{display:flex;gap:6px;flex-wrap:wrap}
+.lockrow{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:11px;font-family:'IBM Plex Mono';text-transform:none;letter-spacing:0;color:var(--muted2)}
+.lockrow select{flex:1;padding:5px 6px;font-size:11px}
 .oacts button{background:#fff;border:1px solid #cfc6b2;color:var(--ink);padding:7px 10px;
   font-size:11.5px;font-family:'Manrope';letter-spacing:0;text-transform:none;border-radius:4px;font-weight:600}
 .oacts button:hover{border-color:var(--ink)}
@@ -158,12 +168,14 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 .dlgbox h3{font-size:13px}
 .dlgbox .sub{font-family:'IBM Plex Mono';font-size:10px;line-height:1.5}
 
-.lockrow{display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px}
-.lockrow span{font-size:11px}
-.lockrow select{flex:1;padding:4px 6px;font-size:10px}
 /* durak taşıma */
 .stop.movable{cursor:pointer}
 .stop.movable:hover{background:#faf7f0}
+.alertbox .warn,.alertbox .info{margin:0}
+.alertbox{margin:0 -16px;border-bottom:1px solid var(--line);background:#fff}
+.alertbox>summary{list-style:none;cursor:pointer;padding:11px 16px;font-size:12px;font-weight:700;color:var(--muted2);user-select:none}
+.alertbox>summary::-webkit-details-marker{display:none}
+.alertbox[open]>summary{border-bottom:1px solid var(--line)}
 .stop.sel{background:#fbf1d9;outline:1px solid var(--hi)}
 .movebar{background:#fbf1d9;border-left:3px solid var(--hi-border);padding:9px 13px;margin:0 16px 8px;
   border-radius:4px;font-size:11px;line-height:1.5;color:var(--ink)}
@@ -342,7 +354,7 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 <div id="side">
   <div class="tabbar" id="tabbar">
     <button class="tabbtn act" data-tab="siparisler" onclick="showTab('siparisler')">Siparişler <b id="ordcount"></b></button>
-    <button class="tabbtn" data-tab="teslimatgir" onclick="showTab('teslimatgir')">Teslimat girişi</button>
+    <button class="tabbtn" data-tab="teslimatgir" onclick="showTab('teslimatgir')">Teslimat</button>
     <button class="tabbtn" data-tab="stok" onclick="showTab('stok')">Stok</button>
     <button class="tabbtn" data-tab="musteriler" onclick="showTab('musteriler')">Müşteriler <b id="custcount"></b></button>
     <button class="tabbtn" data-tab="plan" onclick="showTab('plan')">Plan</button>
@@ -1334,7 +1346,7 @@ function renderOrders(){
     .map(([k,l,n])=>`<button class="fbtn${k==='onay'?' pend':''}${filter===k?' act':''}" onclick="setFilter('${k}')">${l} <b>${n}</b></button>`).join('');
 
   const list=visible();
-  document.getElementById('ordcount').textContent=(open||cnt.onay)?`(${open} açık${cnt.onay?` · ${cnt.onay} onay`:''})`:(orderList.length?'(açık yok)':'');
+  document.getElementById('ordcount').textContent=(open||cnt.onay)?`(${open}${cnt.onay?` · ⏳${cnt.onay}`:''})`:'';
 
   const el=document.getElementById('ordlist');
   if(!list.length){el.innerHTML='<div class="empty">Bu filtrede sipariş yok</div>';updateStatBar();refreshTeslimatGiris();return;}
@@ -1345,56 +1357,45 @@ function renderOrders(){
     const extra=dlv&&o.deliveredQty>o.qty;
     const GL={wait:'…',plan:'▸',road:'➜',done:'✓',canc:'✕',onay:'⏳'};
     const hm=x=>x?new Date(x).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}):'';
+    const q=`'${o.id}'`;
+    const B=(cls,click,label,title)=>`<button${cls?` class="${cls}"`:''} onclick="${click}"${title?` title="${title}"`:''}>${label}</button>`;
+    const cancel=B('no',`if(confirm('Bu sipariş iptal edilsin mi?'))setOrdStatus(${q},'canc')`,'İptal');
+    const edit=B('',`openEdit(${q})`,'✎ Düzenle','Sipariş ve teslimat bilgilerini düzenle');
+    const del=B('no',`delOrder(${q})`,'Sil');
+    let prim='',menu='';
+    if(o.status==='wait'){prim=edit;menu=B('',`toggleHold(${q})`,o.held?'▶ Bugüne al':'⏸ Yarına bırak',"Bugünkü 'Rotayı hesapla' bu siparişi görmezden gelir")+cancel;}
+    else if(o.status==='plan'){prim=B('ok',`openDlg(${q})`,'✓ Teslim işle');menu=edit+B('',`setOrdStatus(${q},'road')`,'Yola çıktı')+B('',`unplanOrder(${q})`,'⏸ Plandan çıkar','Plandan çıkar, açıkta bekletmeye al')+cancel;}
+    else if(o.status==='road'){prim=B('ok',`openDlg(${q})`,'✓ Teslim işle');menu=edit+B('',`setOrdStatus(${q},'plan')`,'Geri al')+cancel;}
+    else if(o.status==='onay'){prim=B('ok',`approveOrder(${q})`,'✓ Onayla')+B('no',`rejectOrder(${q})`,'Reddet');menu=edit;}
+    else if(o.status==='done'){prim=edit;menu=B('',`setOrdStatus(${q},'plan')`,'Geri aç');}
+    else if(o.status==='canc'){prim=B('',`setOrdStatus(${q},'wait')`,'Geri aç');}
+    const canLock=o.status==='wait'||o.status==='plan'||o.status==='road';
+    const lock=canLock?`<label class="lockrow"><span>${o.lockVeh?'🔒':'⚙'} Araç ata</span>
+        <select onchange="setLock('${o.id}',this.value)">
+          <option value=""${o.lockVeh?'':' selected'}>otomatik</option>
+          ${tankers.map((t,i)=>{const nm=t.plate.trim()||`Tanker ${i+1}`;
+            return `<option value="${esc(nm)}"${o.lockVeh===nm?' selected':''}>${esc(nm)}</option>`;}).join('')}
+        </select></label>`:'';
+    const where=o.vehicle?`${esc(o.vehicle)}${o.comp?` · göz ${o.comp}`:''}`:'';
+    const note=[o.note?`Not: ${esc(o.note)}`:'',o.deliverNote?`Şoför: ${esc(o.deliverNote)}`:''].filter(Boolean).join(' · ');
     return `<div class="ocard st-${s.cls}">
       <div class="sh-n">${GL[o.status]||'…'}</div>
       <div>
       <div class="sh-t"><b>${c?esc(c.name):'<i>silinmiş müşteri</i>'}${o.lockVeh?' <span style="color:var(--hi-border);font-size:11px" title="Araç kilitli">🔒</span>':''}</b>
         <span class="sh-time">${hm(dlv?o.deliveredAt:o.createdAt)}</span></div>
       <div class="sh-info">
-        ${dlv
-          ? `<span class="sh-vol${short?' part':''}">${L2(o.deliveredQty)} L</span> bırakıldı / ${L2(o.qty)} L sipariş`
-          : `<span class="sh-vol">${L2(o.qty)} L</span>`}
-        <span class="obadge b-${s.cls}">${s.lab}</span>
-        <br>${fmtDT(o.createdAt)} girildi
+        <span class="sh-vol${short?' part':''}">${L2(dlv?o.deliveredQty:o.qty)} L</span><span class="obadge b-${s.cls}">${s.lab}</span>${o.status==='wait'&&o.held?' <span class="obadge b-wait">⏸ ERTELENDİ</span>':''}
+        ${short?`<span style="color:#b06a00"> · eksik ${L2(o.qty-o.deliveredQty)} L</span>`:''}
+        ${where?`<br>${where}`:''}${note?`<br>${note}`:''}
       </div>
-      ${o.status==='wait'&&o.held?`<div class="sh-note"><b>Ertelendi.</b> Bugünkü rotaya dahil edilmeyecek.</div>`:''}
-      ${short?`<div class="sh-note"><b>Kısmi teslimat.</b> Eksik ${L2(o.qty-o.deliveredQty)} L (%${Math.round(o.deliveredQty/o.qty*100)}).</div>`:''}
-      <div class="sh-info">
-        ${o.note?`Not: ${esc(o.note)}<br>`:''}
-        ${o.vehicle?`Araç: ${esc(o.vehicle)}${o.comp?` · ${o.comp}. göz`:''}<br>`:''}
-        ${o.deliveredAt?`Teslim: ${fmtDT(o.deliveredAt)}<br>`:''}
-        ${o.deliverNote?`Şoför notu: ${esc(o.deliverNote)}`:''}
-      </div>
-      ${dlv&&o.photos&&o.photos.length?`<div style="display:flex;gap:6px;margin-top:8px">
-        ${o.photos.map(p=>`<a href="${p.url}" target="_blank"><img src="${p.thumb||p.url}" loading="lazy" title="${p.type==='tank'?'Dolum tankı':p.type==='irsaliye'?'İrsaliye':p.type}" style="width:52px;height:52px;object-fit:cover;border-radius:4px;border:1px solid var(--line)"></a>`).join('')}
-      </div>`:''}
-      ${o.status==='onay'?`<div class="sh-note" style="background:#f6effb;border-left-color:#8b3fb5"><b>Onay bekliyor.</b> Onaylayınca kalıcı kayıtlara (Excel geçmişi) işlenir.</div>`:''}
-      ${o.status!=='done'&&o.status!=='canc'&&o.status!=='onay'?`
-      <div class="lockrow">
-        <span>${o.lockVeh?'🔒':'⚙'}</span>
-        <select onchange="setLock('${o.id}',this.value)">
-          <option value=""${o.lockVeh?'':' selected'}>otomatik ata</option>
-          ${tankers.map((t,i)=>{const nm=t.plate.trim()||`Tanker ${i+1}`;
-            return `<option value="${esc(nm)}"${o.lockVeh===nm?' selected':''}>${esc(nm)}</option>`;}).join('')}
-        </select>
-      </div>`:''}
+      ${dlv&&o.photos&&o.photos.length?`<div class="ophotos">${o.photos.map(p=>`<a href="${p.url}" target="_blank"><img src="${p.thumb||p.url}" loading="lazy" title="${p.type==='tank'?'Dolum tankı':p.type==='irsaliye'?'İrsaliye':p.type}"></a>`).join('')}</div>`:''}
       <div class="oacts">
-        ${o.status==='wait'?`<button onclick="toggleHold('${o.id}')" title="Bugünkü 'Rotayı hesapla' bu siparişi görmezden gelir">${o.held?'▶ Bugüne al':'⏸ Yarına bırak'}</button>`:''}
-        ${(o.status==='wait'||o.status==='plan'||o.status==='road')?`<button onclick="if(confirm('Bu sipariş iptal edilsin mi?'))setOrdStatus('${o.id}','canc')" class="no">İptal</button>`:''}
-        ${o.status==='plan'?`<button onclick="unplanOrder('${o.id}')" title="Plandan çıkar, açıkta bekletmeye al">⏸ Plandan çıkar</button>
-                             <button onclick="setOrdStatus('${o.id}','road')">Yola çıktı</button>`:''}
-        ${o.status==='road'?`<button onclick="setOrdStatus('${o.id}','plan')">Geri al</button>`:''}
-        ${(o.status==='plan'||o.status==='road')?`<button class="ok" onclick="openDlg('${o.id}')">Teslim işle</button>`:''}
-        ${o.status==='onay'?`<button class="ok" onclick="approveOrder('${o.id}')">✓ Onayla</button>
-                             <button class="no" onclick="rejectOrder('${o.id}')">Reddet</button>`:''}
-        ${o.status==='done'?`<button onclick="setOrdStatus('${o.id}','plan')">Geri aç</button>`:''}
-        ${o.status!=='canc'?`<button onclick="openEdit('${o.id}')" title="Sipariş ve teslimat bilgilerini düzenle">✎ Düzenle</button>`:''}
-        ${o.status==='canc'?`<button onclick="setOrdStatus('${o.id}','wait')">Geri aç</button>`:''}
-        <button class="no" style="margin-left:auto" onclick="delOrder('${o.id}')">Sil</button>
+        ${prim}
+        <details class="more"><summary>⋯</summary><div class="moremenu">${lock}<div class="moreb">${menu}${del}</div></div></details>
       </div>
       </div>
     </div>`;
-  }).join('');
+    }).join('');
   updateStatBar();
   refreshTeslimatGiris();
 }
@@ -2389,19 +2390,24 @@ async function render(routes,extra,cfg,garage,plant,orders){
   top+=`<div class="ok"><b>${used}/${cfg.drivers} şoför · ${orders.length-extra.unassigned.length}/${orders.length} sipariş · ${L2(totL)} L · ${totKm.toFixed(0)} km</b><br>Dolum ${cfg.loadFix} dk${cfg.queue?` + ${cfg.queue} dk sıra`:''} · Boşaltma ${cfg.dropFix} dk + ${cfg.dropVar} dk/1000 L
     ${used?`<br><button class="ghost hot" style="width:100%;margin-top:9px" onclick="openSheet(0)">📋 Şoför görev formları</button>`:''}
     ${routes.some(r=>r.leftover>0)?`<br><button class="ghost" style="width:100%;margin-top:6px;border-color:#c9a6e0;color:#7a3fa8" onclick="endDay()">🌙 Günü kapat — kalan yakıtları ertesi güne aktar</button>`:''}</div>`;
+  const alerts=[];
   if(extra.transfers.length)
-    top+=`<div class="info"><b>Garaj aktarımları</b><br>${extra.transfers.map(t=>`${t.from} göz ${t.fromComp} → ${t.to} göz ${t.toComp} · ${L2(t.vol)} L`).join('<br>')}</div>`;
+    alerts.push(`<div class="info"><b>Garaj aktarımları</b><br>${extra.transfers.map(t=>`${t.from} göz ${t.fromComp} → ${t.to} göz ${t.toComp} · ${L2(t.vol)} L`).join('<br>')}</div>`);
   if(extra.park.length)
-    top+=`<div class="warn"><b>Şoför yetmedi</b><br>${extra.park.map(p=>p.veh.id).join(', ')} garajda kaldı.</div>`;
-  if(extra.notes.length)top+=`<div class="warn"><b>Dikkat</b><br>${extra.notes.join('<br>')}</div>`;
+    alerts.push(`<div class="warn"><b>Şoför yetmedi</b><br>${extra.park.map(p=>p.veh.id).join(', ')} garajda kaldı.</div>`);
+  if(extra.notes.length)alerts.push(`<div class="warn"><b>Dikkat</b><br>${extra.notes.join('<br>')}</div>`);
   if(extra.unassigned.length)
-    top+=`<div class="warn"><b>Yüklenemedi (${extra.unassigned.length})</b><br>${extra.unassigned.map(o=>`${esc(o.name)} · ${L2(o.qty)} L`).join('<br>')}</div>`;
+    alerts.push(`<div class="warn"><b>Yüklenemedi (${extra.unassigned.length})</b><br>${extra.unassigned.map(o=>`${esc(o.name)} · ${L2(o.qty)} L`).join('<br>')}</div>`);
   const overs=routes.filter(r=>r.drops&&r.total>r.veh.shift);
-  if(overs.length)top+=`<div class="warn"><b>Vardiya aşımı</b><br>${overs.map(r=>`${r.veh.id} — ${dur(r.total)} / ${dur(r.veh.shift)}`).join('<br>')}</div>`;
+  if(overs.length)alerts.push(`<div class="warn"><b>Vardiya aşımı</b><br>${overs.map(r=>`${r.veh.id} — ${dur(r.total)} / ${dur(r.veh.shift)}`).join('<br>')}</div>`);
   const partials=routes.flatMap(r=>r.legs.filter(l=>l.kind==='drop'&&l.a.give<l.a.o.qty).map(l=>`${esc(l.a.o.name)}: ${L2(l.a.give)}/${L2(l.a.o.qty)} L (${r.veh.id})`));
-  if(partials.length)top+=`<div class="info"><b>Kısmi teslimat</b><br>${partials.join('<br>')}</div>`;
+  if(partials.length)alerts.push(`<div class="info"><b>Kısmi teslimat</b><br>${partials.join('<br>')}</div>`);
   const lefts=routes.filter(r=>r.leftover>0);
-  if(lefts.length)top+=`<div class="info"><b>Full dolum — araçta kalan (ertesi güne)</b><br>${lefts.map(r=>`${r.veh.id}: ${L2(r.leftover)} L`).join('<br>')}<br><span style="color:var(--muted);font-size:10px">Tankerler full döndü. "Günü kapat" ile bu yakıt ertesi günün mevcut yakıtı olur.</span></div>`;
+  if(lefts.length)alerts.push(`<div class="info"><b>Full dolum — araçta kalan (ertesi güne)</b><br>${lefts.map(r=>`${r.veh.id}: ${L2(r.leftover)} L`).join('<br>')}<br><span style="color:var(--muted);font-size:10px">Tankerler full döndü. "Günü kapat" ile bu yakıt ertesi günün mevcut yakıtı olur.</span></div>`);
+  if(alerts.length){
+    const hasWarn=alerts.some(x=>x.startsWith('<div class="warn"'));
+    top+=`<details class="alertbox"><summary${hasWarn?' style="color:var(--alert)"':''}>${hasWarn?'⚠':'ℹ'} Uyarılar ve notlar (${alerts.length}) ▾</summary>${alerts.join('')}</details>`;
+  }
   document.getElementById('out').innerHTML=top+html;
   const stPlanEl=document.getElementById('stPlan');if(stPlanEl)stPlanEl.textContent=`${used}/${cfg.drivers}`;
   map.fitBounds(bounds,{padding:[45,45]});
