@@ -1007,6 +1007,19 @@ Tarayıcıda (bulut yazımı kapalı) üç senaryo doğrulandı: açık sipariş
 müşteri → yeni kayıt; açık siparişli + evet → mevcut sipariş teslim edildi;
 açık siparişli + hayır → ayrı kayıt. Normal "Teslim işle" diyaloğu etkilenmedi.
 
+## EXCEL'DE FOTOĞRAFLAR: TIKLANABİLİR BAĞLANTI (2026-09-24)
+
+Kullanıcı "fotolar excelde olacak mı / nasıl olmalı" diye sordu. Foto linkleri
+zaten sütunlardaydı ama düz uzun URL metniydi. Artık "Dolum tankı — aç" /
+"İrsaliye — aç" adlı tıklanabilir (mavi, altı çizili) hücre bağlantıları
+(`linkCell`, xlsx-js-style `l.Target`); Teslimat Geçmişi ve Siparişler
+sayfalarında. Silindi (kırmızı) satırlarda da bağlantı korunuyor. Gerçek .xlsx
+yazıp geri okuyarak doğrulandı. **Bilinçli karar:** fotoğraflar dosyaya
+GÖMÜLMEDİ (SheetJS resim gömemez; gömmek dosyayı yüzlerce MB yapar ve
+ExcelJS gibi ağır bir kütüphane ister) — link tıklanınca tam boyutlu foto
+açılır. Not: v16 öncesi loglanan eski teslimatlarda foto linki yoktur
+(backfill yalnızca orders'ta hâlâ duran kayıtlara uygulanabildi).
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
