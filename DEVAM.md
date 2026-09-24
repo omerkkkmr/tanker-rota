@@ -1046,6 +1046,20 @@ tarihine göre sıralansın". Yeni sipariş durumu **`onay` (ONAY BEKLİYOR)**:
 Tarayıcıda doğrulandı (planlayıcı: filtre/sıralama/onayla/reddet; şoför: `onay`
 yazımı, rozet, sayaç, bildirim).
 
+## "TESLİMAT GİRİŞİ" AYRI SEKME (2026-09-24)
+
+Kullanıcı: sipariş formunun içindeki "Satış / teslimat gir" düğmesi karıştırıyor,
+sipariş gibi algılanıyor; düzgün bir yer ver, adı "Teslimat girişi" olsun. Düğme
+sipariş formundan kaldırıldı; Siparişler'in yanına **"Teslimat girişi"** adlı
+ayrı bir sekme eklendi (sıra: Siparişler → Teslimat girişi → Müşteriler → Plan →
+Filo → Ayarlar). Sekmede müşteri, litre, araç (ops.), teslim tarihi/saati, not
+formu + altında "Son teslimatlar" (en yeni 8, durum rozetli). Mantık aynı:
+doğrudan `done` kaydı; müşterinin açık siparişi varsa "o siparişe işlensin mi?".
+Önceki diyalog tabanlı doğrudan-mod kodu (`openDirect`/`saveDirect`) silindi.
+Bulunan/ düzeltilen küçük hata: `renderOrders()` boş filtrede erken `return`
+ettiği için (ve `updateStatBar` atlandığı için) sekmedeki liste yenilenmiyordu;
+boş-liste yolunda da yenileme + `updateStatBar` çağrılıyor.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

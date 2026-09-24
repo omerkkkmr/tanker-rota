@@ -322,6 +322,7 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 <div id="side">
   <div class="tabbar" id="tabbar">
     <button class="tabbtn act" data-tab="siparisler" onclick="showTab('siparisler')">Siparişler <b id="ordcount"></b></button>
+    <button class="tabbtn" data-tab="teslimatgir" onclick="showTab('teslimatgir')">Teslimat girişi</button>
     <button class="tabbtn" data-tab="musteriler" onclick="showTab('musteriler')">Müşteriler <b id="custcount"></b></button>
     <button class="tabbtn" data-tab="plan" onclick="showTab('plan')">Plan</button>
     <button class="tabbtn" data-tab="filo" onclick="showTab('filo')">Filo <b id="fleetcount"></b></button>
@@ -338,7 +339,6 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
           <button class="ghost hot" onclick="addOrder()" style="flex:1">+ Talep ekle</button>
         </div>
         <input id="onote" placeholder="Not (opsiyonel)" style="margin-top:6px">
-        <button class="ghost" style="width:100%;margin-top:8px" onclick="openDirect()" title="Sipariş/plan olmadan, doğrudan tamamlanmış satış veya teslimat kaydı">✓ Satış / teslimat gir (tamamlanmış)</button>
       </div>
       <div class="filters" id="ofilters"></div>
       <div id="ordlist"></div>
@@ -347,6 +347,29 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
         <button class="ghost" onclick="exportExcel(this)">Excel indir</button>
       </div>
       <button class="primary" id="go" onclick="run()">Rotayı hesapla</button>
+    </div>
+  </div>
+
+  <div class="sec tabpanel" data-tab="teslimatgir" style="display:none">
+    <div class="body">
+      <div class="newform">
+        <label style="margin-top:0">Teslimat girişi</label>
+        <div class="hint" style="margin:0 0 8px">Sipariş/plan olmadan, yapılmış bir satışı veya teslimatı doğrudan kaydet. Fotoğraf gereken teslimatlar şoför ekranından girilir.</div>
+        <label>Müşteri</label>
+        <select id="tCust"></select>
+        <div class="grid2">
+          <div><label>Teslim edilen (L)</label><input id="tQty" type="number" placeholder="Litre"></div>
+          <div><label>Araç (opsiyonel)</label><select id="tVeh"></select></div>
+        </div>
+        <label>Teslim tarihi / saati</label>
+        <input id="tTime" type="datetime-local">
+        <label>Not</label>
+        <input id="tNote" placeholder="opsiyonel">
+        <button class="primary" onclick="saveTeslimatGiris()">Teslimatı kaydet</button>
+        <div class="hint" id="tMsg" style="color:var(--diesel);min-height:14px;text-align:center"></div>
+      </div>
+      <label>Son teslimatlar</label>
+      <div id="tRecent"></div>
     </div>
   </div>
 
@@ -447,14 +470,8 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 
 <div class="dlg" id="dlg">
   <div class="dlgbox">
-    <h3 id="dlgTitle">Teslim kaydı</h3>
+    <h3>Teslim kaydı</h3>
     <div class="sub" id="dlgSub"></div>
-    <div id="dDirectBox" style="display:none">
-      <label>Müşteri</label>
-      <select id="dCust"></select>
-      <label>Araç (opsiyonel)</label>
-      <select id="dVeh"></select>
-    </div>
     <label>Bırakılan miktar (L)</label>
     <input id="dQty" type="number">
     <label>Teslim saati</label>
@@ -974,8 +991,6 @@ function openDlg(id){
   const o=byId(id);if(!o)return;
   const c=customers.find(c=>c.id===o.cid);
   dlgId=id;
-  document.getElementById('dlgTitle').textContent='Teslim kaydı';
-  document.getElementById('dDirectBox').style.display='none';
   document.getElementById('dlgSub').textContent=`${c?c.name:'—'} · sipariş ${L2(o.qty)} L${o.vehicle?' · '+o.vehicle:''}`;
   document.getElementById('dQty').value=o.deliveredQty??o.qty;
   const d=o.deliveredAt?new Date(o.deliveredAt):new Date();
@@ -985,52 +1000,56 @@ function openDlg(id){
   document.getElementById('dlg').classList.add('on');
   document.getElementById('dQty').focus();
 }
-function openDirect(){
-  if(!customers.length)return alert('Önce rehbere müşteri ekle.');
-  dlgId='__direct__';
-  document.getElementById('dlgTitle').textContent='Satış / teslimat kaydı';
-  document.getElementById('dlgSub').textContent='Sipariş/plan olmadan doğrudan tamamlanmış teslimat. Fotoğraf gerekiyorsa şoför ekranından girilir.';
-  document.getElementById('dDirectBox').style.display='block';
-  document.getElementById('dCust').innerHTML=customers.slice().sort((a,b)=>a.name.localeCompare(b.name,'tr'))
+function renderTeslimatGiris(){
+  const cs=document.getElementById('tCust');if(!cs)return;
+  const prev=cs.value;
+  cs.innerHTML=customers.slice().sort((a,b)=>a.name.localeCompare(b.name,'tr'))
     .map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
-  const pre=document.getElementById('osel').value;
-  if(customers.some(c=>c.id===pre))document.getElementById('dCust').value=pre;
-  document.getElementById('dVeh').innerHTML='<option value="">— belirtilmedi —</option>'+
-    tankers.map(t=>`<option value="${esc(t.plate)}">${esc(t.plate)}</option>`).join('');
-  document.getElementById('dQty').value=document.getElementById('oqty').value||'';
-  const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
-  document.getElementById('dTime').value=d.toISOString().slice(0,16);
-  document.getElementById('dNote').value='';
-  document.getElementById('dlg').classList.add('on');
-  document.getElementById('dQty').focus();
+  if(customers.some(c=>c.id===prev))cs.value=prev;
+  const vs=document.getElementById('tVeh'),pv=vs.value;
+  vs.innerHTML='<option value="">— belirtilmedi —</option>'+tankers.map(t=>`<option value="${esc(t.plate)}">${esc(t.plate)}</option>`).join('');
+  vs.value=pv;
+  if(!document.getElementById('tTime').value)resetTeslimatTime();
+  const recent=orderList.filter(o=>o.status==='done'||o.status==='onay').slice().sort(byDelivery).slice(0,8);
+  document.getElementById('tRecent').innerHTML=recent.length?recent.map(o=>{
+    const c=customers.find(c=>c.id===o.cid);
+    return `<div class="cust"><b>${c?esc(c.name):'<i>silinmiş müşteri</i>'}</b>
+      <small>${L2(o.deliveredQty||o.qty)} L${o.vehicle?' · '+esc(o.vehicle):''} · ${fmtDT(o.deliveredAt)}</small>
+      <span class="obadge b-${ST[o.status].cls}">${ST[o.status].lab}</span></div>`;
+  }).join(''):'<div class="empty">Henüz teslimat yok</div>';
 }
-function saveDirect(){
-  const cid=document.getElementById('dCust').value;
-  const q=parseInt(document.getElementById('dQty').value);
-  if(!cid)return alert('Müşteri seç.');
-  if(!q||q<=0)return alert('Bırakılan miktarı gir.');
-  const t=document.getElementById('dTime').value;
-  const veh=document.getElementById('dVeh').value||null;
+function resetTeslimatTime(){
+  const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
+  document.getElementById('tTime').value=d.toISOString().slice(0,16);
+}
+function saveTeslimatGiris(){
+  const cid=document.getElementById('tCust').value;
+  const q=parseInt(document.getElementById('tQty').value);
+  if(!cid)return alert('Müşteri seç. (Rehberde yoksa önce Müşteriler sekmesinden ekle.)');
+  if(!q||q<=0)return alert('Teslim edilen miktarı gir.');
+  const t=document.getElementById('tTime').value;
+  const veh=document.getElementById('tVeh').value||null;
   const when=t?new Date(t).toISOString():nowIso();
-  const note=document.getElementById('dNote').value.trim();
+  const note=document.getElementById('tNote').value.trim();
   // müşterinin açık siparişi varsa aynı teslimatı iki kez saymamak için ona işle
   const open=orderList.find(o=>o.cid===cid&&(o.status==='wait'||o.status==='plan'||o.status==='road'));
   let o=null;
-  if(open&&confirm(`Bu müşterinin açık bir siparişi var (${L2(open.qty)} L).\n\nBu teslimat o siparişe işlensin mi?\n\nTamam = o siparişi teslim edildi yap\nİptal = ayrı, yeni bir satış kaydı oluştur`))o=open;
+  if(open&&confirm(`Bu müşterinin açık bir siparişi var (${L2(open.qty)} L).\n\nBu teslimat o siparişe işlensin mi?\n\nTamam = o siparişi teslim edildi yap\nİptal = ayrı, yeni bir teslimat kaydı oluştur`))o=open;
   if(o){
     o.status='done';o.deliveredQty=q;o.deliveredAt=when;o.deliverNote=note;
     if(veh)o.vehicle=veh;
     o.held=false;
   }else{
-    o={id:uid(),cid,qty:q,status:'done',note:'Satış/teslimat girişi (planlayıcı)',createdAt:nowIso(),
+    o={id:uid(),cid,qty:q,status:'done',note:'Teslimat girişi (planlayıcı)',createdAt:nowIso(),
       plannedAt:null,deliveredAt:when,deliveredQty:q,vehicle:veh,comp:null,deliverNote:note,lockVeh:null,held:false};
     orderList.push(o);
   }
-  save();closeDlg();renderOrders();draw();cloudOrderUpsert(o);
+  document.getElementById('tQty').value='';document.getElementById('tNote').value='';resetTeslimatTime();
+  save();renderOrders();draw();cloudOrderUpsert(o);
+  const m=document.getElementById('tMsg');m.textContent='✓ Teslimat kaydedildi';setTimeout(()=>{m.textContent='';},3000);
 }
 function closeDlg(){document.getElementById('dlg').classList.remove('on');dlgId=null;}
 function saveDeliv(){
-  if(dlgId==='__direct__')return saveDirect();
   const o=byId(dlgId);if(!o)return closeDlg();
   const q=parseInt(document.getElementById('dQty').value);
   if(!q||q<=0)return alert('Bırakılan miktarı gir.');
@@ -1078,7 +1097,7 @@ function renderOrders(){
   document.getElementById('ordcount').textContent=(open?`(${open} açık · ${L2(openL)} L`:(orderList.length?'(açık yok':''))+(cnt.onay?`${open||orderList.length?' · ':'('}${cnt.onay} onay bekliyor`:'')+(open||orderList.length||cnt.onay?')':'');
 
   const el=document.getElementById('ordlist');
-  if(!list.length){el.innerHTML='<div class="empty">Bu filtrede sipariş yok</div>';return;}
+  if(!list.length){el.innerHTML='<div class="empty">Bu filtrede sipariş yok</div>';updateStatBar();refreshTeslimatGiris();return;}
   el.innerHTML=list.map(o=>{
     const c=customers.find(c=>c.id===o.cid), s=ST[o.status];
     const dlv=o.status==='done'||o.status==='onay';
@@ -1136,6 +1155,10 @@ function renderOrders(){
     </div>`;
   }).join('');
   updateStatBar();
+  refreshTeslimatGiris();
+}
+function refreshTeslimatGiris(){
+  if(document.querySelector('.tabpanel[data-tab="teslimatgir"]')?.style.display==='block')renderTeslimatGiris();
 }
 
 function exportCsv(){
@@ -2178,6 +2201,7 @@ async function run(){
 
 /* ---------- sekmeler ---------- */
 function showTab(t){
+  if(t==='teslimatgir')renderTeslimatGiris();
   document.querySelectorAll('.tabpanel').forEach(el=>{el.style.display=el.dataset.tab===t?'block':'none';});
   document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('act',b.dataset.tab===t));
 }
