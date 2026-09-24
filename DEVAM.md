@@ -992,6 +992,21 @@ Bulunan tek boşluk: planlanmış/yolda bir sipariş doğrudan iptal edilemiyord
 (İptal yalnız "Bekliyor"da vardı) → İptal artık wait/plan/road'da (onaylı),
 iptalde araç/göz/planlama alanları temizleniyor.
 
+## PLANLAYICIDAN SATIŞ / TESLİMAT GİRİŞİ (2026-09-24)
+
+Kullanıcı: "planlayıcı satış/teslimat da girebilmeli sisteme". Siparişler
+sekmesindeki yeni sipariş formuna "✓ Satış / teslimat gir (tamamlanmış)"
+düğmesi eklendi. Mevcut teslim diyaloğu (`dlg`) yeniden kullanıldı: müşteri,
+araç (opsiyonel), bırakılan litre, saat, not. Kayıt sipariş olmadan doğrudan
+`status='done'` bir sipariş olarak yazılır (`log_teslimat` tetikleyicisi
+kalıcı geçmişe/Excel'e de ekler). Müşterinin açık (wait/plan/road) siparişi
+varsa "o siparişe işlensin mi?" diye sorar (şoför ekranındaki plan dışı
+teslimatla aynı mantık — aynı teslimat iki kez sayılmaz). Planlayıcı
+diyaloğunda fotoğraf yok (fotoğraf gereken teslimat şoför ekranından girilir).
+Tarayıcıda (bulut yazımı kapalı) üç senaryo doğrulandı: açık siparişi olmayan
+müşteri → yeni kayıt; açık siparişli + evet → mevcut sipariş teslim edildi;
+açık siparişli + hayır → ayrı kayıt. Normal "Teslim işle" diyaloğu etkilenmedi.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
