@@ -170,6 +170,7 @@ let rtChannel=null;
 const isSent=o=>o&&(o.status==='done'||o.status==='onay');   // şoför girdi (onay bekliyor ya da onaylandı)
 let extraDone=[];        // bugün bu araçla teslim edilip rotada görünmeyenler (plan dışı / rotadan çıkmış)
 let adhocMode=false, adhocGps=null;
+let editRow=null;         // düzenlenen (onay bekleyen) sipariş satırı
 
 /* ---------- giriş / çıkış ---------- */
 function loadSession(){try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null');}catch(e){return null;}}
@@ -341,8 +342,9 @@ function openStop(oid){
       </div>
       <div class="dlgbtns">
         <button class="btn-cancel" onclick="closeDlg()">Kapat</button>
-        <a href="${navUrl(l.lat,l.lng)}" target="_blank" style="flex:1"><button class="btn-save" style="width:100%">Yol Tarifi</button></a>
-      </div>`;
+        ${o.status==='onay'?`<button class="btn-save" onclick="editDelivery('${o.id}')">✎ Düzenle</button>`:`<a href="${navUrl(l.lat,l.lng)}" target="_blank" style="flex:1"><button class="btn-save" style="width:100%">Yol Tarifi</button></a>`}
+      </div>
+      ${o.status==='onay'?'<div class="savingNote">Onaylanmadan önce teslim bilgilerini düzeltebilirsin.</div>':'<div class="savingNote">Onaylanmış teslimat — değişiklik için planlayıcıya söyle.</div>'}`;
   }else{
     box.innerHTML=`
       <h3>${esc(l.name)}</h3>
@@ -377,7 +379,7 @@ function openStop(oid){
   }
   document.getElementById('dlg').classList.add('on');
 }
-function closeDlg(){document.getElementById('dlg').classList.remove('on');curLeg=null;photoTank=null;photoIrs=null;curFisIdx=null;photoFis=null;adhocMode=false;adhocGps=null;}
+function closeDlg(){document.getElementById('dlg').classList.remove('on');curLeg=null;photoTank=null;photoIrs=null;curFisIdx=null;photoFis=null;adhocMode=false;adhocGps=null;editRow=null;}
 
 /* ---------- dolum fişi (tesiste alınan makbuz) ---------- */
 function openFis(idx,vol){
@@ -447,6 +449,7 @@ function onPhoto(input,type){
 function checkReady(){
   const litre=parseFloat(document.getElementById('fLitre')?.value);
   let ok=litre>0&&photoTank&&photoIrs;
+  if(editRow)ok=litre>0;   // düzenlemede fotoğraflar zorunlu değil (mevcut olanlar kalır)
   if(adhocMode){
     const sel=document.getElementById('aCust')?.value;
     const custOk=sel&&(sel!=='__new__'||(document.getElementById('aNewName').value.trim()&&adhocGps));
@@ -534,8 +537,82 @@ function openDone(oid){
       ${tank?`<a href="${tank.url}" target="_blank"><img src="${tank.thumb||tank.url}" loading="lazy"></a>`:''}
       ${irs?`<a href="${irs.url}" target="_blank"><img src="${irs.thumb||irs.url}" loading="lazy"></a>`:''}
     </div>
-    <div class="dlgbtns"><button class="btn-cancel" onclick="closeDlg()">Kapat</button></div>`;
+    <div class="dlgbtns"><button class="btn-cancel" onclick="closeDlg()">Kapat</button>
+      ${o.status==='onay'?`<button class="btn-save" onclick="editDelivery('${o.id}')">✎ Düzenle</button>`:''}</div>
+    ${o.status==='onay'?'<div class="savingNote">Onaylanmadan önce teslim bilgilerini düzeltebilirsin.</div>':'<div class="savingNote">Onaylanmış teslimat — değişiklik için planlayıcıya söyle.</div>'}`;
   document.getElementById('dlg').classList.add('on');
+}
+
+/* ---------- onay bekleyen teslimatı düzenle ---------- */
+function editDelivery(oid){
+  const row=orderStatus[oid]||extraDone.find(x=>x.id===oid);
+  if(!row||row.status!=='onay')return;
+  editRow=row;adhocMode=false;photoTank=null;photoIrs=null;curLeg=null;
+  const isAdhoc=(row.deliver_note||'').startsWith('[Plan dışı]');
+  const noteTxt=(row.deliver_note||'').replace(/^\[Plan dışı\]\s*/,'');
+  const photos=row.photos||[];
+  const has=t=>photos.some(p=>p.type===t);
+  const name=(row.customers?.name)||findLegName(oid)||'Teslimat';
+  document.getElementById('dlgBox').innerHTML=`
+    <h3>${esc(name)}</h3>
+    <div class="csub">Teslimatı düzenle · onay bekliyor</div>
+    <label>Boşaltılan Litre</label>
+    <input type="number" id="fLitre" value="${row.delivered_qty||''}" inputmode="numeric">
+    <label>Dolum Tankı Fotoğrafı</label>
+    <button class="photobtn${has('tank')?' have':''}" id="btnTank" onclick="document.getElementById('fileTank').click()">
+      <span class="icon">📷</span><span>${has('tank')?'Mevcut fotoğraf kalsın — değiştirmek için dokun':'Fotoğraf çek'}</span></button>
+    <input type="file" id="fileTank" accept="image/*" capture="environment" style="display:none" onchange="onPhoto(this,'tank')">
+    <label>İrsaliye Fotoğrafı</label>
+    <button class="photobtn${has('irsaliye')?' have':''}" id="btnIrs" onclick="document.getElementById('fileIrs').click()">
+      <span class="icon">📄</span><span>${has('irsaliye')?'Mevcut fotoğraf kalsın — değiştirmek için dokun':'Fotoğraf çek'}</span></button>
+    <input type="file" id="fileIrs" accept="image/*" capture="environment" style="display:none" onchange="onPhoto(this,'irsaliye')">
+    <label>Not (opsiyonel)</label>
+    <input type="text" id="fNote" value="${esc(noteTxt)}" placeholder="—">
+    <div class="dlgbtns">
+      <button class="btn-cancel" onclick="closeDlg()">Vazgeç</button>
+      <button class="btn-save" id="btnSave" onclick="submitEdit(${isAdhoc})">Değişiklikleri Kaydet</button>
+    </div>
+    <div class="savingNote" id="saveNote"></div>`;
+  document.getElementById('dlg').classList.add('on');
+}
+function findLegName(oid){const l=myVehicle&&myVehicle.legs.find(x=>x.kind==='drop'&&x.oid===oid);return l?l.name:'';}
+async function submitEdit(isAdhoc){
+  if(!editRow)return;
+  const litre=parseFloat(document.getElementById('fLitre').value);
+  const note=document.getElementById('fNote').value.trim();
+  if(!(litre>0))return;
+  const btn=document.getElementById('btnSave'),noteEl=document.getElementById('saveNote');
+  btn.disabled=true;
+  try{
+    const old=editRow.photos||[];
+    const keep=t=>old.find(p=>p.type===t);
+    let tank=keep('tank'),irs=keep('irsaliye');
+    if(photoTank||photoIrs)noteEl.textContent='Fotoğraflar yükleniyor…';
+    const tag='edit'+Date.now();
+    const[nt,ni]=await Promise.all([
+      photoTank?uploadPhoto(photoTank,tag,'tank'):null,
+      photoIrs?uploadPhoto(photoIrs,tag,'irsaliye'):null
+    ]);
+    if(nt)tank={type:'tank',url:nt.url,thumb:nt.thumb};
+    if(ni)irs={type:'irsaliye',url:ni.url,thumb:ni.thumb};
+    noteEl.textContent='Kaydediliyor…';
+    const{data,error}=await sb.from('orders').update({
+      delivered_qty:Math.round(litre),
+      deliver_note:isAdhoc?('[Plan dışı] '+note).trim():(note||null),
+      photos:[tank,irs].filter(Boolean)
+    }).eq('id',editRow.id).eq('status','onay').select('id');   // arada onaylandıysa değişmez
+    if(error)throw error;
+    if(!data||!data.length){
+      noteEl.textContent='Bu teslimat az önce onaylandı — artık değiştirilemez.';
+      loadRoute(false);btn.disabled=false;return;
+    }
+    closeDlg();loadRoute(false);
+    toast('Teslimat güncellendi');
+  }catch(e){
+    console.warn(e);
+    noteEl.textContent='Hata: kaydedilemedi. Sinyal kontrol edip tekrar deneyin.';
+    btn.disabled=false;
+  }
 }
 
 /* ---------- plan dışı teslimat ---------- */

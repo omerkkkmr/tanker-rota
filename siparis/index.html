@@ -71,6 +71,17 @@ select{cursor:pointer}
 .ocancel{margin-top:10px;background:transparent;border:1px solid var(--line);color:var(--muted2);
   padding:6px 12px;border-radius:999px;font-size:10px;font-family:'IBM Plex Mono'}
 .ocancel:active{border-color:var(--alert);color:var(--alert)}
+.oedit{margin-top:10px;margin-right:6px;background:transparent;border:1px solid var(--line);color:var(--muted2);
+  padding:6px 12px;border-radius:999px;font-size:10px;font-family:'IBM Plex Mono'}
+.oedit:active{border-color:var(--hi-border);color:var(--hi-border)}
+.dlg{position:fixed;inset:0;background:rgba(27,25,23,.6);z-index:3000;display:none;align-items:center;justify-content:center;padding:16px}
+.dlg.on{display:flex}
+.dlgbox{background:var(--card);border-radius:16px;padding:20px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto;box-shadow:var(--sh-md)}
+.dlgbox h3{font-size:16px;font-weight:800;margin-bottom:2px}
+.dlgbox .csub{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);margin-bottom:6px}
+.dlgbtns{display:flex;gap:8px;margin-top:18px}
+.dlgbtns button{flex:1;padding:13px;border-radius:9px;font-weight:700;font-size:14px;border:1px solid var(--line);background:transparent;color:var(--muted2)}
+.dlgbtns .save{background:var(--hi-bg);border-color:var(--hi-border);color:var(--ink)}
 .empty{padding:24px 0;text-align:center;color:var(--muted);font-family:'IBM Plex Mono';font-size:12px}
 
 .mappick{background:transparent;border:1px solid var(--line);color:var(--muted2);padding:10px 12px;
@@ -112,6 +123,24 @@ select{cursor:pointer}
 
   <div class="sectitle" style="margin-top:24px">Son Teslim Edilenler <b id="doneCount">0</b></div>
   <div id="donelist"></div>
+</div>
+
+<div class="dlg" id="edlg">
+  <div class="dlgbox">
+    <h3>Siparişi düzenle</h3>
+    <div class="csub" id="eSub"></div>
+    <label>Müşteri</label>
+    <select id="eCust"></select>
+    <label>Miktar (L)</label>
+    <input id="eQty" type="number" inputmode="numeric">
+    <label>Not</label>
+    <input id="eNote" placeholder="—">
+    <div class="msg err" id="eMsg"></div>
+    <div class="dlgbtns">
+      <button onclick="closeEdit()">Vazgeç</button>
+      <button class="save" id="eSave" onclick="saveEdit()">Kaydet</button>
+    </div>
+  </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -229,6 +258,8 @@ function renderOrders(){
       ${o.status==='wait'&&o.held?'<div class="oheld">⏸ Ertelendi — planlamacı bugün göndermeyecek</div>':''}
       <div class="oqty">${L2(o.qty)} L</div>
       ${o.note?`<div class="onote">Not: ${esc(o.note)}</div>`:''}
+      ${o.status==='plan'?'<div class="onote">Planlandı — miktarı değiştirirsen rota planlayıcıda yeniden hesaplanınca güncellenir.</div>':''}
+      ${(o.status==='wait'||o.status==='plan')?`<button class="oedit" onclick="openEdit('${o.id}')">✎ Düzenle</button>`:''}
       ${o.status==='wait'?`<button class="ocancel" onclick="cancelOrder('${o.id}')">İptal et</button>`:''}
     </div>`;
   }).join('');
@@ -297,6 +328,37 @@ async function addOrder(){
   }finally{
     btn.disabled=false;
   }
+}
+let edId=null;
+function openEdit(id){
+  const o=orderList.find(x=>x.id===id);if(!o)return;
+  edId=id;
+  document.getElementById('eSub').textContent=ST[o.status]?.lab||'';
+  document.getElementById('eCust').innerHTML=customers.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  document.getElementById('eCust').value=o.customer_id;
+  document.getElementById('eQty').value=o.qty;
+  document.getElementById('eNote').value=o.note||'';
+  document.getElementById('eMsg').textContent='';
+  document.getElementById('edlg').classList.add('on');
+}
+function closeEdit(){document.getElementById('edlg').classList.remove('on');edId=null;}
+async function saveEdit(){
+  const msg=document.getElementById('eMsg');
+  const qty=parseInt(document.getElementById('eQty').value);
+  const cid=document.getElementById('eCust').value;
+  if(!cid){msg.textContent='Müşteri seç.';return;}
+  if(!qty||qty<=0){msg.textContent='Geçerli miktar gir.';return;}
+  const btn=document.getElementById('eSave');btn.disabled=true;
+  try{
+    // yalnızca hâlâ açık (bekliyor/planlandı) siparişler değiştirilebilir — arada yola çıkmış/teslim edilmişse reddedilir
+    const{data,error}=await sb.from('orders').update({customer_id:cid,qty,note:document.getElementById('eNote').value.trim()})
+      .eq('id',edId).in('status',['wait','plan']).select('id');
+    if(error)throw error;
+    if(!data||!data.length){msg.textContent='Bu sipariş artık düzenlenemez (yola çıkmış ya da teslim edilmiş).';load();return;}
+    closeEdit();load();
+  }catch(e){
+    console.warn(e);msg.textContent='Kaydedilemedi — internet/sinyal kontrol edin.';
+  }finally{btn.disabled=false;}
 }
 async function cancelOrder(id){
   if(!confirm('Bu talebi iptal etmek istediğine emin misin?'))return;

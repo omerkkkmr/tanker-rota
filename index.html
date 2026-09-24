@@ -468,6 +468,33 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 </div>
 </div>
 
+<div class="dlg" id="edlg">
+  <div class="dlgbox" style="max-width:360px;max-height:90vh;overflow-y:auto">
+    <h3>Düzenle</h3>
+    <div class="sub" id="eSub"></div>
+    <label>Müşteri</label>
+    <select id="eCust"></select>
+    <label>Sipariş miktarı (L)</label>
+    <input id="eQty" type="number">
+    <label>Sipariş notu</label>
+    <input id="eNote" placeholder="opsiyonel">
+    <div id="eDelBox" style="display:none;border-top:1px solid var(--line);margin-top:14px;padding-top:2px">
+      <label>Teslim edilen (L)</label>
+      <input id="eDQty" type="number">
+      <label>Teslim tarihi / saati</label>
+      <input id="eDTime" type="datetime-local">
+      <label>Teslim eden araç</label>
+      <select id="eVeh"></select>
+      <label>Şoför / teslimat notu</label>
+      <input id="eDNote" placeholder="opsiyonel">
+    </div>
+    <div class="row">
+      <button class="ghost" onclick="closeEdit()">Vazgeç</button>
+      <button class="primary" style="margin-top:0;padding:9px" onclick="saveEdit()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
 <div class="dlg" id="dlg">
   <div class="dlgbox">
     <h3>Teslim kaydı</h3>
@@ -959,6 +986,55 @@ async function markLogDeleted(orderId){
   catch(e){console.warn('"silindi" işareti yazılamadı (supabase-v17-silinen-teslimat-isaretle.sql çalıştırılmış mı?):',e);}
 }
 function setQty(id,v){const o=byId(id),q=parseInt(v);if(o&&q>0){o.qty=q;save();renderOrders();draw();cloudOrderUpsert(o);}}
+let edId=null;
+function openEdit(id){
+  const o=byId(id);if(!o)return;
+  edId=id;
+  const c=customers.find(c=>c.id===o.cid);
+  document.getElementById('eSub').textContent=`${c?c.name:'—'} · ${ST[o.status].lab}`;
+  document.getElementById('eCust').innerHTML=customers.slice().sort((a,b)=>a.name.localeCompare(b.name,'tr'))
+    .map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');
+  document.getElementById('eCust').value=o.cid;
+  document.getElementById('eQty').value=o.qty;
+  document.getElementById('eNote').value=o.note||'';
+  const del=o.status==='done'||o.status==='onay';
+  document.getElementById('eDelBox').style.display=del?'block':'none';
+  if(del){
+    document.getElementById('eDQty').value=o.deliveredQty??o.qty;
+    const d=o.deliveredAt?new Date(o.deliveredAt):new Date();
+    d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
+    document.getElementById('eDTime').value=d.toISOString().slice(0,16);
+    document.getElementById('eVeh').innerHTML='<option value="">— belirtilmedi —</option>'+
+      [...new Set([...tankers.map(t=>t.plate),o.vehicle].filter(Boolean))].map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+    document.getElementById('eVeh').value=o.vehicle||'';
+    document.getElementById('eDNote').value=o.deliverNote||'';
+  }
+  document.getElementById('edlg').classList.add('on');
+}
+function closeEdit(){document.getElementById('edlg').classList.remove('on');edId=null;}
+function saveEdit(){
+  const o=byId(edId);if(!o)return closeEdit();
+  const q=parseInt(document.getElementById('eQty').value);
+  if(!document.getElementById('eCust').value)return alert('Müşteri seç.');
+  if(!q||q<=0)return alert('Sipariş miktarı geçerli olmalı.');
+  const del=o.status==='done'||o.status==='onay';
+  let dq=null;
+  if(del){
+    dq=parseInt(document.getElementById('eDQty').value);
+    if(!dq||dq<=0)return alert('Teslim edilen miktarı gir.');
+  }
+  o.cid=document.getElementById('eCust').value;
+  o.qty=q;
+  o.note=document.getElementById('eNote').value.trim();
+  if(del){
+    o.deliveredQty=dq;
+    const t=document.getElementById('eDTime').value;
+    if(t)o.deliveredAt=new Date(t).toISOString();
+    o.vehicle=document.getElementById('eVeh').value||null;
+    o.deliverNote=document.getElementById('eDNote').value.trim();
+  }
+  save();closeEdit();renderOrders();draw();cloudOrderUpsert(o);
+}
 function setLock(id,v){
   const o=byId(id);if(!o)return;
   o.lockVeh=v||null;
@@ -1145,10 +1221,9 @@ function renderOrders(){
         ${o.status==='road'?`<button onclick="setOrdStatus('${o.id}','plan')">Geri al</button>`:''}
         ${(o.status==='plan'||o.status==='road')?`<button class="ok" onclick="openDlg('${o.id}')">Teslim işle</button>`:''}
         ${o.status==='onay'?`<button class="ok" onclick="approveOrder('${o.id}')">✓ Onayla</button>
-                             <button onclick="openDlg('${o.id}')">Düzelt</button>
                              <button class="no" onclick="rejectOrder('${o.id}')">Reddet</button>`:''}
-        ${o.status==='done'?`<button onclick="openDlg('${o.id}')">Teslimi düzelt</button>
-                             <button onclick="setOrdStatus('${o.id}','plan')">Geri aç</button>`:''}
+        ${o.status==='done'?`<button onclick="setOrdStatus('${o.id}','plan')">Geri aç</button>`:''}
+        ${o.status!=='canc'?`<button onclick="openEdit('${o.id}')" title="Sipariş ve teslimat bilgilerini düzenle">✎ Düzenle</button>`:''}
         ${o.status==='canc'?`<button onclick="setOrdStatus('${o.id}','wait')">Geri aç</button>`:''}
         <button class="no" style="margin-left:auto" onclick="delOrder('${o.id}')">Sil</button>
       </div>

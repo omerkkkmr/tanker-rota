@@ -1060,6 +1060,29 @@ Bulunan/ düzeltilen küçük hata: `renderOrders()` boş filtrede erken `return
 ettiği için (ve `updateStatBar` atlandığı için) sekmedeki liste yenilenmiyordu;
 boş-liste yolunda da yenileme + `updateStatBar` çağrılıyor.
 
+## ÜÇ EKRANDA DÜZENLEME (2026-09-24)
+
+Kullanıcı: "teslimatçı teslim bilgilerini, sipariş giren siparişi bilgilerini
+düzenleyebilsin; planlayıcı hem siparişi hem teslimatı".
+- **Şoför (teslimat):** ONAY BEKLEYEN teslimatı (rota durağı veya plan dışı)
+  "✎ Düzenle" ile düzeltir: litre, not, fotoğraflar (yalnız yeni çekilen değişir,
+  diğeri kalır). Plan dışı notunun `[Plan dışı]` öneki korunur. Güncelleme
+  `.eq('status','onay')` ile yapılır — arada planlayıcı onayladıysa reddedilir
+  ("az önce onaylandı"). Onaylanmış teslimatta düzenleme yok ("planlayıcıya söyle").
+- **Sipariş giren (siparis):** açık (Bekliyor/Planlandı) siparişte "✎ Düzenle":
+  müşteri, miktar, not. Güncelleme `.in('status',['wait','plan'])` ile yapılır;
+  arada yola çıktı/teslim olduysa reddedilir. Planlandı'da miktar değişirse rota
+  planlayıcıda yeniden hesaplanınca güncellenir (uyarı satırı gösterilir). Yolda /
+  teslim edilenlerde düzenleme yok.
+- **Planlayıcı (index):** her sipariş kartında (iptal hariç) "✎ Düzenle": müşteri,
+  sipariş miktarı, sipariş notu; teslim edilmiş/onay bekleyen ise ek olarak teslim
+  edilen litre, teslim tarihi/saati, araç, şoför notu. Eski "Teslimi düzelt/Düzelt"
+  düğmeleri bunun içine alındı. Not: onaylanmış (done) bir teslim düzenlenince
+  `log_teslimat` tetikleyicisi kalıcı geçmişe düzeltilmiş halini YENİ satır olarak
+  ekler (bilinçli, önceki davranışla aynı: düzeltmeler iz bırakır).
+Tarayıcıda üç ekran da taklit kayıtlarla doğrulandı (alanlar, kısmi foto
+değişimi, prefix, yarış durumu, düğme görünürlükleri).
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
