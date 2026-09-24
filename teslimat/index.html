@@ -68,6 +68,14 @@ header button:active{border-color:var(--hi);color:var(--hi)}
   text-transform:uppercase;flex-shrink:0}
 .stop-badge.wait{background:#fbf1d9;color:var(--hi-border)}
 .stop-badge.done{background:#e8f6ec;color:var(--diesel)}
+.adhocRow{padding:4px 16px 8px}
+.adhocBtn{width:100%;padding:13px;background:var(--card);border:1.5px dashed var(--hi-border);color:var(--hi-border);
+  border-radius:12px;font-weight:700;font-size:14px}
+.adhocBtn:active{background:#fbf1d9}
+.gpsInfo{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);margin-top:8px}
+.gpsInfo.ok{color:var(--diesel)}
+.gpsInfo.err{color:var(--alert)}
+.secTitle{font-family:'IBM Plex Mono';font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2);margin:18px 2px 8px}
 .empty{padding:40px 16px;text-align:center;color:var(--muted);font-family:'IBM Plex Mono';font-size:12px;line-height:1.8}
 
 /* ---- teslim modalı ---- */
@@ -124,6 +132,8 @@ header button:active{border-color:var(--hi);color:var(--hi)}
     <div class="cell"><b id="sVol">0</b><span>Teslim L</span></div>
   </div>
 
+  <div class="adhocRow"><button class="adhocBtn" onclick="openAdhoc()">➕ Plan dışı teslimat</button></div>
+
   <div id="refreshRow">
     <span id="lastSync" class="mono"></span>
     <button onclick="loadRoute(true)">↻ Yenile</button>
@@ -154,6 +164,8 @@ let session=null;        // {id,plate}
 let myVehicle=null;      // routes.data.vehicles[] içindeki kendi kaydı
 let orderStatus={};      // oid -> orders satırı (status/delivered_qty/photos/...)
 let rtChannel=null;
+let extraDone=[];        // bugün bu araçla teslim edilip rotada görünmeyenler (plan dışı / rotadan çıkmış)
+let adhocMode=false, adhocGps=null;
 
 /* ---------- giriş / çıkış ---------- */
 function loadSession(){try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null');}catch(e){return null;}}
@@ -218,6 +230,13 @@ async function loadRoute(manual){
         orderStatus={};ords.forEach(o=>orderStatus[o.id]=o);
       }else orderStatus={};
     }
+    const t0=new Date();t0.setHours(0,0,0,0);
+    const{data:ex,error:ee}=await sb.from('orders').select('*, customers(name,lat,lng)')
+      .eq('vehicle',session.plate).eq('status','done').gte('delivered_at',t0.toISOString())
+      .order('delivered_at',{ascending:false});
+    if(ee)throw ee;
+    const routeOids=new Set((myVehicle?.legs||[]).filter(l=>l.kind==='drop').map(l=>l.oid));
+    extraDone=(ex||[]).filter(o=>!routeOids.has(o.id));
     document.getElementById('lastSync').textContent='son güncelleme: '+new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
     render();
   }catch(e){
@@ -233,21 +252,31 @@ function subscribeRealtime(){
 }
 
 /* ---------- görünüm ---------- */
+function extraHtml(){
+  if(!extraDone.length)return '';
+  return `<div class="secTitle">✓ Tamamlanan — plan dışı / rotadan çıkan</div>`+extraDone.map(o=>`
+    <div class="leg"><div class="stop done" onclick="openDone('${o.id}')">
+      <div class="stop-n">✓</div>
+      <div class="stop-body">
+        <div class="stop-name">${esc(o.customers?.name||'—')}</div>
+        <div class="stop-meta">${L2(o.delivered_qty||0)} L · ${o.delivered_at?new Date(o.delivered_at).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}):''}</div>
+      </div>
+      <div class="stop-badge done">✓ Teslim</div>
+    </div></div>`).join('');
+}
 function render(){
   const tl=document.getElementById('timeline');
-  if(!myVehicle){
-    tl.innerHTML='<div class="empty">Bugün için sana atanmış bir rota yok.<br>Planlamacı rotayı yayınladığında burada görünecek.</div>';
-    document.getElementById('sTot').textContent='0';
-    document.getElementById('sDone').textContent='0';
-    document.getElementById('sVol').textContent='0';
-    return;
-  }
-  const drops=myVehicle.legs.filter(l=>l.kind==='drop');
-  const doneCount=drops.filter(l=>orderStatus[l.oid]?.status==='done').length;
-  const volDone=drops.reduce((s,l)=>{const o=orderStatus[l.oid];return s+(o?.status==='done'?(o.delivered_qty||0):0);},0);
-  document.getElementById('sTot').textContent=drops.length;
+  const drops=myVehicle?myVehicle.legs.filter(l=>l.kind==='drop'):[];
+  const doneCount=drops.filter(l=>orderStatus[l.oid]?.status==='done').length+extraDone.length;
+  const volDone=drops.reduce((s,l)=>{const o=orderStatus[l.oid];return s+(o?.status==='done'?(o.delivered_qty||0):0);},0)
+    +extraDone.reduce((s,o)=>s+(o.delivered_qty||0),0);
+  document.getElementById('sTot').textContent=drops.length+extraDone.length;
   document.getElementById('sDone').textContent=doneCount;
   document.getElementById('sVol').textContent=L2(volDone);
+  if(!myVehicle){
+    tl.innerHTML='<div class="empty">Bugün için sana atanmış bir rota yok.<br>Planlamacı rotayı yayınladığında burada görünecek.<br>Rota dışı bir yere teslimat yaptıysan yukarıdaki <b>Plan dışı teslimat</b> ile kaydedebilirsin.</div>'+extraHtml();
+    return;
+  }
 
   let n=0;
   tl.innerHTML=myVehicle.legs.map((l,i)=>{
@@ -276,7 +305,7 @@ function render(){
         <div class="stop-badge ${isDone?'done':'wait'}">${isDone?'✓ Teslim':'Bekliyor'}</div>
       </div>
     </div>`;
-  }).join('');
+  }).join('')+extraHtml();
 }
 
 /* ---------- teslim modalı ---------- */
@@ -344,7 +373,7 @@ function openStop(oid){
   }
   document.getElementById('dlg').classList.add('on');
 }
-function closeDlg(){document.getElementById('dlg').classList.remove('on');curLeg=null;photoTank=null;photoIrs=null;curFisIdx=null;photoFis=null;}
+function closeDlg(){document.getElementById('dlg').classList.remove('on');curLeg=null;photoTank=null;photoIrs=null;curFisIdx=null;photoFis=null;adhocMode=false;adhocGps=null;}
 
 /* ---------- dolum fişi (tesiste alınan makbuz) ---------- */
 function openFis(idx,vol){
@@ -413,11 +442,16 @@ function onPhoto(input,type){
 }
 function checkReady(){
   const litre=parseFloat(document.getElementById('fLitre')?.value);
-  const ok=litre>0&&photoTank&&photoIrs;
+  let ok=litre>0&&photoTank&&photoIrs;
+  if(adhocMode){
+    const sel=document.getElementById('aCust')?.value;
+    const custOk=sel&&(sel!=='__new__'||(document.getElementById('aNewName').value.trim()&&adhocGps));
+    ok=ok&&!!custOk;
+  }
   const btn=document.getElementById('btnSave');
   if(btn)btn.disabled=!ok;
 }
-document.addEventListener('input',e=>{if(e.target&&e.target.id==='fLitre')checkReady();});
+document.addEventListener('input',e=>{if(e.target&&(e.target.id==='fLitre'||e.target.id==='aNewName'))checkReady();});
 
 function getGps(){
   return new Promise(resolve=>{
@@ -477,6 +511,174 @@ async function uploadPhoto(file,oid,tag){
     if(!te){const{data:td}=sb.storage.from('belgeler').getPublicUrl(thumbPath);thumbUrl=td.publicUrl;}
   }catch(e){console.warn('küçük önizleme yüklenemedi, tam boyut kullanılacak:',e);}
   return {url:data.publicUrl,thumb:thumbUrl};
+}
+
+/* ---------- tamamlanan (rotada olmayan) teslimatı görüntüle ---------- */
+function openDone(oid){
+  const o=extraDone.find(x=>x.id===oid);if(!o)return;
+  const photos=o.photos||[];
+  const tank=photos.find(p=>p.type==='tank'), irs=photos.find(p=>p.type==='irsaliye');
+  const c=o.customers;
+  document.getElementById('dlgBox').innerHTML=`
+    <h3>${esc(c?.name||'—')}</h3>
+    <div class="csub">Teslim edildi · ${o.delivered_at?new Date(o.delivered_at).toLocaleString('tr-TR'):''}</div>
+    <div class="readonly-block">
+      Bırakılan: <b>${L2(o.delivered_qty||0)} L</b>
+      ${o.deliver_note?`<br>Not: ${esc(o.deliver_note)}`:''}
+    </div>
+    <div class="readonly-photos">
+      ${tank?`<a href="${tank.url}" target="_blank"><img src="${tank.thumb||tank.url}" loading="lazy"></a>`:''}
+      ${irs?`<a href="${irs.url}" target="_blank"><img src="${irs.thumb||irs.url}" loading="lazy"></a>`:''}
+    </div>
+    <div class="dlgbtns"><button class="btn-cancel" onclick="closeDlg()">Kapat</button></div>`;
+  document.getElementById('dlg').classList.add('on');
+}
+
+/* ---------- plan dışı teslimat ---------- */
+function getGpsLong(){
+  return new Promise(resolve=>{
+    if(!navigator.geolocation)return resolve({err:'unsupported'});
+    navigator.geolocation.getCurrentPosition(
+      pos=>resolve({lat:pos.coords.latitude,lng:pos.coords.longitude}),
+      e=>resolve({err:e.code===1?'denied':'fail'}),
+      {enableHighAccuracy:true,timeout:15000,maximumAge:0}
+    );
+  });
+}
+async function openAdhoc(){
+  curLeg=null;photoTank=null;photoIrs=null;adhocMode=true;adhocGps=null;
+  const box=document.getElementById('dlgBox');
+  box.innerHTML='<h3>Plan dışı teslimat</h3><div class="csub">Müşteriler yükleniyor…</div>';
+  document.getElementById('dlg').classList.add('on');
+  let custs=[];
+  try{
+    const{data,error}=await sb.from('customers').select('id,name').order('name');
+    if(error)throw error;custs=data||[];
+  }catch(e){
+    box.innerHTML='<h3>Plan dışı teslimat</h3><div class="csub">Müşteri listesi alınamadı — internet/sinyal kontrol edin.</div><div class="dlgbtns"><button class="btn-cancel" onclick="closeDlg()">Kapat</button></div>';
+    return;
+  }
+  box.innerHTML=`
+    <h3>Plan dışı teslimat</h3>
+    <div class="csub">Rotada olmayan bir yere yaptığın teslimat</div>
+
+    <label>Müşteri</label>
+    <select id="aCust" onchange="onAdhocCust()" style="width:100%;padding:12px;background:var(--bg);border:1px solid var(--line);border-radius:8px;font-family:'IBM Plex Mono';font-size:16px;color:var(--ink)">
+      <option value="">— seç —</option>
+      ${custs.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}
+      <option value="__new__">➕ Yeni müşteri (bulunduğum konum)</option>
+    </select>
+    <div id="aNewBox" style="display:none">
+      <input type="text" id="aNewName" placeholder="Yeni müşteri adı" style="margin-top:8px">
+      <div class="gpsInfo" id="aGpsInfo">Konum alınıyor…</div>
+      <button class="photobtn" style="margin-top:8px" onclick="fetchAdhocGps()"><span class="icon">🎯</span><span>Şu anki konumumu yeniden al</span></button>
+    </div>
+
+    <label>Boşaltılan Litre</label>
+    <input type="number" id="fLitre" inputmode="numeric" placeholder="0">
+
+    <label>Dolum Tankı Fotoğrafı</label>
+    <button class="photobtn" id="btnTank" onclick="document.getElementById('fileTank').click()"><span class="icon">📷</span><span>Fotoğraf çek</span></button>
+    <input type="file" id="fileTank" accept="image/*" capture="environment" style="display:none" onchange="onPhoto(this,'tank')">
+
+    <label>İrsaliye Fotoğrafı</label>
+    <button class="photobtn" id="btnIrs" onclick="document.getElementById('fileIrs').click()"><span class="icon">📄</span><span>Fotoğraf çek</span></button>
+    <input type="file" id="fileIrs" accept="image/*" capture="environment" style="display:none" onchange="onPhoto(this,'irsaliye')">
+
+    <label>Not (opsiyonel)</label>
+    <input type="text" id="fNote" placeholder="—">
+
+    <div class="dlgbtns">
+      <button class="btn-cancel" onclick="closeDlg()">Vazgeç</button>
+      <button class="btn-save" id="btnSave" onclick="submitAdhoc()" disabled>Teslimi Kaydet</button>
+    </div>
+    <div class="savingNote" id="saveNote"></div>`;
+  document.getElementById('aCust').addEventListener('change',checkReady);
+}
+async function fetchAdhocGps(){
+  const info=document.getElementById('aGpsInfo');
+  info.className='gpsInfo';info.textContent='Konum alınıyor…';
+  adhocGps=null;checkReady();
+  const r=await getGpsLong();
+  if(!adhocMode)return;
+  if(r.err){
+    info.className='gpsInfo err';
+    info.textContent=r.err==='denied'?'Konum izni verilmedi — telefon/tarayıcı ayarlarından bu site için konuma izin ver, sonra "yeniden al"a bas.':'Konum alınamadı — açık alanda tekrar dene.';
+  }else{
+    adhocGps=r;
+    info.className='gpsInfo ok';
+    info.textContent=`✓ Konum alındı (${r.lat.toFixed(5)}, ${r.lng.toFixed(5)})`;
+  }
+  checkReady();
+}
+function onAdhocCust(){
+  const isNew=document.getElementById('aCust').value==='__new__';
+  document.getElementById('aNewBox').style.display=isNew?'block':'none';
+  if(isNew){adhocGps=null;document.getElementById('aNewName').focus();fetchAdhocGps();}
+  else{adhocGps=null;}
+  checkReady();
+}
+async function submitAdhoc(){
+  if(!adhocMode)return;
+  const sel=document.getElementById('aCust').value;
+  const litre=parseFloat(document.getElementById('fLitre').value);
+  const note=document.getElementById('fNote').value.trim();
+  const isNew=sel==='__new__';
+  const newName=isNew?document.getElementById('aNewName').value.trim():'';
+  if(!sel||!(litre>0)||!photoTank||!photoIrs||(isNew&&(!newName||!adhocGps)))return;
+  const btn=document.getElementById('btnSave');
+  const noteEl=document.getElementById('saveNote');
+  btn.disabled=true;
+  try{
+    let cid=sel;
+    if(isNew){
+      noteEl.textContent='Müşteri kaydediliyor…';
+      const{data,error}=await sb.from('customers').insert({name:newName,lat:adhocGps.lat,lng:adhocGps.lng}).select().single();
+      if(error)throw error;
+      cid=data.id;
+    }
+    // müşterinin açık (wait/plan/road) siparişi varsa aynı teslimatı iki kez saymamak için ona işle
+    let existing=null;
+    if(!isNew){
+      const{data:open,error:oe}=await sb.from('orders').select('id,qty,status').eq('customer_id',cid)
+        .in('status',['wait','plan','road']).order('created_at').limit(1);
+      if(oe)throw oe;
+      if(open&&open.length){
+        if(confirm(`Bu müşterinin açık bir siparişi var (${L2(open[0].qty)} L).\n\nBu teslimat o siparişe işlensin mi?\n\nTamam = o siparişi teslim edildi yap\nİptal = ayrı, plan dışı yeni kayıt oluştur`))existing=open[0];
+      }
+    }
+    noteEl.textContent='Fotoğraflar yükleniyor…';
+    const tag='adhoc'+Date.now();
+    const[tankRes,irsRes,gps]=await Promise.all([
+      uploadPhoto(photoTank,tag,'tank'),
+      uploadPhoto(photoIrs,tag,'irsaliye'),
+      isNew?Promise.resolve(adhocGps):getGps()
+    ]);
+    noteEl.textContent='Kaydediliyor…';
+    const done={
+      status:'done',
+      vehicle:session.plate,
+      delivered_qty:Math.round(litre),
+      deliver_note:('[Plan dışı] '+note).trim(),
+      photos:[{type:'tank',url:tankRes.url,thumb:tankRes.thumb},{type:'irsaliye',url:irsRes.url,thumb:irsRes.thumb}],
+      gps_lat:gps?gps.lat:null,
+      gps_lng:gps?gps.lng:null,
+      delivered_at:new Date().toISOString()
+    };
+    let error;
+    if(existing){
+      ({error}=await sb.from('orders').update(done).eq('id',existing.id));
+    }else{
+      ({error}=await sb.from('orders').insert({...done,customer_id:cid,qty:Math.round(litre),note:'Plan dışı teslimat'}));
+    }
+    if(error)throw error;
+    closeDlg();
+    loadRoute(false);
+  }catch(e){
+    console.warn(e);
+    noteEl.textContent='Hata: kaydedilemedi. Sinyal kontrol edip tekrar deneyin (girdikleriniz kaybolmadı).';
+    btn.disabled=false;
+  }
 }
 
 async function submitDelivery(){

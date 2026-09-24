@@ -946,6 +946,52 @@ dosyalarının birebir (bakımı zor) kopyası olduğu için silindi — dört
 ayrı versiyonlu migration dosyası (tarihçe için) repoda kalmaya devam
 ediyor.
 
+## PLAN DIŞI TESLİMAT + ŞU ANKİ KONUM + TIR HATASI + AKIŞ DENETİMİ (2026-09-24)
+
+Kullanıcı üç şey istedi: (1) şoför plan dışı bir yere de teslimat yapabilsin,
+yeni müşteri konumunu ekleme sırasında o anki konumla işaretleyebilsin;
+(2) sipariş atama / gidiş sırası / durum akışı (açık-bekleyen-planlandı-teslim)
+kontrol edilsin; (3) "TIR işaretliyorum ama Ayarlar'da kaydolmuyor".
+
+**TIR hatası — kök neden:** canlı `tankers` tablosunda `is_tir` kolonu YOK
+(`supabase-v12-ek.sql` hiç çalıştırılmamış). `cloudTankUpsert` satırda `is_tir`
+gönderdiği için Postgrest TÜM güncellemeyi reddediyordu VE `error` hiç
+kontrol edilmiyordu — yani şu an hiçbir tanker düzenlemesi (plaka, hacim,
+mevcut L, vardiya, lisans) buluta gitmiyordu, sessizce. Düzeltme: hata artık
+kontrol ediliyor; `is_tir` yüzünden başarısız olursa TIR hariç alanlar yine
+yazılıyor ve kullanıcıya bir kez "supabase-v12-ek.sql'i çalıştır" uyarısı
+gösteriliyor. **TIR'ın gerçekten kalıcı olması için `supabase-v12-ek.sql`
+Supabase SQL Editor'de çalıştırılmalı** (henüz çalıştırılmadı; dikkat: dosya
+54 KP 654'ü TIR yapar).
+
+**Plan dışı teslimat (teslimat ekranı):** "➕ Plan dışı teslimat" düğmesi.
+Müşteri seç VEYA "Yeni müşteri (bulunduğum konum)": yeni müşteride GPS
+otomatik alınır (konum yoksa kayıt engellenir), müşteri o koordinatla
+`customers`'a eklenir. Litre + 2 fotoğraf + not → `orders`'a `status='done'`,
+`vehicle=plaka`, `note='Plan dışı teslimat'`, `deliver_note='[Plan dışı] ...'`
+olarak yazılır (`log_teslimat` tetikleyicisi kalıcı geçmişe de ekler). Seçilen
+müşterinin açık (wait/plan/road) siparişi varsa "o siparişe işlensin mi?"
+diye sorulur — evetse o sipariş teslim edilir (aynı teslimat iki kez
+sayılmaz/plana tekrar girmez). Ekranda ayrıca artık "✓ Tamamlanan — plan dışı
+/ rotadan çıkan" bölümü var: bugün bu araçla teslim edilip rotada görünmeyen
+her sipariş (plan dışı olanlar + rota yeniden hesaplanınca listeden düşenler)
+görünür; Durak/Tamam/Teslim L sayaçları bunları da kapsar (önceden rota
+yeniden hesaplanınca teslim edilen duraklar ekrandan ve sayaçtan kayboluyordu).
+Rotası hiç olmayan şoför de plan dışı teslimat girebilir.
+
+**Şu anki konum düğmeleri:** planlayıcı Müşteriler sekmesi ("📍 Şu anki
+konumum" → koordinat alanını doldurur), sipariş ekranı yeni müşteri ("🎯 Şu
+anki konumumu kullan" → haritada işaretler), teslimat plan dışı formu (otomatik).
+İzin verilmezse anlaşılır uyarı çıkar.
+
+**Akış denetimi (planlayıcı, yerelde bulut yazımı kapalı test):** ilk hesap
+(atama+göz+sıra) doğru; ertelenen (held) sipariş dışarıda kalıyor; Yola çıktı →
+yeniden hesapta araçta kalıyor; teslim işlenen yeniden hesapta korunuyor/rotadan
+çıkıyor; Plandan çıkar → Bugüne al döngüsü çalışıyor; iptal→geri aç doğru.
+Bulunan tek boşluk: planlanmış/yolda bir sipariş doğrudan iptal edilemiyordu
+(İptal yalnız "Bekliyor"da vardı) → İptal artık wait/plan/road'da (onaylı),
+iptalde araç/göz/planlama alanları temizleniyor.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

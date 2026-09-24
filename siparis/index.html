@@ -93,6 +93,7 @@ select{cursor:pointer}
     <label>Müşteri</label>
     <select id="osel" onchange="toggleNewCust()"></select>
     <input id="ncname" placeholder="Yeni müşteri adı" style="display:none;margin-top:8px">
+    <button type="button" class="mappick" id="gpsBtn" style="display:none" onclick="useMyLocation()">🎯 Şu anki konumumu kullan</button>
     <button type="button" class="mappick" id="mapPickBtn" style="display:none" onclick="toggleMapPicker()">📍 Haritadan Konum Seç (opsiyonel)</button>
     <div id="pickMap"></div>
     <div class="pickhint" id="pickHint">Haritada müşterinin konumuna dokun</div>
@@ -151,6 +152,7 @@ function toggleNewCust(){
   const isNew=document.getElementById('osel').value==='__new__';
   document.getElementById('ncname').style.display=isNew?'block':'none';
   document.getElementById('mapPickBtn').style.display=isNew?'flex':'none';
+  document.getElementById('gpsBtn').style.display=isNew?'flex':'none';
   if(!isNew){
     pickedLoc=null;
     document.getElementById('pickMap').classList.remove('on');
@@ -168,6 +170,28 @@ function resetPickBtn(){
   const b=document.getElementById('mapPickBtn');
   b.className='mappick';
   b.textContent='📍 Haritadan Konum Seç (opsiyonel)';
+}
+function setPickedLoc(lat,lng){
+  pickedLoc={lat,lng};
+  if(pickMap){
+    const ll=[lat,lng];
+    if(pickMarker)pickMarker.setLatLng(ll);else pickMarker=L.marker(ll).addTo(pickMap);
+    pickMap.setView(ll,16);
+  }
+  const btn=document.getElementById('mapPickBtn');
+  btn.className='mappick have';
+  btn.textContent=`✓ Konum seçildi (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+}
+function useMyLocation(){
+  const b=document.getElementById('gpsBtn');
+  if(!navigator.geolocation)return alert('Bu cihaz konum almayı desteklemiyor.');
+  const old=b.textContent;
+  b.disabled=true;b.textContent='Konum alınıyor…';
+  navigator.geolocation.getCurrentPosition(
+    pos=>{b.disabled=false;b.textContent=old;setPickedLoc(pos.coords.latitude,pos.coords.longitude);},
+    err=>{b.disabled=false;b.textContent=old;alert(err.code===1?'Konum izni verilmedi — tarayıcı/telefon ayarlarından bu site için konuma izin ver.':'Konum alınamadı, tekrar dene.');},
+    {enableHighAccuracy:true,timeout:10000}
+  );
 }
 function toggleMapPicker(){
   const box=document.getElementById('pickMap'), hint=document.getElementById('pickHint');

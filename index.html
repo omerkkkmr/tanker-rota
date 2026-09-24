@@ -353,6 +353,9 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
       <input id="cloc" placeholder="40.7712, 30.3541" style="margin-top:6px">
       <div class="row">
         <button class="ghost" id="cpick" onclick="pick('cust')">Haritadan seç</button>
+        <button class="ghost" id="cgps" onclick="useMyLocation()">📍 Şu anki konumum</button>
+      </div>
+      <div class="row">
         <button class="ghost" onclick="addCust()">Rehbere ekle</button>
       </div>
     </div>
@@ -618,12 +621,25 @@ async function cloudTankUpsert(t){
   if(!cloudOK)return t.id;
   const row={plate:t.plate,comps:t.comps,shift_h:t.shift,licensed:t.lic,pin:t.pin||'',
     is_tir:!!t.tir,sort:tankers.indexOf(t)};
-  try{
-    if(isUUID(t.id)){await sb.from('tankers').update(row).eq('id',t.id);return t.id;}
-    else{const{data,error}=await sb.from('tankers').insert(row).select().single();
-      if(error)throw error;t.id=data.id;return data.id;}
-  }catch(e){console.warn('tanker kaydı:',e);return t.id;}
+  const write=async(r)=>{
+    if(isUUID(t.id)){const{error}=await sb.from('tankers').update(r).eq('id',t.id);if(error)throw error;return t.id;}
+    const{data,error}=await sb.from('tankers').insert(r).select().single();
+    if(error)throw error;t.id=data.id;return data.id;
+  };
+  try{return await write(row);}
+  catch(e){
+    console.warn('tanker kaydı:',e);
+    // is_tir kolonu yoksa (supabase-v12-ek.sql çalıştırılmamış) tüm güncelleme reddedilir — TIR dışındaki alanlar yine de kaydolsun
+    const{is_tir,...rowNoTir}=row;
+    try{await write(rowNoTir);}catch(e2){console.warn('yedek tanker kaydı da başarısız:',e2);return t.id;}
+    if(!tirColWarned){
+      tirColWarned=true;
+      alert('TIR işareti bulutta kaydedilemedi: veritabanında "is_tir" kolonu yok.\n\nSupabase → SQL Editor\'de supabase-v12-ek.sql dosyasını çalıştır. Diğer tanker ayarları kaydedildi.');
+    }
+    return t.id;
+  }
 }
+let tirColWarned=false;
 async function cloudTankDelete(id){
   if(cloudOK&&isUUID(id))try{await sb.from('tankers').delete().eq('id',id);}catch(e){console.warn(e);}
 }
@@ -664,6 +680,23 @@ let map=L.map('map').setView([40.76,30.38],10);
 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
   {attribution:'Tiles &copy; Esri &mdash; Source: Esri, HERE, Garmin, OpenStreetMap katkıcıları',maxZoom:19}).addTo(map);
 let layers=L.layerGroup().addTo(map);
+function useMyLocation(){
+  const btn=document.getElementById('cgps');
+  if(!navigator.geolocation)return alert('Bu cihaz konum almayı desteklemiyor.');
+  const old=btn.textContent;
+  btn.disabled=true;btn.textContent='Konum alınıyor…';
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      document.getElementById('cloc').value=`${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
+      btn.disabled=false;btn.textContent=old;
+    },
+    err=>{
+      btn.disabled=false;btn.textContent=old;
+      alert(err.code===1?'Konum izni verilmedi — tarayıcı ayarlarından bu site için konuma izin ver.':'Konum alınamadı, tekrar dene.');
+    },
+    {enableHighAccuracy:true,timeout:10000}
+  );
+}
 let pickMode=null;
 
 function pick(m){
@@ -907,7 +940,7 @@ function setOrdStatus(id,s){
   const o=byId(id);if(!o)return;
   o.status=s;
   if(s==='plan'&&!o.plannedAt)o.plannedAt=nowIso();
-  if(s==='wait'){o.plannedAt=null;o.vehicle=null;o.comp=null;}
+  if(s==='wait'||s==='canc'){o.plannedAt=null;o.vehicle=null;o.comp=null;}
   if(s!=='done'){o.deliveredAt=null;o.deliveredQty=null;}
   save();renderOrders();draw();cloudOrderUpsert(o);
 }
@@ -1018,7 +1051,7 @@ function renderOrders(){
       </div>`:''}
       <div class="oacts">
         ${o.status==='wait'?`<button onclick="toggleHold('${o.id}')" title="Bugünkü 'Rotayı hesapla' bu siparişi görmezden gelir">${o.held?'▶ Bugüne al':'⏸ Yarına bırak'}</button>`:''}
-        ${o.status==='wait'?`<button onclick="setOrdStatus('${o.id}','canc')" class="no">İptal</button>`:''}
+        ${(o.status==='wait'||o.status==='plan'||o.status==='road')?`<button onclick="if(confirm('Bu sipariş iptal edilsin mi?'))setOrdStatus('${o.id}','canc')" class="no">İptal</button>`:''}
         ${o.status==='plan'?`<button onclick="unplanOrder('${o.id}')" title="Plandan çıkar, açıkta bekletmeye al">⏸ Plandan çıkar</button>
                              <button onclick="setOrdStatus('${o.id}','road')">Yola çıktı</button>`:''}
         ${o.status==='road'?`<button onclick="setOrdStatus('${o.id}','plan')">Geri al</button>`:''}
