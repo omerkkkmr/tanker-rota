@@ -1417,6 +1417,9 @@ Rotadaki her durakta telefonu kayıtlıysa "▸ Yol tarifi" yanında **📞 Ara*
 **Planlayıcı (mobil ≤900px):** Müşteriler sekmesinin altında "🗺️ Haritayı aç/kapat" düğmesi (`#cmapbtn`, `setCustMap`). Harita `placeMap('musteriler')` ile bu sekmenin `.body`'sine taşınır, `body.custmap` sınıfıyla görünür; sekmeden çıkılınca kapanır. "Haritadan seç" (yeni müşteri + Düzenle penceresi) artık Plan sekmesine GİTMEZ (`goMapForPick`: `curTab==='musteriler'` ise aynı sayfada haritayı açar); tıklanan koordinat forma yazılır, yeni müşteri seçiminde sayfa koordinat alanına kayar. Garaj/tesis seçimi (Ayarlar) eski davranışta: Plan'a gider. Masaüstünde değişiklik yok (düğme gizli).
 **Şoför:** 📞 Ara artık plan dışı/tamamlanan kartlarda ve "Detay" penceresinde de var (`telBtn`); telefon sorgusu rota boş olsa da çalışsın diye `oids.length` bloğundan çıkarıldı.
 
+## HARİTA HER SAYFADA KENDİ YERİNDE AÇILIR (mobil) (2026-09-25)
+Müşteriler'deki desen genelleştirildi: Plan dışındaki HER sekmede (`goMapForPick`: `curTab!=='plan'`) haritadan seçme, o sayfanın altında haritayı açar; Plan'a atlamaz. `custMapOpen`/`pageMapTab`/`setCustMap` sayfaya göre çalışır, sekme değişince kapanır. **Ayarlar**'da garaj/tesis "Haritadan seç": harita altta açılır, üstünde turuncu ipucu şeridi (`#mapHint`, `setStatus` metnini gösterir), seçilince harita kapanır ve sayfa ilgili alana kayar. Müşteriler'de harita seçimden sonra açık kalır (düğmeyle kapanır). Plan sekmesi ve masaüstü değişmedi.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

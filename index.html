@@ -348,7 +348,9 @@ div.info{background:#eaf2fc;border-left:3px solid #4a90d9;margin:0 -16px;padding
 @media(max-width:900px){
   #map{flex:none;height:60vh;display:none}
   body[data-tab="plan"] #map{display:block}                 /* harita yalnız Plan sekmesinde görünür */
-  body[data-tab="musteriler"].custmap #map{display:block}   /* Müşteriler sekmesinde: düğmeyle açılıp kapanır */
+  body.custmap #map{display:block}   /* Plan dışı sekmelerde (Müşteriler/Ayarlar): harita o sayfada, gerektiğinde açılır */
+  #mapHint{display:none;margin:0 -16px;padding:9px 16px;background:var(--hi);color:#fff;font-size:12px;font-weight:600}
+  body.custmap #mapHint.on{display:block}
   body:not([data-tab="plan"]) #legend{display:none!important}
   #cmapbtn{display:block}
   .tabpanel #statbar{margin:14px -16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
@@ -582,7 +584,7 @@ html,body,*{touch-action:manipulation}
     <div class="st"><b id="stTanker">0</b><span>Depo L</span></div>
     <div class="st"><b id="stPlan">—</b><span>Plan</span></div>
   </div>
-  <div id="map"></div><div id="legend"></div>
+  <div id="mapHint"></div><div id="map"></div><div id="legend"></div>
 </div>
 </div>
 
@@ -955,7 +957,7 @@ function useMyLocation(){
   );
 }
 let pickMode=null;
-let custMapOpen=false;   // Müşteriler sekmesindeki harita (mobil) açık mı
+let custMapOpen=false,pageMapTab=null;   // Plan dışı bir sekmede (Müşteriler/Ayarlar) harita açık mı (mobil)
 
 function pick(m){
   pickMode=m;
@@ -974,11 +976,15 @@ map.on('click',e=>{
     document.getElementById('cEName').value=window._custEditName??document.getElementById('cEName').value;
     document.getElementById('cdlg').classList.add('on');
   }
-  const wasCust=pickMode==='cust';
+  const wasPick=pickMode;
   pickMode=null;returnFromPick();setStatus('');save();draw();
-  if(wasCust&&curTab==='musteriler'&&window.innerWidth<=900)document.getElementById('cloc').scrollIntoView({block:'center',behavior:'smooth'});
+  if(window.innerWidth<=900&&curTab!=='plan'){
+    const fld={cust:'cloc',garage:'garage',plant:'plant'}[wasPick];
+    if(wasPick==='garage'||wasPick==='plant')setCustMap(false);   // Ayarlar'da harita yalnız seçim için açılır; seçince kapanır
+    if(fld)setTimeout(()=>document.getElementById(fld).scrollIntoView({block:'center',behavior:'smooth'}),100);
+  }
 });
-function setStatus(t){const s=document.getElementById('status');s.textContent=t;s.className=t?'on':'';}
+function setStatus(t){const s=document.getElementById('status');s.textContent=t;s.className=t?'on':'';const h=document.getElementById('mapHint');if(h){h.textContent=t;h.classList.toggle('on',!!t);}}
 const num=id=>+document.getElementById(id).value||0;
 
 /* ---------- müşteri ---------- */
@@ -2895,19 +2901,19 @@ function placeMap(t){
   if(window.innerWidth<=900&&t==='plan'){
     const host=document.querySelector('.tabpanel[data-tab="plan"] .body');
     if(host&&m.parentElement!==host){host.appendChild(sb);host.appendChild(m);host.appendChild(lg);}
-  }else if(window.innerWidth<=900&&t==='musteriler'){
-    const host=document.querySelector('.tabpanel[data-tab="musteriler"] .body');   // harita formun altında, düğmeyle açılır
-    if(host&&m.parentElement!==host){host.appendChild(m);host.appendChild(lg);}
+  }else if(window.innerWidth<=900&&custMapOpen&&t!=='plan'){
+    const host=document.querySelector(`.tabpanel[data-tab="${t}"] .body`);   // harita bulunduğun sayfanın altında açılır
+    if(host&&m.parentElement!==host){host.appendChild(document.getElementById('mapHint'));host.appendChild(m);host.appendChild(lg);}
   }else{
     const rel=document.querySelector('.maprel');
-    if(rel&&m.parentElement!==rel){rel.appendChild(sb);rel.appendChild(m);rel.appendChild(lg);}
+    if(rel&&m.parentElement!==rel){rel.appendChild(sb);rel.appendChild(document.getElementById('mapHint'));rel.appendChild(m);rel.appendChild(lg);}
   }
 }
 window.addEventListener('resize',()=>placeMap(curTab));
 function showTab(t){
   if(t==='yonetim')t=lastMgmt;
   if(MGMT.includes(t))lastMgmt=t;
-  if(t!=='musteriler'&&custMapOpen)setCustMap(false);
+  if(custMapOpen&&t!==pageMapTab)setCustMap(false);
   curTab=t;document.body.dataset.tab=t;placeMap(t);
   if(t==='plan'&&window.innerWidth<=900)setTimeout(()=>{map.invalidateSize();if(window._lastBounds)map.fitBounds(window._lastBounds,{padding:[45,45]});},80);
   if(t==='teslimatgir')renderTeslimatGiris();
@@ -2933,14 +2939,14 @@ function updateStatBar(){
 // mobilde harita yalnız Plan sekmesinde: haritadan seçme gerektiğinde Plan'a geçilir, seçimden sonra geri dönülür
 let pickReturnTab=null;
 function setCustMap(on){
-  custMapOpen=on;document.body.classList.toggle('custmap',on);
+  custMapOpen=on;pageMapTab=on?curTab:null;document.body.classList.toggle('custmap',on);
   const b=document.getElementById('cmapbtn');if(b)b.textContent=on?'🗺️ Haritayı kapat':'🗺️ Haritayı aç';
-  if(on){placeMap('musteriler');setTimeout(()=>{map.invalidateSize();
-    if(customers.length){map.fitBounds(customers.map(c=>[c.lat,c.lng]),{padding:[45,45],maxZoom:13});}
+  if(on){placeMap(curTab);setTimeout(()=>{map.invalidateSize();
+    if(customers.length&&curTab==='musteriler'){map.fitBounds(customers.map(c=>[c.lat,c.lng]),{padding:[45,45],maxZoom:13});}
     document.getElementById('map').scrollIntoView({block:'start',behavior:'smooth'});},80);}
 }
 function goMapForPick(){
-  if(window.innerWidth<=900&&curTab==='musteriler'){pickReturnTab=null;setCustMap(true);return;}   // Müşteriler sekmesinde harita aynı sayfada, altta açılır
+  if(window.innerWidth<=900&&curTab!=='plan'){pickReturnTab=null;setCustMap(true);return;}   // harita bulunduğun sayfanın altında açılır (Plan'a atlamaz)
   if(window.innerWidth<=900){pickReturnTab=curTab;showTab('plan');setTimeout(()=>document.getElementById('map').scrollIntoView({block:'start'}),120);}
 }
 function returnFromPick(){
