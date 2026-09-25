@@ -1427,6 +1427,10 @@ Müşteriler'deki desen genelleştirildi: Plan dışındaki HER sekmede (`goMapF
 ## VAZGEÇ ŞERİDİ YALNIZ SEÇİM SÜRERKEN (2026-09-25)
 `#mapHint` (✕ Vazgeç), `setStatus` her durum mesajında (ör. "Bulut verisi yükleniyor") açık kalıyordu; artık yalnız `pickMode` aktifken (`!!t&&!!pickMode`) görünür.
 
+## VERİ YEDEĞİ (2026-09-26)
+Özel repo **omerkkkmr/tanker-rota-yedek** (GitHub Actions, `yedek.yml`): her 5 günde bir 00:00 UTC (03:00 TR) + elle tetiklenebilir. `yedek.py` 9 tabloyu (customers, tankers, orders, routes, settings, teslimat_kayitlari, iptal_kayitlari, stok_girisleri, dolum_fisleri) `yedek/*.json` olarak commit'ler; geçmiş git history'sinde. Repo Secrets: SUPABASE_URL / SUPABASE_KEY (şu an anon anahtar — **erişim kilidi kurulunca service anahtarıyla güncellenmeli**, yoksa yedek boş/hatalı döner). Storage fotoğrafları yedeklenmez. İlk elle çalıştırma başarılı. **Bu repo ASLA herkese açılmamalı** (müşteri verisi).
+**Karar:** Şoför girişinde PIN İSTENMİYOR (kullanıcı kararı). Gelecekteki erişim kilidi tasarımı buna göre: planlayıcı e-posta+şifre; şoför PIN'siz.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
