@@ -1420,6 +1420,10 @@ Rotadaki her durakta telefonu kayıtlıysa "▸ Yol tarifi" yanında **📞 Ara*
 ## HARİTA HER SAYFADA KENDİ YERİNDE AÇILIR (mobil) (2026-09-25)
 Müşteriler'deki desen genelleştirildi: Plan dışındaki HER sekmede (`goMapForPick`: `curTab!=='plan'`) haritadan seçme, o sayfanın altında haritayı açar; Plan'a atlamaz. `custMapOpen`/`pageMapTab`/`setCustMap` sayfaya göre çalışır, sekme değişince kapanır. **Ayarlar**'da garaj/tesis "Haritadan seç": harita altta açılır, üstünde turuncu ipucu şeridi (`#mapHint`, `setStatus` metnini gösterir), seçilince harita kapanır ve sayfa ilgili alana kayar. Müşteriler'de harita seçimden sonra açık kalır (düğmeyle kapanır). Plan sekmesi ve masaüstü değişmedi.
 
+## MÜŞTERİ NOTU + HARİTA SEÇİMDE KAPANMA/VAZGEÇ (2026-09-25)
+**Not:** `customers.note` (**`supabase-v23-musteri-not.sql`** çalıştırılmalı). Yeni müşteri formu, Düzenle penceresi, liste (📝), Excel Müşteri Rehberi ("Not" sütunu) ve şoför ekranı (durak kartı + tamamlanan kartlar). Yazmada telefon/not kolonu yoksa o alan atlanıp tekrar denenir + bir kez uyarı (`custColWarned`); şoför okuması 3 kademeli fallback.
+**Harita (mobil):** "Haritadan seç" sonrası tıklayınca harita HER durumda kapanır (Müşteriler dahil). Açıkken ipucu şeridinde **✕ Vazgeç** var (`setCustMap(false)`): seçimi iptal eder, Düzenle penceresi açıksa geri getirir. Düğmeyle açılan (seçimsiz) harita düğmeyle kapanır.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

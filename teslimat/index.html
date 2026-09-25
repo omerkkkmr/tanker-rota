@@ -176,6 +176,7 @@ const navUrl=(lat,lng)=>`https://www.google.com/maps/dir/?api=1&destination=${la
 
 let session=null;        // {id,plate}
 let myVehicle=null;      // routes.data.vehicles[] içindeki kendi kaydı
+let custNote={};         // customer_id -> müşteri notu
 let custPhone={};        // customer_id -> telefon (kolon yoksa boş kalır, rota yine yüklenir)
 let orderStatus={};      // oid -> orders satırı (status/delivered_qty/photos/...)
 let rtChannel=null;
@@ -249,7 +250,12 @@ async function loadRoute(manual){
         orderStatus={};ords.forEach(o=>orderStatus[o.id]=o);
       }else orderStatus={};
     }
-    try{const{data:cp,error:ce}=await sb.from('customers').select('id,phone');if(!ce&&cp){custPhone={};cp.forEach(c=>{if(c.phone)custPhone[c.id]=c.phone;});}}catch(_){}   // telefon kolonu yoksa sessizce atlanır
+    try{   // telefon/not kolonları yoksa (SQL çalıştırılmadıysa) sessizce atlanır
+      let q=await sb.from('customers').select('id,phone,note');
+      if(q.error)q=await sb.from('customers').select('id,phone');
+      if(q.error)q=await sb.from('customers').select('id,note');
+      if(!q.error&&q.data){custPhone={};custNote={};q.data.forEach(c=>{if(c.phone)custPhone[c.id]=c.phone;if(c.note)custNote[c.id]=c.note;});}
+    }catch(_){}
     const t0=new Date();t0.setHours(0,0,0,0);
     const{data:ex,error:ee}=await sb.from('orders').select('id,status,delivered_qty,delivered_at,photos,deliver_note,vehicle,customer_id,customers(name,lat,lng)')
       .eq('vehicle',session.plate).in('status',['done','onay']).gte('delivered_at',t0.toISOString())
@@ -281,7 +287,7 @@ function extraHtml(){
       <div class="sh-n ${pend?'pend':'ok'}">${pend?'⏳':'✓'}</div>
       <div>
         <div class="sh-t"><b>${esc(o.customers?.name||'—')}</b><span class="sh-time">${o.delivered_at?new Date(o.delivered_at).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}):''}</span></div>
-        <div class="sh-info"><span class="sh-vol ${pend?'pend':'ok'}">${L2(o.delivered_qty||0)} L</span> ${pend?'onay bekliyor':'teslim edildi'}</div>
+        <div class="sh-info"><span class="sh-vol ${pend?'pend':'ok'}">${L2(o.delivered_qty||0)} L</span> ${pend?'onay bekliyor':'teslim edildi'}${custNote[o.customer_id]?`<br>📝 ${esc(custNote[o.customer_id])}`:''}</div>
         <div class="sh-acts"><button class="sh-btn ${pend?'purple':'grey'}" onclick="openDone('${o.id}')">${pend?'✎ Detay / düzenle':'Detay'}</button>${telBtn(o.customer_id)}</div>
       </div></div>`;
   }).join('');
@@ -332,6 +338,7 @@ function render(){
         <div class="sh-info">
           <span class="sh-vol ${cls}">${L2(isDone?(o.delivered_qty||0):l.give)} L</span>${l.comp?` Göz ${l.comp}`:''}
           <br>${isPend?'⏳ onay bekliyor · planlanan '+L2(l.give)+' L':isDone?'✓ teslim edildi · planlanan '+L2(l.give)+' L':'planlanan '+L2(l.give)+' L'}
+          ${custNote[o?.customer_id]?`<br>📝 ${esc(custNote[o.customer_id])}`:''}
         </div>
         <div class="sh-acts">
           <a class="sh-btn" href="${navUrl(l.lat,l.lng)}" target="_blank" rel="noopener">▸ Yol tarifi</a>

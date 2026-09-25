@@ -349,8 +349,9 @@ div.info{background:#eaf2fc;border-left:3px solid #4a90d9;margin:0 -16px;padding
   #map{flex:none;height:60vh;display:none}
   body[data-tab="plan"] #map{display:block}                 /* harita yalnız Plan sekmesinde görünür */
   body.custmap #map{display:block}   /* Plan dışı sekmelerde (Müşteriler/Ayarlar): harita o sayfada, gerektiğinde açılır */
-  #mapHint{display:none;margin:0 -16px;padding:9px 16px;background:var(--hi);color:#fff;font-size:12px;font-weight:600}
-  body.custmap #mapHint.on{display:block}
+  #mapHint{display:none;margin:0 -16px;padding:8px 16px;background:var(--hi);color:#fff;font-size:12px;font-weight:600;align-items:center;justify-content:space-between;gap:10px}
+  #mapHint button{background:rgba(0,0,0,.25);color:#fff;border:0;padding:6px 12px;flex:none}
+  body.custmap #mapHint.on{display:flex}
   body:not([data-tab="plan"]) #legend{display:none!important}
   #cmapbtn{display:block}
   .tabpanel #statbar{margin:14px -16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
@@ -492,6 +493,7 @@ html,body,*{touch-action:manipulation}
       <label>Yeni müşteri</label>
       <input id="cname" placeholder="Müşteri adı">
       <input id="cphone" type="tel" inputmode="tel" placeholder="Telefon (opsiyonel)" style="margin-top:6px">
+      <input id="cnote" placeholder="Not (opsiyonel) — örn. kapı kodu, vardiya saati" style="margin-top:6px">
       <input id="cloc" placeholder="40.7712, 30.3541" style="margin-top:6px">
       <div class="row">
         <button class="ghost" id="cpick" onclick="pick('cust')">Haritadan seç</button>
@@ -584,7 +586,7 @@ html,body,*{touch-action:manipulation}
     <div class="st"><b id="stTanker">0</b><span>Depo L</span></div>
     <div class="st"><b id="stPlan">—</b><span>Plan</span></div>
   </div>
-  <div id="mapHint"></div><div id="map"></div><div id="legend"></div>
+  <div id="mapHint"><span id="mapHintTxt"></span><button type="button" onclick="setCustMap(false)">✕ Vazgeç</button></div><div id="map"></div><div id="legend"></div>
 </div>
 </div>
 
@@ -613,6 +615,8 @@ html,body,*{touch-action:manipulation}
     <input id="cEName" placeholder="Müşteri adı">
     <label>Telefon</label>
     <input id="cEPhone" type="tel" inputmode="tel" placeholder="Telefon (opsiyonel)">
+    <label>Not</label>
+    <input id="cENote" placeholder="Not (opsiyonel)">
     <label>Konum (enlem, boylam)</label>
     <input id="cELoc" placeholder="40.7712, 30.3541" inputmode="decimal">
     <div>
@@ -772,7 +776,7 @@ async function load(){
     ]);
     if(cs.error||tk.error||od.error)throw(cs.error||tk.error||od.error);
     cloudOK=true;
-    customers=cs.data.map(r=>({id:r.id,name:r.name,lat:r.lat,lng:r.lng,phone:r.phone||''}));
+    customers=cs.data.map(r=>({id:r.id,name:r.name,lat:r.lat,lng:r.lng,phone:r.phone||'',note:r.note||''}));
     tankers=tk.data.map(r=>({id:r.id,plate:r.plate,comps:r.comps,
       shift:Number(r.shift_h)||10,lic:r.licensed,pin:r.pin||'',tir:!!r.is_tir}));
     orderList=od.data.map(fromRow);
@@ -846,17 +850,21 @@ const uid=()=>Math.random().toString(36).slice(2,9);
 // UUID mi (Supabase) yoksa yerel geçici id mi
 const isUUID=id=>typeof id==='string'&&/^[0-9a-f]{8}-/.test(id);
 
-let phoneColWarned=false;
+let custColWarned=false;
 async function cloudCustUpsert(c){
   if(!cloudOK)return c.id;
   const write=async row=>isUUID(c.id)?await sb.from('customers').update(row).eq('id',c.id):await sb.from('customers').insert(row).select().single();
   try{
-    const row={name:c.name,lat:c.lat,lng:c.lng,phone:c.phone||null};
+    const row={name:c.name,lat:c.lat,lng:c.lng,phone:c.phone||null,note:c.note||null};
     let r=await write(row);
-    if(r.error&&/phone/i.test(r.error.message||'')){   // supabase-v22 henüz çalıştırılmadıysa telefonsuz kaydet
-      delete row.phone;r=await write(row);
-      if(!phoneColWarned&&c.phone){phoneColWarned=true;alert('Telefon buluta kaydedilemedi: veritabanında "phone" kolonu yok.\n\nSupabase → SQL Editor\'de supabase-v22-telefon.sql dosyasını çalıştır. Müşteri kaydedildi ama telefon yalnız bu cihazda kalır.');}
+    // telefon/not kolonu (supabase-v22/v23) henüz eklenmediyse o alanlar olmadan kaydet
+    const missing=[];
+    for(let k=0;k<2&&r.error;k++){
+      const col=['phone','note'].find(x=>x in row&&new RegExp(x,'i').test(r.error.message||''));
+      if(!col)break;
+      delete row[col];missing.push(col);r=await write(row);
     }
+    if(missing.length&&!custColWarned&&missing.some(m=>c[m])){custColWarned=true;alert('Buluta kaydedilemedi: veritabanında müşteri "'+missing.join('/')+'" kolonu yok.\n\nSupabase → SQL Editor\'de supabase-v22-telefon.sql / supabase-v23-musteri-not.sql dosyasını çalıştır. Müşteri kaydedildi ama bu bilgi yalnız bu cihazda kalır.');}
     if(r.error)throw r.error;
     if(isUUID(c.id))return c.id;
     const old=c.id;c.id=r.data.id;
@@ -980,23 +988,23 @@ map.on('click',e=>{
   pickMode=null;returnFromPick();setStatus('');save();draw();
   if(window.innerWidth<=900&&curTab!=='plan'){
     const fld={cust:'cloc',garage:'garage',plant:'plant'}[wasPick];
-    if(wasPick==='garage'||wasPick==='plant')setCustMap(false);   // Ayarlar'da harita yalnız seçim için açılır; seçince kapanır
+    if(wasPick)setCustMap(false);   // harita yalnız seçim için açılır; seçince kapanır
     if(fld)setTimeout(()=>document.getElementById(fld).scrollIntoView({block:'center',behavior:'smooth'}),100);
   }
 });
-function setStatus(t){const s=document.getElementById('status');s.textContent=t;s.className=t?'on':'';const h=document.getElementById('mapHint');if(h){h.textContent=t;h.classList.toggle('on',!!t);}}
+function setStatus(t){const s=document.getElementById('status');s.textContent=t;s.className=t?'on':'';const h=document.getElementById('mapHint');if(h){document.getElementById('mapHintTxt').textContent=t;h.classList.toggle('on',!!t);}}
 const num=id=>+document.getElementById(id).value||0;
 
 /* ---------- müşteri ---------- */
 function addCust(){
   const n=document.getElementById('cname').value.trim();
   const p=document.getElementById('cloc').value.split(',').map(x=>parseFloat(x.trim()));
-  const ph=document.getElementById('cphone').value.trim();
+  const ph=document.getElementById('cphone').value.trim(),nt=document.getElementById('cnote').value.trim();
   if(!n)return alert('Müşteri adı gir.');
   if(p.length!==2||p.some(isNaN))return alert('Koordinat geçersiz. Örnek: 40.7712, 30.3541');
-  const c={id:uid(),name:n,lat:p[0],lng:p[1],phone:ph};
+  const c={id:uid(),name:n,lat:p[0],lng:p[1],phone:ph,note:nt};
   customers.push(c);
-  document.getElementById('cname').value='';document.getElementById('cloc').value='';document.getElementById('cphone').value='';
+  document.getElementById('cname').value='';document.getElementById('cloc').value='';document.getElementById('cphone').value='';document.getElementById('cnote').value='';
   save();renderCust();draw();
   cloudCustUpsert(c).then(()=>{renderCust();renderOrders();});
 }
@@ -1006,7 +1014,7 @@ function editCust(id){
   custEdId=id;
   document.getElementById('cESub').textContent=c.name;
   document.getElementById('cEName').value=c.name;
-  document.getElementById('cEPhone').value=c.phone||'';
+  document.getElementById('cEPhone').value=c.phone||'';document.getElementById('cENote').value=c.note||'';
   document.getElementById('cELoc').value=`${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}`;
   document.getElementById('cdlg').classList.add('on');
 }
@@ -1037,7 +1045,7 @@ function saveCustEdit(){
   if(!n)return alert('Müşteri adı boş olamaz.');
   if(p.length!==2||p.some(isNaN)||Math.abs(p[0])>90||Math.abs(p[1])>180)return alert('Koordinat geçersiz. Örnek: 40.7712, 30.3541');
   const moved=Math.abs(c.lat-p[0])>1e-6||Math.abs(c.lng-p[1])>1e-6;
-  c.name=n;c.lat=p[0];c.lng=p[1];c.phone=document.getElementById('cEPhone').value.trim();
+  c.name=n;c.lat=p[0];c.lng=p[1];c.phone=document.getElementById('cEPhone').value.trim();c.note=document.getElementById('cENote').value.trim();
   save();closeCustEdit();renderCust();renderOrders();renderTeslimatGiris();draw();
   cloudCustUpsert(c);
   if(moved&&lastRun)alert('Konum güncellendi. Mevcut rota eski konumla hesaplanmıştı — "Rotayı hesapla"yı yeniden çalıştır.');
@@ -1056,7 +1064,7 @@ function renderCust(){
   const el=document.getElementById('custlist');
   document.getElementById('custcount').textContent=customers.length?`(${customers.length})`:'';
   el.innerHTML=customers.length?customers.map(c=>
-    `<div class="cust"><b>${esc(c.name)}${c.phone?`<small style="display:block;font-weight:400"><a href="tel:${esc(c.phone.replace(/[^0-9+]/g,''))}" style="color:inherit">${esc(c.phone)}</a></small>`:''}</b><small>${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}</small>
+    `<div class="cust"><b>${esc(c.name)}${c.phone?`<small style="display:block;font-weight:400"><a href="tel:${esc(c.phone.replace(/[^0-9+]/g,''))}" style="color:inherit">${esc(c.phone)}</a></small>`:''}${c.note?`<small style="display:block;font-weight:400;white-space:normal">📝 ${esc(c.note)}</small>`:''}</b><small>${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}</small>
      <button class="xbtn" onclick="editCust('${c.id}')" title="Düzenle" style="font-size:15px">✎</button>
      <button class="xbtn" onclick="delCust('${c.id}')" title="Sil">✕</button></div>`).join('')
     :'<div class="empty">Rehber boş — aşağıdan müşteri ekle</div>';
@@ -1895,9 +1903,9 @@ async function exportExcel(btn){
     const stokRows=[['Araç','Teslimat (adet)','Teslim edilen (L)','Onay bekleyen (adet)']];
     Object.keys(byVeh).sort().forEach(k=>stokRows.push([k,byVeh[k].n,byVeh[k].l,byVeh[k].onay]));
 
-    const custRows=[['Müşteri','Telefon','Enlem','Boylam','Harita']];
+    const custRows=[['Müşteri','Telefon','Not','Enlem','Boylam','Harita']];
     customers.slice().sort((a,b)=>a.name.localeCompare(b.name,'tr')).forEach(c=>{
-      custRows.push([c.name,c.phone||'',c.lat,c.lng,linkCell(`https://www.google.com/maps?q=${c.lat},${c.lng}`,'Haritada aç')]);
+      custRows.push([c.name,c.phone||'',c.note||'',c.lat,c.lng,linkCell(`https://www.google.com/maps?q=${c.lat},${c.lng}`,'Haritada aç')]);
     });
 
     // stok defteri: giren / \u00e7\u0131kan / kalan (Kalan negatifse k\u0131rm\u0131z\u0131)
@@ -2524,7 +2532,7 @@ function applyCustomerChange(payload){
   const {eventType,new:row,old}=payload;
   if(eventType==='DELETE'){customers=customers.filter(c=>c.id!==old.id);}
   else{
-    const c={id:row.id,name:row.name,lat:row.lat,lng:row.lng,phone:row.phone||''};
+    const c={id:row.id,name:row.name,lat:row.lat,lng:row.lng,phone:row.phone||'',note:row.note||''};
     const i=customers.findIndex(x=>x.id===c.id);
     if(i>=0)customers[i]=c; else customers.push(c);
   }
@@ -2939,6 +2947,10 @@ function updateStatBar(){
 // mobilde harita yalnız Plan sekmesinde: haritadan seçme gerektiğinde Plan'a geçilir, seçimden sonra geri dönülür
 let pickReturnTab=null;
 function setCustMap(on){
+  if(!on&&pickMode){   // seçim yarıda bırakıldı: iptal et, düzenleme penceresini geri aç
+    if(pickMode==='custedit')document.getElementById('cdlg').classList.add('on');
+    pickMode=null;setStatus('');const cp=document.getElementById('cpick');if(cp)cp.classList.remove('hot');
+  }
   custMapOpen=on;pageMapTab=on?curTab:null;document.body.classList.toggle('custmap',on);
   const b=document.getElementById('cmapbtn');if(b)b.textContent=on?'🗺️ Haritayı kapat':'🗺️ Haritayı aç';
   if(on){placeMap(curTab);setTimeout(()=>{map.invalidateSize();
@@ -2963,7 +2975,7 @@ async function softRefresh(){
       sb.from('orders').select('*').order('created_at'),
     ]);
     if(cs.error||od.error)throw(cs.error||od.error);
-    customers=cs.data.map(r=>({id:r.id,name:r.name,lat:r.lat,lng:r.lng,phone:r.phone||''}));
+    customers=cs.data.map(r=>({id:r.id,name:r.name,lat:r.lat,lng:r.lng,phone:r.phone||'',note:r.note||''}));
     orderList=od.data.map(fromRow);
     if(!cloudOK){cloudOK=true;setCloudBadge(true);}
     rolloverPlans();
