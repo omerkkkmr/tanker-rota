@@ -1699,7 +1699,7 @@ async function exportExcel(btn){
       if(o.status==='done'||o.status==='onay'){v.tamam++;v.teslim+=o.deliveredQty||0;}
       else v.bekleyen+=o.qty;
     });
-    const stokRows=[['Plaka','Durak (Tamam/Toplam)','Y\u00fcklenmesi Planlanan (L)','Teslim Edilen (L)','Bekleyen/Yolda (L)']];
+    const stokRows=[['Plaka','Durak (Tamam/Toplam)','Planlanan (L)','Teslim Edilen (L)','Bekleyen (L)']];
     Object.keys(byVeh).sort().forEach(v=>{
       const s=byVeh[v];
       stokRows.push([v,`${s.tamam}/${s.durak}`,s.planlanan,s.teslim,s.bekleyen]);
@@ -1738,8 +1738,8 @@ async function exportExcel(btn){
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(dayRows),'G\u00fcnl\u00fck Stok');
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(logRows),'Teslimat Ge\u00e7mi\u015fi');
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(cancRows),'\u0130ptal Ge\u00e7mi\u015fi');
-    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(stokRows),'Stok \u00d6zeti (bug\u00fcn)');
-    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ordRows),'Sipari\u015fler (bug\u00fcn)');
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ordRows),'Sipari\u015fler');
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(stokRows),'Ara\u00e7 \u00d6zeti');
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(custRows),'M\u00fc\u015fteri Rehberi');
     const filename=`tanker-rota-${new Date().toISOString().slice(0,10)}.xlsx`;
     // iOS Safari: veri \u00e7ekmek i\u00e7in "await" kullan\u0131ld\u0131ktan SONRA indirme

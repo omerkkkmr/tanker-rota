@@ -1290,6 +1290,21 @@ Kullanıcı: "yakınlaştırma olmasın" (önceki çift dokunma önlemi yetmedi)
    gesturechange/gestureend` `preventDefault` (harita kendi dokunma yönetimini kullandığı için etkilenmez).
 3. Çift dokunma (`touch-action:manipulation`) önceki turdan duruyor.
 
+## DENEME VERİSİ TEMİZLİĞİ + EXCEL SAYFA ADLARI (2026-09-25)
+
+Kullanıcı: "eski denemeleri vs ekrandan ve sqlden sil, şifreye gerek yok, exceli güncelle".
+- **Şifre:** gerekmiyor (karar kullanıcıda; anon anahtar/açık RLS ödünleşimi olduğu gibi kalıyor).
+- **Temizlik:** canlı veri incelendi — 9 sipariş (hepsi 5.000 L test), 4 teslimat kaydı, 1 iptal kaydı,
+  deneme rotası, "Fhhhbh" test müşterisi, storage'da deneme fotoğrafları. Claude Code'un otomatik
+  izin sistemi anon anahtarla toplu DELETE'i ("Cloud Storage Mass Delete") ENGELLEDİ; atlatılmadı.
+  Bunun yerine `supabase-temizlik-deneme-verisi.sql` hazırlandı — kullanıcı SQL Editor'de çalıştırır
+  (orders/teslimat_kayitlari/iptal_kayitlari/dolum_fisleri silinir, rota boşaltılır, Fhhhbh silinir).
+  KORUNAN: tankerler, "Salih Pala" müşterisi, stok girişi (30.000 L Sunpet — silme isteğe bağlı satır
+  dosyada yorumlu). Fotoğraflar SQL ile silinemez → Supabase panelinden Storage → belgeler → klasör sil.
+- **Excel:** "Siparişler (bugün)" → "Siparişler", "Stok Özeti (bugün)" → "Araç Özeti" (artık bugünle
+  sınırlı değildi); araç özeti başlıkları "Planlanan/Bekleyen" ("Yolda" kalktı); sayfa sırası:
+  Stok Hareketleri, Günlük Stok, Teslimat Geçmişi, İptal Geçmişi, Siparişler, Araç Özeti, Müşteri Rehberi.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
