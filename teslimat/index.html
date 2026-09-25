@@ -247,9 +247,9 @@ async function loadRoute(manual){
         const{data:ords,error:oe}=await sb.from('orders').select('id,status,delivered_qty,delivered_at,photos,deliver_note,vehicle,customer_id').in('id',oids);
         if(oe)throw oe;
         orderStatus={};ords.forEach(o=>orderStatus[o.id]=o);
-        try{const{data:cp,error:ce}=await sb.from('customers').select('id,phone');if(!ce&&cp){custPhone={};cp.forEach(c=>{if(c.phone)custPhone[c.id]=c.phone;});}}catch(_){}
       }else orderStatus={};
     }
+    try{const{data:cp,error:ce}=await sb.from('customers').select('id,phone');if(!ce&&cp){custPhone={};cp.forEach(c=>{if(c.phone)custPhone[c.id]=c.phone;});}}catch(_){}   // telefon kolonu yoksa sessizce atlanır
     const t0=new Date();t0.setHours(0,0,0,0);
     const{data:ex,error:ee}=await sb.from('orders').select('id,status,delivered_qty,delivered_at,photos,deliver_note,vehicle,customer_id,customers(name,lat,lng)')
       .eq('vehicle',session.plate).in('status',['done','onay']).gte('delivered_at',t0.toISOString())
@@ -272,6 +272,7 @@ function subscribeRealtime(){
 }
 
 /* ---------- görünüm ---------- */
+const telBtn=cid=>custPhone[cid]?`<a class="sh-btn line" href="tel:${custPhone[cid].replace(/[^0-9+]/g,'')}">📞 Ara</a>`:'';
 function extraHtml(){
   if(!extraDone.length)return '';
   return `<div class="secBand">✓ Tamamlanan — plan dışı / rotadan çıkan</div>`+extraDone.map(o=>{
@@ -281,7 +282,7 @@ function extraHtml(){
       <div>
         <div class="sh-t"><b>${esc(o.customers?.name||'—')}</b><span class="sh-time">${o.delivered_at?new Date(o.delivered_at).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}):''}</span></div>
         <div class="sh-info"><span class="sh-vol ${pend?'pend':'ok'}">${L2(o.delivered_qty||0)} L</span> ${pend?'onay bekliyor':'teslim edildi'}</div>
-        <div class="sh-acts"><button class="sh-btn ${pend?'purple':'grey'}" onclick="openDone('${o.id}')">${pend?'✎ Detay / düzenle':'Detay'}</button></div>
+        <div class="sh-acts"><button class="sh-btn ${pend?'purple':'grey'}" onclick="openDone('${o.id}')">${pend?'✎ Detay / düzenle':'Detay'}</button>${telBtn(o.customer_id)}</div>
       </div></div>`;
   }).join('');
 }
@@ -334,7 +335,7 @@ function render(){
         </div>
         <div class="sh-acts">
           <a class="sh-btn" href="${navUrl(l.lat,l.lng)}" target="_blank" rel="noopener">▸ Yol tarifi</a>
-          ${custPhone[o?.customer_id]?`<a class="sh-btn line" href="tel:${custPhone[o.customer_id].replace(/[^0-9+]/g,'')}">📞 Ara</a>`:''}
+          ${telBtn(o?.customer_id)}
           <button class="sh-btn ${isPend?'purple':isDone?'grey':'green'}" onclick="openStop('${l.oid}')">${isPend?'✎ Detay / düzenle':isDone?'Detay':'✓ Teslim gir'}</button>
         </div>
       </div>
@@ -564,6 +565,7 @@ function openDone(oid){
       ${irs?`<a href="${irs.url}" target="_blank"><img src="${irs.thumb||irs.url}" loading="lazy"></a>`:''}
     </div>
     <div class="dlgbtns"><button class="btn-cancel" onclick="closeDlg()">Kapat</button>
+      ${custPhone[o.customer_id]?`<a class="btn-save" style="text-decoration:none;text-align:center;background:#fff;color:var(--ink);border:1px solid #cfc6b2" href="tel:${custPhone[o.customer_id].replace(/[^0-9+]/g,'')}">📞 Ara</a>`:''}
       ${o.status==='onay'?`<button class="btn-save" onclick="editDelivery('${o.id}')">✎ Düzenle</button>`:''}</div>
     ${o.status==='onay'?'<div class="savingNote">Onaylanmadan önce teslim bilgilerini düzeltebilirsin.</div>':'<div class="savingNote">Onaylanmış teslimat — değişiklik için planlayıcıya söyle.</div>'}`;
   document.getElementById('dlg').classList.add('on');

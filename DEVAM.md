@@ -1413,6 +1413,10 @@ Excel indir düğmesi Teslimat ve Stok sekmelerinin üstünden kaldırıldı; Y�
 ## ŞOFÖR EKRANI: MÜŞTERİYİ ARA (2026-09-25)
 Rotadaki her durakta telefonu kayıtlıysa "▸ Yol tarifi" yanında **📞 Ara** (`tel:` linki) çıkar; yoksa görünmez. Telefonlar rota yüklemesinden AYRI bir `customers(id,phone)` sorgusuyla gelir — `supabase-v22-telefon.sql` çalıştırılmadıysa sorgu sessizce hata verir, rota normal yüklenir, sadece Ara düğmesi çıkmaz. Plan dışı/tamamlanan kartlarda yok.
 
+## MÜŞTERİLER SEKMESİNDE KENDİ HARİTASI + ARA DÜĞMESİ HER KARTTA (2026-09-25)
+**Planlayıcı (mobil ≤900px):** Müşteriler sekmesinin altında "🗺️ Haritayı aç/kapat" düğmesi (`#cmapbtn`, `setCustMap`). Harita `placeMap('musteriler')` ile bu sekmenin `.body`'sine taşınır, `body.custmap` sınıfıyla görünür; sekmeden çıkılınca kapanır. "Haritadan seç" (yeni müşteri + Düzenle penceresi) artık Plan sekmesine GİTMEZ (`goMapForPick`: `curTab==='musteriler'` ise aynı sayfada haritayı açar); tıklanan koordinat forma yazılır, yeni müşteri seçiminde sayfa koordinat alanına kayar. Garaj/tesis seçimi (Ayarlar) eski davranışta: Plan'a gider. Masaüstünde değişiklik yok (düğme gizli).
+**Şoför:** 📞 Ara artık plan dışı/tamamlanan kartlarda ve "Detay" penceresinde de var (`telBtn`); telefon sorgusu rota boş olsa da çalışsın diye `oids.length` bloğundan çıkarıldı.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
