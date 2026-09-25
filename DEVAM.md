@@ -1361,6 +1361,17 @@ görünür kalır, ekranda ek yer kaplamaz; harita açıkken altın renkli ("on"
 harita seçim modları haritayı kendi açar). Masaüstünde düğme yok. 375px'de açma/kapama, sabit konum
 (kaydırınca değişmedi) ve harita boyutu doğrulandı.
 
+## HARİTA YALNIZ PLAN SEKMESİNDE (mobil) (2026-09-25)
+
+Kullanıcı: "plana tıklayınca orada görünsün, diğer sayfalarda görünmesin". Sekme şeridindeki 🗺️ düğmesi
+kaldırıldı (bir önceki tur). ≤900px'de harita yalnız **Plan** sekmesinde görünür ve rota listesinin ÜSTÜNE
+yerleşir (`placeMap`: `#map`+`#legend` Plan panelinin başına taşınır, diğer sekmelerde geri `.maprel`e
+konur ve gizlenir); durum şeridi (Açık sipariş/Talep L/Tanker/Şoför/Plan) her sekmede kalır. Haritadan
+seçme (müşteri/garaj/tesis/müşteri düzenle) mobilde Plan sekmesine geçer, tıklamadan sonra önceki sekmeye
+döner (`goMapForPick`/`returnFromPick`). Legend mobilde harita altında sıradan blok. Masaüstü (>900px)
+düzeni değişmedi. 375px'de: 6 sekmede harita gizli, Plan'da 374×487 harita + karolar + liste üstünde,
+seçim akışı önceki sekmeye dönüyor — doğrulandı.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
