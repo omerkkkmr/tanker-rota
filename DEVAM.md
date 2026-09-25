@@ -1305,6 +1305,28 @@ Kullanıcı: "eski denemeleri vs ekrandan ve sqlden sil, şifreye gerek yok, exc
   sınırlı değildi); araç özeti başlıkları "Planlanan/Bekleyen" ("Yolda" kalktı); sayfa sırası:
   Stok Hareketleri, Günlük Stok, Teslimat Geçmişi, İptal Geçmişi, Siparişler, Araç Özeti, Müşteri Rehberi.
 
+## EXCEL: TESLİMATLAR ODAKLI + MANTIKLI SÜTUN SIRASI, MÜŞTERİ DÜZENLEME (2026-09-25)
+
+- **Excel artık sipariş değil TESLİMAT tutar:** "Siparişler" sayfası kaldırıldı; **"Teslimatlar"** sayfası
+  (kalıcı kayıt + onay bekleyenler + listede duran teslimler; sipariş başına TEK satır, düzeltmede en son
+  kayıt; açık sipariş/ajanda Excel'e girmez; altta TOPLAM). Sayfalar: Stok Hareketleri, Günlük Stok,
+  Teslimatlar, İptal Geçmişi, Araç Özeti, Müşteri Rehberi. "Araç Özeti" artık teslimatlardan (araç bazında
+  adet + teslim edilen L + onay bekleyen).
+- **Sütun sırası (okuma sırasına göre):** Teslimatlar: Teslim tarihi, Müşteri, Araç, Göz, Sipariş (L),
+  Teslim edilen (L), Fark (L), Şoför notu, Sipariş notu, Dolum tankı, İrsaliye, Durum, Sipariş girişi,
+  Kayıt zamanı, Kayıt no (teknik alanlar sonda). Stok Hareketleri: Tarih, Hareket, Müşteri/Kaynak, Giren,
+  Çıkan, Kalan, sonra Bayi/Satış türü/Araç/İrsaliye no/Not/foto. İptal: İptal tarihi ilk. Müşteri Rehberi:
+  + "Haritada aç" linki. Başlık satırı koyu, sütun genişlikleri içeriğe göre. Silinen siparişin teslimatı
+  kırmızı + "SİPARİŞ SİLİNDİ". Gerçek .xlsx yazıp geri okuyarak doğrulandı (düzeltme çift sayımı yok).
+- Hata düzeltildi: kırmızı stilli satırlarda hücre tipi (`t`) eksikti (bellek içi okumada boş görünüyordu);
+  stok defterinde "sipariş başına en son kayıt" artık `logged_at` karşılaştırmasıyla (sıraya bağımlı değil).
+- **Müşteri düzenleme (Müşteriler sekmesi, satırda ✎):** ad + konum (enlem, boylam); konum için
+  "📍 Şu anki konumum" veya "🗺️ Haritadan seç" (pencere gizlenir, haritada tıklanan yer alınır,
+  pencere geri açılır). Kaydedince rehber, siparişler ve harita güncellenir; konum değiştiyse rotayı yeniden
+  hesaplama uyarısı. Geçmiş teslimat kayıtlarında eski ad aynen kalır (kayıt anındaki isim). `cloudCustUpsert`
+  hata kontrolü eklendi. Kapsam: müşteride yalnız ad+konum var; telefon/adres gibi ek alanlar istenirse yeni
+  kolon (SQL) gerekir.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

@@ -571,6 +571,28 @@ html,body,*{touch-action:manipulation}
 </div>
 </div>
 
+<div class="dlg" id="cdlg">
+  <div class="dlgbox">
+    <h3>Müşteriyi düzenle</h3>
+    <div class="sub" id="cESub"></div>
+    <label>Müşteri adı</label>
+    <input id="cEName" placeholder="Müşteri adı">
+    <label>Konum (enlem, boylam)</label>
+    <input id="cELoc" placeholder="40.7712, 30.3541" inputmode="decimal">
+    <div>
+      <div class="phrow">
+        <button type="button" class="phbtn" id="cEGps" onclick="custEditGps()">📍 Şu anki konumum</button>
+        <button type="button" class="phbtn" onclick="custEditPick()">🗺️ Haritadan seç</button>
+      </div>
+    </div>
+    <div class="hint" style="margin-top:8px">Konumu değiştirirsen "Rotayı hesapla"yı yeniden çalıştır. Geçmiş teslimat kayıtlarında eski ad aynen kalır.</div>
+    <div class="row">
+      <button class="ghost" onclick="closeCustEdit()">Vazgeç</button>
+      <button class="primary" style="margin-top:0;padding:9px" onclick="saveCustEdit()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
 <div class="dlg" id="edlg">
   <div class="dlgbox" style="max-width:360px;max-height:90vh;overflow-y:auto">
     <h3>Düzenle</h3>
@@ -781,7 +803,8 @@ async function cloudCustUpsert(c){
   if(!cloudOK)return c.id;
   try{
     if(isUUID(c.id)){
-      await sb.from('customers').update({name:c.name,lat:c.lat,lng:c.lng}).eq('id',c.id);
+      const{error:ue}=await sb.from('customers').update({name:c.name,lat:c.lat,lng:c.lng}).eq('id',c.id);
+      if(ue)throw ue;
       return c.id;
     }else{
       const{data,error}=await sb.from('customers').insert({name:c.name,lat:c.lat,lng:c.lng}).select().single();
@@ -894,6 +917,12 @@ map.on('click',e=>{
   if(pickMode==='garage')document.getElementById('garage').value=v;
   else if(pickMode==='plant')document.getElementById('plant').value=v;
   else if(pickMode==='cust'){document.getElementById('cloc').value=v;document.getElementById('cpick').classList.remove('hot');}
+  else if(pickMode==='custedit'){
+    document.getElementById('cELoc').value=`${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
+    document.getElementById('cEName').value=window._custEditName??document.getElementById('cEName').value;
+    document.getElementById('cdlg').classList.add('on');
+    if(window.innerWidth<=900)document.getElementById('side').scrollIntoView({behavior:'smooth'});
+  }
   pickMode=null;setStatus('');save();draw();
 });
 function setStatus(t){const s=document.getElementById('status');s.textContent=t;s.className=t?'on':'';}
@@ -911,6 +940,47 @@ function addCust(){
   save();renderCust();draw();
   cloudCustUpsert(c).then(()=>{renderCust();renderOrders();});
 }
+let custEdId=null;
+function editCust(id){
+  const c=customers.find(x=>x.id===id);if(!c)return;
+  custEdId=id;
+  document.getElementById('cESub').textContent=c.name;
+  document.getElementById('cEName').value=c.name;
+  document.getElementById('cELoc').value=`${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}`;
+  document.getElementById('cdlg').classList.add('on');
+}
+function closeCustEdit(){document.getElementById('cdlg').classList.remove('on');custEdId=null;}
+function custEditGps(){
+  const b=document.getElementById('cEGps');
+  if(!navigator.geolocation)return alert('Bu cihaz konum almayı desteklemiyor.');
+  const old=b.textContent;b.disabled=true;b.textContent='Konum alınıyor…';
+  navigator.geolocation.getCurrentPosition(
+    pos=>{document.getElementById('cELoc').value=`${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;b.disabled=false;b.textContent=old;},
+    err=>{b.disabled=false;b.textContent=old;alert(err.code===1?'Konum izni verilmedi — tarayıcı ayarlarından bu site için konuma izin ver.':'Konum alınamadı, tekrar dene.');},
+    {enableHighAccuracy:true,timeout:10000}
+  );
+}
+// haritadan seç: pencereyi gizle, haritada tıklanan yeri al, pencereyi geri aç
+function custEditPick(){
+  const nm=document.getElementById('cEName').value;
+  pickMode='custedit';
+  document.getElementById('cdlg').classList.remove('on');
+  setStatus('Haritada müşterinin yeni konumunu tıkla');
+  window._custEditName=nm;
+  if(window.innerWidth<=900)document.querySelector('.maprel').scrollIntoView({behavior:'smooth'});
+}
+function saveCustEdit(){
+  const c=customers.find(x=>x.id===custEdId);if(!c)return closeCustEdit();
+  const n=document.getElementById('cEName').value.trim();
+  const p=document.getElementById('cELoc').value.split(',').map(x=>parseFloat(x.trim()));
+  if(!n)return alert('Müşteri adı boş olamaz.');
+  if(p.length!==2||p.some(isNaN)||Math.abs(p[0])>90||Math.abs(p[1])>180)return alert('Koordinat geçersiz. Örnek: 40.7712, 30.3541');
+  const moved=Math.abs(c.lat-p[0])>1e-6||Math.abs(c.lng-p[1])>1e-6;
+  c.name=n;c.lat=p[0];c.lng=p[1];
+  save();closeCustEdit();renderCust();renderOrders();renderTeslimatGiris();draw();
+  cloudCustUpsert(c);
+  if(moved&&lastRun)alert('Konum güncellendi. Mevcut rota eski konumla hesaplanmıştı — "Rotayı hesapla"yı yeniden çalıştır.');
+}
 function delCust(id){
   const n=orderList.filter(o=>o.cid===id).length;
   if(n&&!confirm(`Bu müşterinin ${n} sipariş kaydı var, hepsi silinecek. Devam?`))return;
@@ -926,6 +996,7 @@ function renderCust(){
   document.getElementById('custcount').textContent=customers.length?`(${customers.length})`:'';
   el.innerHTML=customers.length?customers.map(c=>
     `<div class="cust"><b>${esc(c.name)}</b><small>${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}</small>
+     <button class="xbtn" onclick="editCust('${c.id}')" title="Düzenle" style="font-size:15px">✎</button>
      <button class="xbtn" onclick="delCust('${c.id}')" title="Sil">✕</button></div>`).join('')
     :'<div class="empty">Rehber boş — aşağıdan müşteri ekle</div>';
   const sel=document.getElementById('osel');
@@ -1221,13 +1292,13 @@ async function buildStokLedger(){
   const moves=[];let err=null;
   const gi=await sb.from('stok_girisleri').select('*').order('tarih');
   if(gi.error){err='Stok tablosu kurulu değil — Supabase SQL Editor\'de supabase-v19-stok.sql dosyasını çalıştır.';}
-  else(gi.data||[]).forEach(r=>moves.push({t:new Date(r.tarih).getTime(),type:'in',id:r.id,name:r.kaynak||'—',veh:'',doc:r.belge_no||'',note:r.aciklama||'',qty:r.litre,
+  else(gi.data||[]).forEach(r=>moves.push({t:new Date(r.tarih).getTime(),type:'in',id:r.id,name:r.kaynak||'Stok girişi',veh:'',doc:r.belge_no||'',note:r.aciklama||'',qty:r.litre,
     bayi:r.bayi||'',tur:r.satis_turu==='ic'?'İç satış':r.satis_turu==='dis'?'Dış satış':'',foto:r.irsaliye_foto_url||'',thumb:r.irsaliye_foto_thumb||''}));
   const tk=await sb.from('teslimat_kayitlari').select('order_id,customer_name,delivered_qty,vehicle,delivered_at,logged_at,siparis_silindi,deliver_note').order('logged_at');
   if(tk.error){err=(err?err+' ':'')+'Teslimat kayıtları okunamadı.';}
   else{
     const last=new Map();
-    (tk.data||[]).forEach(r=>last.set(r.order_id||r.logged_at,r));   // aynı siparişin düzeltmeleri: sonuncu geçerli
+    (tk.data||[]).forEach(r=>{const k=r.order_id||r.logged_at,p=last.get(k);if(!p||String(r.logged_at)>String(p.logged_at))last.set(k,r);});   // aynı siparişin düzeltmeleri: sonuncu geçerli
     last.forEach(r=>{
       const q=r.delivered_qty||0;if(q<=0)return;
       moves.push({t:new Date(r.delivered_at||r.logged_at).getTime(),type:'out',name:(r.customer_name||'—')+(r.siparis_silindi?' (sipariş silindi)':''),veh:r.vehicle||'',doc:'',note:r.deliver_note||'',qty:q});
@@ -1663,84 +1734,95 @@ async function exportExcel(btn){
     const DELCELL={font:{color:{rgb:'FFFFFF'},bold:true},fill:{patternType:'solid',fgColor:{rgb:'C8402C'}}};
     const LINKSTYLE={font:{color:{rgb:'0563C1'},underline:true}};
     const linkCell=(url,label)=>url?{v:label,t:'s',l:{Target:url,Tooltip:url},s:LINKSTYLE}:'';
-    const styledRow=(vals,style)=>style?vals.map(v=>(v&&typeof v==='object')?{...v,s:style}:{v:v??'',s:style}):vals;
-    let logRows=[['Kay\u0131t','Durum','M\u00fc\u015fteri','Sipari\u015f L','B\u0131rak\u0131lan L','Ara\u00e7','G\u00f6z','Not','\u015eof\u00f6r notu','Sipari\u015f giri\u015fi','Teslim','Kay\u0131t zaman\u0131','Dolum tank\u0131 foto\u011fraf\u0131','\u0130rsaliye foto\u011fraf\u0131']];
+    const styledRow=(vals,style)=>style?vals.map(v=>(v&&typeof v==='object')?{...v,s:style}:{v:v??'',t:typeof v==='number'?'n':'s',s:style}):vals;
+    // TESLİMATLAR: kalıcı kayıt (onaylanmış) + onay bekleyenler + listede duran teslimler; sipariş başına TEK satır
+    // (düzeltmelerde en son kayıt geçerli). Sipariş/ajanda listesi Excel'e girmez.
+    let logRows=[['Teslim tarihi','Müşteri','Araç','Göz','Sipariş (L)','Teslim edilen (L)','Fark (L)','Şoför notu','Sipariş notu','Dolum tankı','İrsaliye','Durum','Sipariş girişi','Kayıt zamanı','Kayıt no']];
+    const tes=[],haveO=new Set();
+    orderList.filter(o=>o.status==='done'||o.status==='onay').forEach(o=>{
+      haveO.add(o.id);
+      const c=customers.find(x=>x.id===o.cid);
+      tes.push({t:o.deliveredAt,name:c?c.name:'—',veh:o.vehicle||'',comp:o.comp,qty:o.qty,dq:o.deliveredQty,dnote:o.deliverNote||'',note:o.note||'',
+        tank:o.photos?.find(p=>p.type==='tank')?.url||'',irs:o.photos?.find(p=>p.type==='irsaliye')?.url||'',
+        durum:o.status==='onay'?'ONAY BEKLİYOR':'',created:o.createdAt,logged:'',id:o.id,gone:false});
+    });
     if(cloudOK){
       try{
         const{data,error}=await sb.from('teslimat_kayitlari').select('*').order('delivered_at',{ascending:false});
         if(error)throw error;
-        (data||[]).forEach(r=>{
-          const deleted=!!r.siparis_silindi;
-          logRows.push(styledRow([r.id,deleted?'S\u0130L\u0130ND\u0130':'',r.customer_name||'\u2014',r.qty??'',r.delivered_qty??'',r.vehicle??'',r.comp??'',
-            r.note??'',r.deliver_note??'',fmtDT(r.order_created_at),fmtDT(r.delivered_at),fmtDT(r.logged_at),
-            linkCell(r.photo_tank_url,'Dolum tankı — aç'),linkCell(r.photo_irsaliye_url,'İrsaliye — aç')],deleted?DELCELL:null));
+        const last=new Map();
+        (data||[]).forEach(r=>{const k=r.order_id||r.id,p=last.get(k);if(!p||String(r.logged_at)>String(p.logged_at))last.set(k,r);});
+        last.forEach(r=>{
+          if(r.order_id&&haveO.has(r.order_id))return;
+          tes.push({t:r.delivered_at,name:r.customer_name||'—',veh:r.vehicle||'',comp:r.comp,qty:r.qty,dq:r.delivered_qty,dnote:r.deliver_note||'',note:r.note||'',
+            tank:r.photo_tank_url||'',irs:r.photo_irsaliye_url||'',durum:r.siparis_silindi?'SİPARİŞ SİLİNDİ':'',created:r.order_created_at,logged:r.logged_at,id:r.order_id||r.id,gone:!!r.siparis_silindi});
         });
-      }catch(e){console.warn('teslimat ge\u00e7mi\u015fi \u00e7ekilemedi (supabase-v14/v16/v17 SQL \u00e7al\u0131\u015ft\u0131r\u0131lm\u0131\u015f m\u0131?):',e);}
+      }catch(e){console.warn('teslimat geçmişi çekilemedi (supabase-v14/v16/v17 SQL çalıştırılmış mı?):',e);}
     }
+    tes.sort((a,b)=>String(b.t||'').localeCompare(String(a.t||'')));
+    tes.forEach(x=>{
+      const fark=(x.dq!=null&&x.qty!=null)?x.dq-x.qty:'';
+      logRows.push(styledRow([fmtDT(x.t),x.name,x.veh,x.comp??'',x.qty??'',x.dq??'',fark,x.dnote,x.note,
+        linkCell(x.tank,'Dolum tankı — aç'),linkCell(x.irs,'İrsaliye — aç'),x.durum,fmtDT(x.created),x.logged?fmtDT(x.logged):'',x.id],x.gone?DELCELL:null));
+    });
+    if(tes.length)logRows.push(['','TOPLAM','','','',tes.reduce((a,x)=>a+(x.dq||0),0),'','','','','','','','','']);
 
-    // kal\u0131c\u0131 iptal ge\u00e7mi\u015fi: "Teslimleri ar\u015fivle" ile silinen iptaller de burada durur
-    let cancRows=[['Kay\u0131t','M\u00fc\u015fteri','Sipari\u015f L','Ara\u00e7','Not','Sipari\u015f giri\u015fi','\u0130ptal','Kay\u0131t zaman\u0131']];
+    // kalıcı iptal geçmişi
+    let cancRows=[['İptal tarihi','Müşteri','Sipariş (L)','Araç','Not','Sipariş girişi','Kayıt zamanı','Kayıt no']];
     if(cloudOK){
       try{
         const{data,error}=await sb.from('iptal_kayitlari').select('*').order('cancelled_at',{ascending:false});
         if(error)throw error;
         (data||[]).forEach(r=>{
-          cancRows.push([r.id,r.customer_name||'\u2014',r.qty??'',r.vehicle??'',r.note??'',
-            fmtDT(r.order_created_at),fmtDT(r.cancelled_at),fmtDT(r.logged_at)]);
+          cancRows.push([fmtDT(r.cancelled_at),r.customer_name||'—',r.qty??'',r.vehicle??'',r.note??'',
+            fmtDT(r.order_created_at),fmtDT(r.logged_at),r.id]);
         });
-      }catch(e){console.warn('iptal ge\u00e7mi\u015fi \u00e7ekilemedi (supabase-v18 SQL \u00e7al\u0131\u015ft\u0131r\u0131lm\u0131\u015f m\u0131?):',e);}
+      }catch(e){console.warn('iptal geçmişi çekilemedi (supabase-v18 SQL çalıştırılmış mı?):',e);}
     }
 
+    // ARAÇ ÖZETİ: teslimatlardan (araç bazında adet + teslim edilen litre)
     const byVeh={};
-    orderList.forEach(o=>{
-      if(o.status==='canc'||!o.vehicle)return;
-      const v=byVeh[o.vehicle]||(byVeh[o.vehicle]={durak:0,tamam:0,planlanan:0,teslim:0,bekleyen:0});
-      v.durak++;v.planlanan+=o.qty;
-      if(o.status==='done'||o.status==='onay'){v.tamam++;v.teslim+=o.deliveredQty||0;}
-      else v.bekleyen+=o.qty;
-    });
-    const stokRows=[['Plaka','Durak (Tamam/Toplam)','Planlanan (L)','Teslim Edilen (L)','Bekleyen (L)']];
-    Object.keys(byVeh).sort().forEach(v=>{
-      const s=byVeh[v];
-      stokRows.push([v,`${s.tamam}/${s.durak}`,s.planlanan,s.teslim,s.bekleyen]);
-    });
+    tes.forEach(x=>{const k=x.veh||'(araç belirtilmemiş)';const v=byVeh[k]||(byVeh[k]={n:0,l:0,onay:0});v.n++;v.l+=x.dq||0;if(x.durum==='ONAY BEKLİYOR')v.onay++;});
+    const stokRows=[['Araç','Teslimat (adet)','Teslim edilen (L)','Onay bekleyen (adet)']];
+    Object.keys(byVeh).sort().forEach(k=>stokRows.push([k,byVeh[k].n,byVeh[k].l,byVeh[k].onay]));
 
-    const custRows=[['M\u00fc\u015fteri','Enlem','Boylam']];
+    const custRows=[['Müşteri','Enlem','Boylam','Harita']];
     customers.slice().sort((a,b)=>a.name.localeCompare(b.name,'tr')).forEach(c=>{
-      custRows.push([c.name,c.lat,c.lng]);
-    });
-
-    const ordRows=[['Sipari\u015f','M\u00fc\u015fteri','Enlem','Boylam','Sipari\u015f L','B\u0131rak\u0131lan L','Durum','Plan g\u00fcn\u00fc','Girildi','Planland\u0131','Teslim','Ara\u00e7','G\u00f6z','Not','\u015eof\u00f6r notu','Dolum tank\u0131 foto\u011fraf\u0131','\u0130rsaliye foto\u011fraf\u0131']];
-    orderList.slice().sort((a,b)=>String(b.deliveredAt||b.createdAt||'').localeCompare(String(a.deliveredAt||a.createdAt||''))).forEach(o=>{
-      const c=customers.find(c=>c.id===o.cid);
-      const tankUrl=o.photos?.find(p=>p.type==='tank')?.url||'';
-      const irsUrl=o.photos?.find(p=>p.type==='irsaliye')?.url||'';
-      ordRows.push([o.id,c?c.name:'\u2014',c?c.lat:'',c?c.lng:'',o.qty,o.deliveredQty??'',ST[o.status].lab,planDay(o),
-        fmtDT(o.createdAt),fmtDT(o.plannedAt),fmtDT(o.deliveredAt),o.vehicle??'',o.comp??'',o.note??'',o.deliverNote??'',linkCell(tankUrl,'Dolum tankı — aç'),linkCell(irsUrl,'İrsaliye — aç')]);
+      custRows.push([c.name,c.lat,c.lng,linkCell(`https://www.google.com/maps?q=${c.lat},${c.lng}`,'Haritada aç')]);
     });
 
     // stok defteri: giren / \u00e7\u0131kan / kalan (Kalan negatifse k\u0131rm\u0131z\u0131)
     const stk=await buildStokLedger();
     const NEG={font:{color:{rgb:'C8402C'},bold:true}};
-    const ledRows=[['Tarih','Hareket','M\u00fc\u015fteri / Kaynak','Bayi (irsaliye)','Sat\u0131\u015f t\u00fcr\u00fc','Ara\u00e7','\u0130rsaliye no','Not','\u0130rsaliye foto\u011fraf\u0131','Giren (L)','\u00c7\u0131kan (L)','Kalan (L)']];
-    stk.moves.forEach(m=>ledRows.push([fmtDT(m.t),m.type==='in'?'Giri\u015f':'\u00c7\u0131k\u0131\u015f',m.name,m.bayi||'',m.tur||'',m.veh,m.doc,m.note,
-      m.foto?{v:'\u0130rsaliye \u2014 a\u00e7',t:'s',l:{Target:m.foto,Tooltip:m.foto},s:{font:{color:{rgb:'0563C1'},underline:true}}}:'',
-      m.type==='in'?m.qty:'',m.type==='out'?m.qty:'',m.bal<0?{v:m.bal,t:'n',s:NEG}:m.bal]));
+    const ledRows=[['Tarih','Hareket','Müşteri / Kaynak','Giren (L)','Çıkan (L)','Kalan (L)','Bayi (irsaliye)','Satış türü','Araç','İrsaliye no','Not','İrsaliye fotoğrafı']];
+    stk.moves.forEach(m=>ledRows.push([fmtDT(m.t),m.type==='in'?'Giriş':'Çıkış',m.name,
+      m.type==='in'?m.qty:'',m.type==='out'?m.qty:'',m.bal<0?{v:m.bal,t:'n',s:NEG}:m.bal,
+      m.bayi||'',m.tur||'',m.veh,m.doc,m.note,
+      m.foto?{v:'İrsaliye — aç',t:'s',l:{Target:m.foto,Tooltip:m.foto},s:{font:{color:{rgb:'0563C1'},underline:true}}}:'']));
     const totIn=stk.moves.filter(m=>m.type==='in').reduce((a,m)=>a+m.qty,0), totOut=stk.moves.filter(m=>m.type==='out').reduce((a,m)=>a+m.qty,0);
-    ledRows.push(['','','','','','','','','TOPLAM',totIn,totOut,totIn-totOut]);
-    if(stk.err)ledRows.push(['\u26a0 '+stk.err]);
+    ledRows.push(['','TOPLAM','',totIn,totOut,totIn-totOut]);
+    if(stk.err)ledRows.push(['⚠ '+stk.err]);
     const dayMap=new Map();
     stk.moves.forEach(m=>{const d=new Date(m.t).toLocaleDateString('tr-TR');const r=dayMap.get(d)||{gir:0,cik:0,bal:0};if(m.type==='in')r.gir+=m.qty;else r.cik+=m.qty;r.bal=m.bal;dayMap.set(d,r);});
     const dayRows=[['Tarih','A\u00e7\u0131l\u0131\u015f (L)','Giren (L)','\u00c7\u0131kan (L)','Kapan\u0131\u015f / Kalan (L)']];
     let prev=0;dayMap.forEach((r,d)=>{dayRows.push([d,prev,r.gir,r.cik,r.bal<0?{v:r.bal,t:'n',s:NEG}:r.bal]);prev=r.bal;});
+    // başlık satırı koyu + sütun genişliği içeriğe göre
+    const HEAD={font:{bold:true,color:{rgb:'FFFFFF'}},fill:{patternType:'solid',fgColor:{rgb:'2A2621'}},alignment:{vertical:'center'}};
+    const mk=rows=>{
+      const body=rows.map((r,i)=>i===0?r.map(c=>({v:c,t:'s',s:HEAD})):r);
+      const ws=XLSX.utils.aoa_to_sheet(body);
+      const w=[];
+      rows.forEach(r=>{if(r.length<2)return;r.forEach((c,i)=>{const t=String(c&&typeof c==='object'?(c.v??''):(c??''));w[i]=Math.max(w[i]||8,Math.min(42,t.length+2));});});
+      ws['!cols']=w.map(x=>({wch:x}));
+      return ws;
+    };
     const wb=XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ledRows),'Stok Hareketleri');
-    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(dayRows),'G\u00fcnl\u00fck Stok');
-    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(logRows),'Teslimat Ge\u00e7mi\u015fi');
-    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(cancRows),'\u0130ptal Ge\u00e7mi\u015fi');
-    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ordRows),'Sipari\u015fler');
-    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(stokRows),'Ara\u00e7 \u00d6zeti');
-    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(custRows),'M\u00fc\u015fteri Rehberi');
+    XLSX.utils.book_append_sheet(wb,mk(ledRows),'Stok Hareketleri');
+    XLSX.utils.book_append_sheet(wb,mk(dayRows),'G\u00fcnl\u00fck Stok');
+    XLSX.utils.book_append_sheet(wb,mk(logRows),'Teslimatlar');
+    XLSX.utils.book_append_sheet(wb,mk(cancRows),'\u0130ptal Ge\u00e7mi\u015fi');
+    XLSX.utils.book_append_sheet(wb,mk(stokRows),'Ara\u00e7 \u00d6zeti');
+    XLSX.utils.book_append_sheet(wb,mk(custRows),'M\u00fc\u015fteri Rehberi');
     const filename=`tanker-rota-${new Date().toISOString().slice(0,10)}.xlsx`;
     // iOS Safari: veri \u00e7ekmek i\u00e7in "await" kullan\u0131ld\u0131ktan SONRA indirme
     // tetiklenirse, bu art\u0131k "ger\u00e7ek bir t\u0131klamaya ba\u011fl\u0131" say\u0131lmay\u0131p
