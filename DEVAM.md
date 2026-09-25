@@ -1388,6 +1388,9 @@ Sekme sırası: **Siparişler → Teslimat → Plan → Stok → Yönetim**. Mob
 ## FİYAT ALANLARINDA SİLİK ÖRNEK YOK (2026-09-25)
 `tPrice/aPrice/ePrice/dPrice` girişlerinden "örn. 42,50" placeholder'ı kaldırıldı (alan boş görünür).
 
+## YÖNETİM SEKMESİ AYRIŞTIRILDI (2026-09-25)
+`.tabbtn[data-tab="yonetim"]`: sağa yaslı (`margin-left:auto`) + sol ayraç çizgisi; günlük 4 sekmeden görsel olarak ayrı.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
