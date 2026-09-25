@@ -39,6 +39,10 @@ body{font-family:'Manrope',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;b
 .tabbtn.act{color:#f2f0ec;background:var(--ink);border-bottom-color:var(--hi)}
 .tabbtn.act b{color:var(--hi)}
 .tabbtn:hover{color:#f2f0ec}
+.subnav{display:none;background:#fff;border-bottom:1px solid var(--line)}
+.subnav button{flex:1;padding:11px 4px;background:transparent;border:0;border-bottom:3px solid transparent;border-radius:0;font-size:12px;font-weight:600;color:var(--muted2)}
+.subnav button b{font-family:'IBM Plex Mono';font-size:9px;font-weight:400;color:var(--muted)}
+.subnav button.act{color:var(--ink);border-bottom-color:var(--hi)}
 .sec{border-bottom:1px solid var(--line)}
 .sec>summary{padding:11px 16px;cursor:pointer;font-size:11px;font-weight:700;letter-spacing:.06em;
   text-transform:uppercase;list-style:none;display:flex;justify-content:space-between;align-items:center;color:var(--muted2)}
@@ -375,12 +379,15 @@ html,body,*{touch-action:manipulation}
 <div id="side">
   <div class="tabbar" id="tabbar">
     <button class="tabbtn act" data-tab="siparisler" onclick="showTab('siparisler')">Siparişler <b id="ordcount"></b></button>
-    <button class="tabbtn" data-tab="teslimatgir" onclick="showTab('teslimatgir')">Teslimat</button>
-    <button class="tabbtn" data-tab="stok" onclick="showTab('stok')">Stok</button>
-    <button class="tabbtn" data-tab="musteriler" onclick="showTab('musteriler')">Müşteriler <b id="custcount"></b></button>
     <button class="tabbtn" data-tab="plan" onclick="showTab('plan')">Plan</button>
-    <button class="tabbtn" data-tab="filo" onclick="showTab('filo')">Filo <b id="fleetcount"></b></button>
-    <button class="tabbtn" data-tab="ayarlar" onclick="showTab('ayarlar')">Ayarlar</button>
+    <button class="tabbtn" data-tab="teslimatgir" onclick="showTab('teslimatgir')">Teslimat <b id="onayTab" style="color:#c9a0e8"></b></button>
+    <button class="tabbtn" data-tab="stok" onclick="showTab('stok')">Stok</button>
+    <button class="tabbtn" data-tab="yonetim" onclick="showTab('yonetim')">⚙ Yönetim</button>
+  </div>
+  <div class="subnav" id="subnav">
+    <button data-sub="musteriler" onclick="showTab('musteriler')">Müşteriler <b id="custcount"></b></button>
+    <button data-sub="filo" onclick="showTab('filo')">Filo <b id="fleetcount"></b></button>
+    <button data-sub="ayarlar" onclick="showTab('ayarlar')">Ayarlar</button>
   </div>
 
   <div class="sec tabpanel" data-tab="siparisler">
@@ -406,15 +413,12 @@ html,body,*{touch-action:manipulation}
       </div>
       <div class="filters" id="ofilters"></div>
       <div id="ordlist"></div>
-      <div class="row">
-        <button class="ghost" onclick="exportExcel(this)">Excel indir</button>
-      </div>
-      <button class="primary" id="go" onclick="run()">Rotayı hesapla</button>
     </div>
   </div>
 
   <div class="sec tabpanel" data-tab="teslimatgir" style="display:none">
     <div class="body">
+      <button class="ghost" style="width:100%;margin-bottom:10px" onclick="exportExcel(this)">📥 Excel indir (stok + teslimatlar)</button>
       <div class="newform">
         <label style="margin-top:0">Teslimat girişi</label>
         <div class="hint" style="margin:0 0 8px">Sipariş/plan olmadan, yapılmış bir satışı veya teslimatı doğrudan kaydet. Fotoğraf gereken teslimatlar şoför ekranından girilir.</div>
@@ -444,6 +448,7 @@ html,body,*{touch-action:manipulation}
 
   <div class="sec tabpanel" data-tab="stok" style="display:none">
     <div class="body">
+      <button class="ghost" style="width:100%;margin-bottom:10px" onclick="exportExcel(this)">📥 Excel indir (stok + teslimatlar)</button>
       <div class="statgrid" id="stokSummary"></div>
       <div id="stokPending"></div>
       <div class="newform">
@@ -472,7 +477,6 @@ html,body,*{touch-action:manipulation}
       </div>
       <label>Stok hareketleri (son 20)</label>
       <div id="stokList"></div>
-      <button class="ghost" style="width:100%;margin-top:8px" onclick="exportExcel(this)">Excel indir (tüm hareketler)</button>
     </div>
   </div>
 
@@ -549,6 +553,7 @@ html,body,*{touch-action:manipulation}
   </div>
 
   <div class="sec tabpanel" data-tab="plan" style="display:none">
+    <div style="padding:12px 16px 0"><button class="primary" id="go" onclick="run()" style="margin-top:0">Rotayı hesapla</button></div>
     <div class="body" style="padding-top:12px">
       <div id="status"></div>
       <div id="out"></div>
@@ -1499,7 +1504,7 @@ function tesItems(){
     have.add(o.id);
     const c=customers.find(x=>x.id===o.cid);
     items.push({pend:o.status==='onay',name:c?c.name:'silinmiş müşteri',qty:o.deliveredQty??o.qty,veh:o.vehicle||'',t:o.deliveredAt,note:o.deliverNote||'',
-      photos:(o.photos||[]).map(p=>({type:p.type,url:p.url,thumb:p.thumb||p.url})),gone:false,up:o.unitPrice,tutar:tutarOf(o.deliveredQty??o.qty,o.unitPrice)});
+      id:o.id,photos:(o.photos||[]).map(p=>({type:p.type,url:p.url,thumb:p.thumb||p.url})),gone:false,up:o.unitPrice,tutar:tutarOf(o.deliveredQty??o.qty,o.unitPrice)});
   });
   tesLog.forEach(r=>{
     if(r.order_id&&have.has(r.order_id))return;
@@ -1510,13 +1515,29 @@ function tesItems(){
 }
 function renderTesList(){
   const el=document.getElementById('tRecent');if(!el)return;
-  const all=tesItems(),list=all.slice(0,tesLimit);
-  document.getElementById('tCount').textContent=all.length?`(${all.length})`:'';
-  document.getElementById('tMore').style.display=(all.length>tesLimit||tesLog.length>=tesLimit*3)?'':'none';
-  if(!list.length){el.innerHTML='<div class="empty">Henüz teslimat yok</div>';return;}
+  const all=tesItems(),pend=all.filter(i=>i.pend),done=all.filter(i=>!i.pend),list=done.slice(0,tesLimit);
+  document.getElementById('tCount').textContent=done.length?`(${done.length})`:'';
+  document.getElementById('tMore').style.display=(done.length>tesLimit||tesLog.length>=tesLimit*3)?'':'none';
   const hm=x=>x?new Date(x).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}):'';
+  const card=(i,k,acts)=>`<div class="ocard st-${k}">
+      <div class="sh-n">${i.pend?'⏳':'✓'}</div>
+      <div>
+        <div class="sh-t"><b>${esc(i.name)}</b><span class="sh-time">${hm(i.t)}</span></div>
+        <div class="sh-info"><span class="sh-vol">${L2(i.qty)} L</span><span class="obadge b-${k}">${i.pend?'ONAY BEKLİYOR':'TESLİM'}</span>${i.gone?' <span class="obadge b-late">SİPARİŞ SİLİNDİ</span>':''}
+          ${i.veh?`<br>${esc(i.veh)}`:''}${i.tutar!=null?`<br>₺ ${fmtUP(i.up)}/L · <b>${fmtTL(i.tutar)}</b>`:''}${i.note?`<br>${esc(i.note)}`:''}</div>
+        ${i.photos.length?`<div class="ophotos">${i.photos.map(p=>`<a href="${p.url}" target="_blank"><img src="${p.thumb}" loading="lazy" onerror="this.onerror=null;this.src='${p.url}'" title="${p.type==='tank'?'Dolum tankı':'İrsaliye'}"></a>`).join('')}</div>`:''}
+        ${acts||''}
+      </div>
+    </div>`;
+  // önce onay bekleyenler (işlem gerektirir), altında tarih başlıklı teslimler
+  let html='';
+  if(pend.length){
+    html+=`<div class="dayhead" style="margin-top:0;background:#4a2a63">⏳ Onay bekleyenler <b>${pend.length}</b></div>`;
+    html+=pend.map(i=>card(i,'onay',`<div class="oacts"><button class="ok" onclick="approveOrder('${i.id}')">✓ Onayla</button><button class="no" onclick="rejectOrder('${i.id}')">Reddet</button><button onclick="openEdit('${i.id}')">✎ Düzenle</button></div>`)).join('');
+  }
+  if(!list.length&&!pend.length){el.innerHTML='<div class="empty">Henüz teslimat yok</div>';return;}
   let last='';
-  el.innerHTML=list.map(i=>{
+  html+=list.map(i=>{
     const d=i.t?isoDay(i.t):'',t=todayStr();
     let head='';
     if(d!==last){
@@ -1525,17 +1546,9 @@ function renderTesList(){
       const rel=d===t?'Bugün':d===addDays(t,-1)?'Dün':'';
       head=`<div class="dayhead" style="margin-top:0">${rel?rel+' · ':''}${d?fmtDay(d):'—'} <b>${grp.length} teslimat · ${L2(grp.reduce((a,x)=>a+x.qty,0))} L${grp.some(x=>x.tutar!=null)?` · ${fmtTL(grp.reduce((a,x)=>a+(x.tutar||0),0))}`:''}</b></div>`;
     }
-    const k=i.pend?'onay':'done';
-    return head+`<div class="ocard st-${k}">
-      <div class="sh-n">${i.pend?'⏳':'✓'}</div>
-      <div>
-        <div class="sh-t"><b>${esc(i.name)}</b><span class="sh-time">${hm(i.t)}</span></div>
-        <div class="sh-info"><span class="sh-vol">${L2(i.qty)} L</span><span class="obadge b-${k}">${i.pend?'ONAY BEKLİYOR':'TESLİM'}</span>${i.gone?' <span class="obadge b-late">SİPARİŞ SİLİNDİ</span>':''}
-          ${i.veh?`<br>${esc(i.veh)}`:''}${i.tutar!=null?`<br>₺ ${fmtUP(i.up)}/L · <b>${fmtTL(i.tutar)}</b>`:''}${i.note?`<br>${esc(i.note)}`:''}</div>
-        ${i.photos.length?`<div class="ophotos">${i.photos.map(p=>`<a href="${p.url}" target="_blank"><img src="${p.thumb}" loading="lazy" onerror="this.onerror=null;this.src='${p.url}'" title="${p.type==='tank'?'Dolum tankı':'İrsaliye'}"></a>`).join('')}</div>`:''}
-      </div>
-    </div>`;
+    return head+card(i,'done','');
   }).join('');
+  el.innerHTML=html;
 }
 function resetTeslimatTime(){
   const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
@@ -1720,7 +1733,8 @@ function renderOrders(){
   const list=visible();
   const openToday=orderList.filter(o=>(o.status==='wait'||o.status==='plan')&&planDay(o)<=todayStr()).length;
   const onayN=orderList.filter(o=>o.status==='onay').length;
-  document.getElementById('ordcount').textContent=(openToday||onayN)?`(${openToday}${onayN?` · ⏳${onayN}`:''})`:'';
+  document.getElementById('ordcount').textContent=openToday?`(${openToday})`:'';
+  document.getElementById('onayTab').textContent=onayN?`⏳${onayN}`:'';
 
   const el=document.getElementById('ordlist');
   if(!list.length){el.innerHTML='<div class="empty">Bu filtrede sipariş yok</div>';updateStatBar();refreshTeslimatGiris();return;}
@@ -2853,6 +2867,7 @@ async function run(){
 
 /* ---------- sekmeler ---------- */
 let curTab='siparisler';
+const MGMT=['musteriler','filo','ayarlar'];let lastMgmt='musteriler';
 // mobilde harita Plan sekmesinin içine (rota listesinin üstüne) taşınır; diğer sekmelerde/masaüstünde yerinde kalır
 function placeMap(t){
   const m=document.getElementById('map'),lg=document.getElementById('legend');
@@ -2866,12 +2881,17 @@ function placeMap(t){
 }
 window.addEventListener('resize',()=>placeMap(curTab));
 function showTab(t){
+  if(t==='yonetim')t=lastMgmt;
+  if(MGMT.includes(t))lastMgmt=t;
   curTab=t;document.body.dataset.tab=t;placeMap(t);
   if(t==='plan'&&window.innerWidth<=900)setTimeout(()=>{map.invalidateSize();if(window._lastBounds)map.fitBounds(window._lastBounds,{padding:[45,45]});},80);
   if(t==='teslimatgir')renderTeslimatGiris();
   if(t==='stok')renderStok();
   document.querySelectorAll('.tabpanel').forEach(el=>{el.style.display=el.dataset.tab===t?'block':'none';});
-  document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('act',b.dataset.tab===t));
+  const grp=MGMT.includes(t)?'yonetim':t;
+  document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('act',b.dataset.tab===grp));
+  const sn=document.getElementById('subnav');sn.style.display=MGMT.includes(t)?'flex':'none';
+  sn.querySelectorAll('button').forEach(b=>b.classList.toggle('act',b.dataset.sub===t));
 }
 
 /* ---------- üst durum şeridi ---------- */

@@ -1372,6 +1372,16 @@ döner (`goMapForPick`/`returnFromPick`). Legend mobilde harita altında sırada
 düzeni değişmedi. 375px'de: 6 sekmede harita gizli, Plan'da 374×487 harita + karolar + liste üstünde,
 seçim akışı önceki sekmeye dönüyor — doğrulandı.
 
+## MENÜ YAPISI: 5 SEKME + YÖNETİM (2026-09-25)
+Planlayıcı üst menüsü 7 sekmeden 5'e indi: **Siparişler → Plan → Teslimat → Stok → ⚙ Yönetim**.
+- Yönetim altında ikinci şerit (`#subnav`): Müşteriler / Filo / Ayarlar. `showTab('yonetim')` son açılan alt sayfayı hatırlar (`lastMgmt`).
+- Onay bekleyen teslimatlar artık **Teslimat** sekmesinin en üstünde (✓ Onayla / Reddet / ✎ Düzenle); sekme başlığında ⏳N rozeti (`#onayTab`).
+- Excel düğmeleri Teslimat ve Stok sekmelerinin üstüne taşındı.
+- "Rotayı hesapla" (`#go`) Plan sekmesinin başında.
+- Harita-seçme akışları (`goMapForPick/returnFromPick`) 'musteriler'e dönmeye devam ediyor.
+**Test (375px, stub verisiyle):** 5 sekme kaydırmasız sığıyor; Yönetim→Filo geçişi ve son sayfa hatırlama; rozet; Teslimat sekmesinden onay diyaloğu → onay sonrası durum `done`, rozet siliniyor; konsol hatası yok.
+**Hâlâ bekleyen (kullanıcı):** `supabase-v21-fiyat.sql` çalıştırılmadı.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
