@@ -1271,6 +1271,15 @@ Düğme ve `clearDone()` kaldırıldı. Ekran zaten günlük görünümle sade k
 onay bekleyen); tek tek silme kartlardaki "⋯ → Sil"de duruyor. Kalıcı teslimat/iptal kayıtları
 (Excel geçmişi) bundan bağımsızdı, etkilenmez.
 
+## LİTRE ALANLARINDA SAYISAL KLAVYE (2026-09-25)
+
+Kullanıcı: "litre girilen yerlerde numerik klavye çıksın sadece". Tüm litre alanlarına
+`inputmode="numeric" pattern="[0-9]*"` eklendi (telefonda yalnız rakam tuş takımı açılır; litre
+tam sayıdır): planlayıcı — yeni sipariş, Teslimat girişi, stok girişi, düzenle (sipariş + teslim
+edilen), teslim işle, Filo "mevcut L" ve Ayarlar "hacim"; sipariş ekranı — miktar (düzenleme
+zaten vardı); şoför ekranı — üç teslim formunun litre alanı (zaten vardı). Ondalık gereken
+alanlara (dakika/saat ayarları) dokunulmadı.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

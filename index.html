@@ -399,7 +399,7 @@ html,body,*{touch-action:manipulation}
         <label style="margin-top:0">Yeni sipariş talebi</label>
         <select id="osel"></select>
         <div class="grid2" style="margin-top:6px">
-          <input id="oqty" type="number" placeholder="Miktar (L)" value="5000">
+          <input id="oqty" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="Miktar (L)" value="5000">
           <input id="odate" type="date" title="Teslim günü — gelecek bir tarih seçersen ajandaya girer">
         </div>
         <input id="onote" placeholder="Not (opsiyonel)" style="margin-top:6px">
@@ -423,7 +423,7 @@ html,body,*{touch-action:manipulation}
         <label>Müşteri</label>
         <select id="tCust"></select>
         <div class="grid2">
-          <div><label>Teslim edilen (L)</label><input id="tQty" type="number" placeholder="Litre"></div>
+          <div><label>Teslim edilen (L)</label><input id="tQty" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="Litre"></div>
           <div><label>Araç (opsiyonel)</label><select id="tVeh"></select></div>
         </div>
         <label>Teslim tarihi / saati</label>
@@ -448,7 +448,7 @@ html,body,*{touch-action:manipulation}
       <div class="newform">
         <label style="margin-top:0">Gelen stok girişi</label>
         <div class="grid2">
-          <div><label>Miktar (L)</label><input id="sLitre" type="number" placeholder="Litre"></div>
+          <div><label>Miktar (L)</label><input id="sLitre" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="Litre"></div>
           <div><label>Tarih / saat</label><input id="sTarih" type="datetime-local"></div>
         </div>
         <label>Kaynak / tedarikçi</label>
@@ -578,12 +578,12 @@ html,body,*{touch-action:manipulation}
     <select id="eCust"></select>
     <div id="eDateBox"><label>Teslim günü (ajanda)</label><input id="eDate" type="date"></div>
     <label>Sipariş miktarı (L)</label>
-    <input id="eQty" type="number">
+    <input id="eQty" type="number" inputmode="numeric" pattern="[0-9]*">
     <label>Sipariş notu</label>
     <input id="eNote" placeholder="opsiyonel">
     <div id="eDelBox" style="display:none;border-top:1px solid var(--line);margin-top:14px;padding-top:2px">
       <label>Teslim edilen (L)</label>
-      <input id="eDQty" type="number">
+      <input id="eDQty" type="number" inputmode="numeric" pattern="[0-9]*">
       <label>Teslim tarihi / saati</label>
       <input id="eDTime" type="datetime-local">
       <label>Teslim eden araç</label>
@@ -605,7 +605,7 @@ html,body,*{touch-action:manipulation}
     <h3>Teslim kaydı</h3>
     <div class="sub" id="dlgSub"></div>
     <label>Bırakılan miktar (L)</label>
-    <input id="dQty" type="number">
+    <input id="dQty" type="number" inputmode="numeric" pattern="[0-9]*">
     <label>Teslim saati</label>
     <input id="dTime" type="datetime-local">
     <label>Not</label>
@@ -1010,7 +1010,7 @@ function renderFleet(){
         <div class="crow">
           <div class="clab">${j+1}</div>
           <div class="clab" id="hacim-${i}-${j}" style="text-align:right;padding-right:6px">${L2(c.cap)}</div>
-          <input class="cin fuel${c.cur>c.cap?' over':''}" type="number" value="${c.cur}" onchange="setCur(${i},${j},this.value)">
+          <input class="cin fuel${c.cur>c.cap?' over':''}" type="number" inputmode="numeric" pattern="[0-9]*" value="${c.cur}" onchange="setCur(${i},${j},this.value)">
           <span></span>
         </div>`).join('')}</div>
       <div class="hint" style="margin-top:2px">Göz/hacim değişikliği için <b>Ayarlar</b> sekmesine bak.</div>
@@ -1052,7 +1052,7 @@ function renderTankConfig(){
       <div class="comps">${t.comps.map((c,j)=>`
         <div class="crow">
           <div class="clab">${j+1}</div>
-          <input class="cin" type="number" value="${c.cap}" onchange="setCap(${i},${j},this.value)">
+          <input class="cin" type="number" inputmode="numeric" pattern="[0-9]*" value="${c.cap}" onchange="setCap(${i},${j},this.value)">
           <button class="xbtn" onclick="delComp(${i},${j})" title="Gözü sil">✕</button>
         </div>`).join('')}</div>
       <div class="tfoot">

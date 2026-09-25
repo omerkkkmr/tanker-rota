@@ -124,7 +124,7 @@ html,body,*{touch-action:manipulation}
     <label>Teslim günü (gelecek tarih = ajanda)</label>
     <input id="odate" type="date">
     <label>Miktar (L)</label>
-    <input id="oqty" type="number" placeholder="Miktar (L)" value="5000">
+    <input id="oqty" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="Miktar (L)" value="5000">
     <label>Not (opsiyonel)</label>
     <input id="onote" placeholder="—">
     <button class="primary" id="addBtn" onclick="addOrder()">+ Talep Ekle</button>
