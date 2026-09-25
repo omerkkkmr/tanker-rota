@@ -726,6 +726,7 @@ const KEY='tankerRotaV9';  // localStorage yedek anahtarı
 
 /* ---------- state ---------- */
 let customers=[], orderList=[], tankers=[];
+let stokKalan=null,stokBarBusy=false,stokBarTimer=null,stokBarLast=0;   // Depo L (durum barı)
 const SEED=[
   {name:'Serdivan Nakliyat',lat:40.7712,lng:30.3541},
   {name:'Arifiye Lojistik',lat:40.7211,lng:30.3597},
@@ -1397,6 +1398,7 @@ async function renderStok(){
   const gir=moves.filter(m=>m.type==='in').reduce((s,m)=>s+m.qty,0);
   const cik=moves.filter(m=>m.type==='out').reduce((s,m)=>s+m.qty,0);
   const kal=gir-cik;
+  stokKalan=kal;{const el=document.getElementById('stTanker');if(el)el.textContent=L2(kal);}
   sum.innerHTML=`<div><b>${L2(gir)}</b><span>Giren L</span></div><div><b>${L2(cik)}</b><span>Çıkan L</span></div><div class="${kal<0?'neg':''}"><b>${L2(kal)}</b><span>Kalan L</span></div>`;
   const pend=orderList.filter(o=>o.status==='onay');
   const pl=pend.reduce((s,o)=>s+(o.deliveredQty||0),0);
@@ -2948,7 +2950,31 @@ function updateStatBar(){
   const g=id=>document.getElementById(id);
   if(g('stOpen'))g('stOpen').textContent=open.length;
   if(g('stVol'))g('stVol').textContent=L2(openL);
-  if(g('stTanker'))g('stTanker').textContent=L2(tankers.reduce((a,t)=>a+t.comps.reduce((b,c)=>b+(c.cur||0),0),0));   // araçlardaki mevcut yakıt toplamı
+  if(g('stTanker'))g('stTanker').textContent=stokKalan==null?'—':L2(stokKalan);   // Depo L = stok defteri bakiyesi (girişler − onaylı teslimatlar)
+  stokBarYenile();
+}
+// Depo L: Stok sekmesindeki "Kalan L" ile aynı hesap (aynı siparişin düzeltmelerinde son kayıt geçerli), ama yalnız gereken 3 kolon çekilir.
+// En fazla ~5 sn'de bir sorgu atılır; çağrılar birikirse sonuncusu (trailing) çalışır, böylece onay/giriş sonrası bar güncel kalır.
+function stokBarYenile(force){
+  if(!cloudOK)return;
+  const bekle=force?0:Math.max(0,5000-(Date.now()-stokBarLast));
+  clearTimeout(stokBarTimer);
+  stokBarTimer=setTimeout(async()=>{
+    if(stokBarBusy){stokBarYenile();return;}
+    stokBarBusy=true;stokBarLast=Date.now();
+    try{
+      const gi=await sb.from('stok_girisleri').select('litre');
+      const tk=await sb.from('teslimat_kayitlari').select('order_id,delivered_qty,logged_at');
+      if(gi.error||tk.error)throw(gi.error||tk.error);
+      const last=new Map();
+      (tk.data||[]).forEach(r=>{const k=r.order_id||r.logged_at,p=last.get(k);if(!p||String(r.logged_at)>String(p.logged_at))last.set(k,r);});
+      const gir=(gi.data||[]).reduce((a,r)=>a+(r.litre||0),0);
+      let cik=0;last.forEach(r=>{cik+=Math.max(0,r.delivered_qty||0);});
+      stokKalan=gir-cik;
+      const el=document.getElementById('stTanker');if(el)el.textContent=L2(stokKalan);
+    }catch(e){console.warn('depo bakiyesi:',e);}
+    stokBarBusy=false;
+  },bekle);
 }
 
 /* ---------- mobil: liste/harita atlama düğmeleri ---------- */

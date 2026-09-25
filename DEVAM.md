@@ -1440,6 +1440,9 @@ Aynı yedek görevi (tanker-rota-yedek, 5 günde bir) `fotograf_yedek.py` ile St
 ## SİPARİŞ EKRANI: YENİ MÜŞTERİYE TELEFON + NOT (2026-09-26)
 `siparis/index.html`: "+ Yeni müşteri ekle" seçilince ad + **telefon** + **not** alanları açılır; kayıtta phone/note kolonu yoksa (v22/v23 çalıştırılmadıysa) o alan atlanıp tekrar denenir. Sahte `sb.from` ile test edildi (alanlar açılıp kapanıyor, kolon-yok fallback'i, temizleme); gerçek veritabanına test müşterisi yazılmadı.
 
+## DURUM BARI "DEPO L" = STOK BAKİYESİ (2026-09-26)
+Önceki tanım (araçlardaki elle girilen yakıt toplamı) onaylanan teslimatla azalmadığı için "güncel değil" görünüyordu; kullanıcının "elimizdeki litre"si stok demekmiş. Artık `stokKalan` = Σ stok girişleri − Σ onaylı teslimat (aynı siparişin son kaydı) — Stok sekmesindeki "Kalan L" ile aynı hesap. `stokBarYenile()`: yalnız 3 kolon çeker (`stok_girisleri.litre`, `teslimat_kayitlari.order_id,delivered_qty,logged_at`), en fazla ~5 sn'de bir sorgu (trailing), `updateStatBar` her çağrıldığında (sipariş/onay/30 sn yenilemesi/realtime) tetiklenir; Stok sekmesi açılınca kesin değer yazılır. Gerçek veritabanıyla doğrulandı (bar = Stok Kalan L). Araçlardaki yakıt toplamı artık barda yok (Filo sekmesinde görünüyor).
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
