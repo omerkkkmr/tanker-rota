@@ -1407,6 +1407,9 @@ Tek ortak `#statbar` tüm sekmelerde aynı: Açık Sipariş / Talep L / Tanker /
 ## EXCEL BUTONU → YÖNETİM > RAPOR; "ELDE L" → "DEPO L" (2026-09-25)
 Excel indir düğmesi Teslimat ve Stok sekmelerinin üstünden kaldırıldı; Yönetim altına yeni **Rapor** alt sayfası (`data-tab="rapor"`, MGMT listesinde) eklendi. Bilgi barındaki hücre etiketi "Depo L" (hesap aynı: araçlardaki mevcut yakıt toplamı).
 
+## MÜŞTERİ TELEFONU (2026-09-25)
+`customers.phone` (text, opsiyonel) — **`supabase-v22-telefon.sql` çalıştırılmalı.** Planlayıcıda: Yeni müşteri formu + Düzenle penceresi + liste (isim altında, `tel:` linki) + Excel "Müşteri Rehberi" (Telefon sütunu). Kolon yoksa kayıt telefonsuz tekrar denenir, bir kez uyarı çıkar, telefon yalnız cihazda kalır (fiyattaki desenle aynı). Şoför/sipariş ekranlarında henüz gösterilmiyor.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
