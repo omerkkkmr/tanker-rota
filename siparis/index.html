@@ -125,6 +125,8 @@ html,body,*{touch-action:manipulation}
     <label>Müşteri</label>
     <select id="osel" onchange="toggleNewCust()"></select>
     <input id="ncname" placeholder="Yeni müşteri adı" style="display:none;margin-top:8px">
+    <input id="ncphone" type="tel" inputmode="tel" placeholder="Telefon (opsiyonel)" style="display:none;margin-top:8px">
+    <input id="ncnote" placeholder="Müşteri notu (opsiyonel) — örn. kapı kodu" style="display:none;margin-top:8px">
     <button type="button" class="mappick" id="gpsBtn" style="display:none" onclick="useMyLocation()">🎯 Şu anki konumumu kullan</button>
     <button type="button" class="mappick" id="mapPickBtn" style="display:none" onclick="toggleMapPicker()">📍 Haritadan Konum Seç (opsiyonel)</button>
     <div id="pickMap"></div>
@@ -210,7 +212,7 @@ function renderCustSelect(){
 }
 function toggleNewCust(){
   const isNew=document.getElementById('osel').value==='__new__';
-  document.getElementById('ncname').style.display=isNew?'block':'none';
+  ['ncname','ncphone','ncnote'].forEach(i=>document.getElementById(i).style.display=isNew?'block':'none');
   document.getElementById('mapPickBtn').style.display=isNew?'flex':'none';
   document.getElementById('gpsBtn').style.display=isNew?'flex':'none';
   if(!isNew){
@@ -338,7 +340,14 @@ async function addOrder(){
       // (geçici) kaydedilir — planlamacı ekranındaki "Haritadan seç" ile
       // sonradan düzeltilebilir.
       const loc=pickedLoc||{lat:DEPOT_LAT,lng:DEPOT_LNG};
-      const{data,error}=await sb.from('customers').insert({name:newName,lat:loc.lat,lng:loc.lng}).select().single();
+      // telefon/not kolonları (supabase-v22/v23) henüz eklenmediyse o alanlar olmadan kaydet
+      const crow={name:newName,lat:loc.lat,lng:loc.lng,phone:document.getElementById('ncphone').value.trim()||null,note:document.getElementById('ncnote').value.trim()||null};
+      let{data,error}=await sb.from('customers').insert(crow).select().single();
+      for(let k=0;k<2&&error;k++){
+        const col=['phone','note'].find(x=>x in crow&&new RegExp(x,'i').test(error.message||''));
+        if(!col)break;
+        delete crow[col];({data,error}=await sb.from('customers').insert(crow).select().single());
+      }
       if(error)throw error;
       cid=data.id;
     }
@@ -349,7 +358,7 @@ async function addOrder(){
     document.getElementById('onote').value='';
     document.getElementById('odate').value=addDays1();
     if(isNew){
-      document.getElementById('ncname').value='';
+      document.getElementById('ncname').value='';document.getElementById('ncphone').value='';document.getElementById('ncnote').value='';
       document.getElementById('pickMap').classList.remove('on');
       document.getElementById('pickHint').classList.remove('on');
       resetPickBtn();

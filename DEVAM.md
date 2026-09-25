@@ -1437,6 +1437,9 @@ Aynı yedek görevi (tanker-rota-yedek, 5 günde bir) `fotograf_yedek.py` ile St
 ## ANA EKRANA EKLENEBİLİR (PWA) (2026-09-26)
 Üç sayfa da ana ekrana uygulama gibi (adres çubuğu olmadan, `display:standalone`) eklenebilir: `manifest.json` (Tanker Rota), `siparis/manifest.json` (Sipariş), `teslimat/manifest.json` (Teslimat) — adlarda "şoför" kelimesi YOK (kullanıcı isteği). Simgeler `ikon/` altında (tanker kamyonu; planlayıcı amber, sipariş mavi, teslimat yeşil; 180/192/512). Head'e manifest/theme-color/apple-touch-icon/apple-mobile-web-app-* eklendi. **Service worker YOK** (bilinçli: eski sürüm önbelleği riski yok, çevrimdışı çalışma da yok). Kurulum: iPhone Safari → Paylaş → Ana Ekrana Ekle; Android Chrome → ⋮ → Ana ekrana ekle/Uygulamayı yükle. Gerçek telefonda kurulum denenmedi; manifest/simge/başlık dosyaları yerelde doğrulandı.
 
+## SİPARİŞ EKRANI: YENİ MÜŞTERİYE TELEFON + NOT (2026-09-26)
+`siparis/index.html`: "+ Yeni müşteri ekle" seçilince ad + **telefon** + **not** alanları açılır; kayıtta phone/note kolonu yoksa (v22/v23 çalıştırılmadıysa) o alan atlanıp tekrar denenir. Sahte `sb.from` ile test edildi (alanlar açılıp kapanıyor, kolon-yok fallback'i, temizleme); gerçek veritabanına test müşterisi yazılmadı.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
