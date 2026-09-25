@@ -29,43 +29,43 @@ body{font-family:'Manrope',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;b
 .brand{padding:14px 16px;background:var(--ink);color:var(--htext);display:flex;align-items:baseline;justify-content:space-between;gap:10px;box-shadow:0 1px 0 rgba(0,0,0,.15)}
 .brand h1{font-size:15px;font-weight:800;letter-spacing:.01em}
 .brand h1 b{color:var(--hi);font-weight:800}
-.brand span{font-family:'IBM Plex Mono';font-size:9px;color:#b7ada0;letter-spacing:.08em}
+.brand span{font-family:'Manrope';font-size:11px;color:#b7ada0;letter-spacing:.08em}
 /* sekme şeridi: görev formu sekmeleri gibi koyu */
 .tabbar{display:flex;background:var(--ink2);border-bottom:0;overflow-x:auto}
 @media(max-width:900px){.tabbar{position:sticky;top:0;z-index:50}}
 .tabbtn{background:transparent;border:0;border-bottom:3px solid transparent;color:#a39a8c;border-radius:0;
   padding:12px 11px;font-size:12px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:5px}
-.tabbtn b{font-family:'IBM Plex Mono';font-size:9px;color:#8b8377;font-weight:400}
+.tabbtn b{font-family:'Manrope';font-size:11px;color:#8b8377;font-weight:400}
 .tabbtn.act{color:#f2f0ec;background:var(--ink);border-bottom-color:var(--hi)}
 .tabbtn.act b{color:var(--hi)}
 .tabbtn:hover{color:#f2f0ec}
 .tabbtn[data-tab="yonetim"]{margin-left:auto;border-left:1px solid #4a443b;padding-left:14px}   /* Yönetim ayrı: sağa yaslı + ayraç */
 .subnav{display:none;background:#fff;border-bottom:1px solid var(--line)}
 .subnav button{flex:1;padding:11px 4px;background:transparent;border:0;border-bottom:3px solid transparent;border-radius:0;font-size:12px;font-weight:600;color:var(--muted2)}
-.subnav button b{font-family:'IBM Plex Mono';font-size:9px;font-weight:400;color:var(--muted)}
+.subnav button b{font-family:'Manrope';font-size:11px;font-weight:400;color:var(--muted)}
 .subnav button.act{color:var(--ink);border-bottom-color:var(--hi)}
 .sec{border-bottom:1px solid var(--line)}
-.sec>summary{padding:11px 16px;cursor:pointer;font-size:11px;font-weight:700;letter-spacing:.06em;
+.sec>summary{padding:11px 16px;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.06em;
   text-transform:uppercase;list-style:none;display:flex;justify-content:space-between;align-items:center;color:var(--muted2)}
 .sec>summary::-webkit-details-marker{display:none}
-.sec>summary::after{content:'▾';color:var(--hi);font-size:11px}
+.sec>summary::after{content:'▾';color:var(--hi);font-size:12px}
 .sec[open]>summary::after{content:'▴'}
 .sec>summary:hover{background:#ece5d4}
 .body{padding:4px 16px 16px}
-label{display:block;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:9px 0 3px}
+label{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:9px 0 3px}
 input,textarea,select{width:100%;background:var(--card);border:1px solid var(--line);color:var(--ink);padding:8px 9px;
-  font-family:'IBM Plex Mono';font-size:12px;border-radius:4px}
+  font-family:'Manrope';font-size:12px;border-radius:4px}
 select{cursor:pointer}
 input:focus,textarea:focus,select:focus{outline:2px solid var(--hi);outline-offset:-1px;border-color:var(--hi)}
 textarea{resize:vertical;line-height:1.55;white-space:pre;overflow-x:auto}
-.hint{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.45;font-family:'IBM Plex Mono'}
+.hint{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.45;font-family:'Manrope'}
 button{font-family:'Manrope';font-weight:600;font-size:12px;letter-spacing:0;text-transform:none;
   border:0;padding:9px 12px;border-radius:4px;cursor:pointer}
 .primary{background:var(--green);color:#fff;border:1px solid var(--green);width:100%;margin-top:12px;padding:12px;font-size:13px}
 
 .primary:hover{filter:brightness(.92)}
 .primary:disabled{background:#e5ddc9;color:#a89f8f;border-color:#e5ddc9;cursor:wait}
-.ghost{background:transparent;border:1px solid var(--line);color:var(--muted2);padding:7px 10px;font-size:11px}
+.ghost{background:transparent;border:1px solid var(--line);color:var(--muted2);padding:7px 10px;font-size:12px}
 .ghost:hover{border-color:var(--hi-border);color:var(--hi-border)}
 .ghost.hot{border-color:var(--hi-border);color:var(--hi-border)}
 .row{display:flex;gap:6px;margin-top:8px}
@@ -73,24 +73,24 @@ button{font-family:'Manrope';font-weight:600;font-size:12px;letter-spacing:0;tex
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
 .queue-wrap{background:#fff;border:1px solid var(--line);border-radius:4px;padding:10px;margin-top:4px}
-.queue-val{font-family:'IBM Plex Mono';font-size:18px;font-weight:600;color:var(--hi-border);text-align:center;margin-bottom:5px}
+.queue-val{font-family:'Manrope';font-size:18px;font-weight:600;color:var(--hi-border);text-align:center;margin-bottom:5px}
 input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-color:var(--hi)}
-.saved{font-family:'IBM Plex Mono';font-size:9px;color:#cdc5b8;opacity:0;transition:opacity .3s}
+.saved{font-family:'Manrope';font-size:11px;color:#cdc5b8;opacity:0;transition:opacity .3s}
 .saved.on{opacity:1}
 
 /* müşteri rehberi */
-.cust{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line);font-family:'IBM Plex Mono';font-size:11px}
+.cust{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line);font-family:'Manrope';font-size:12px}
 .cust:first-child{border-top:0}
 .cust b{font-family:'Manrope';font-size:12px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cust small{color:var(--muted);font-size:9px}
+.cust small{color:var(--muted);font-size:11px}
 .xbtn{background:transparent;border:0;color:var(--muted);cursor:pointer;padding:2px 5px;font-size:13px;line-height:1}
 .xbtn:hover{color:var(--alert)}
-.empty{font-family:'IBM Plex Mono';font-size:10px;color:var(--muted);padding:10px 0;text-align:center}
+.empty{font-family:'Manrope';font-size:11px;color:var(--muted);padding:10px 0;text-align:center}
 
 /* ---- sipariş yönetimi ---- */
 .filters{display:flex;gap:6px;margin-bottom:9px;flex-wrap:wrap}
 .fbtn{background:var(--card);border:1px solid var(--line);color:var(--muted2);padding:6px 13px;border-radius:999px;
-  font-family:'Manrope';font-size:11px;letter-spacing:0;text-transform:none;font-weight:500;
+  font-family:'Manrope';font-size:12px;letter-spacing:0;text-transform:none;font-weight:500;
   display:flex;align-items:center;gap:5px}
 .fbtn:hover{border-color:var(--muted2);color:var(--ink)}
 .fbtn.act{border-color:var(--ink);color:var(--htext);background:var(--ink)}
@@ -100,7 +100,7 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 .b-onay{color:#7a3fa8;border-color:#d9bdec;background:#f3e9fa}
 .b-late{color:#b3392a;border-color:#f0cec7;background:#fbeae7}
 .sh-n{width:36px;height:36px;border-radius:50%;background:#8b8377;color:#fff;display:flex;align-items:center;justify-content:center;
-  font-family:'IBM Plex Mono';font-size:15px;font-weight:600}
+  font-family:'Manrope';font-size:15px;font-weight:600}
 .st-wait .sh-n{background:#8b8377}.st-plan .sh-n{background:var(--blue)}
 .st-done .sh-n{background:var(--green)}.st-onay .sh-n{background:var(--xfer)}.st-canc .sh-n{background:var(--alert)}
 .ocard.st-done{opacity:.9}.ocard.st-canc{opacity:.6}
@@ -108,30 +108,30 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 .fbtn.pend{border-color:#8b3fb5;color:#7a3fa8}
 .statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:10px}
 .statgrid div{background:#fff;padding:10px 6px;text-align:center}
-.statgrid b{display:block;font-family:'IBM Plex Mono';font-size:15px;font-weight:600}
-.statgrid span{font-family:'IBM Plex Mono';font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.statgrid b{display:block;font-family:'Manrope';font-size:15px;font-weight:600}
+.statgrid span{font-family:'Manrope';font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .statgrid .neg b{color:var(--alert)}
 .mv{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:8px 0;border-top:1px solid var(--line);font-size:12px}
 .mv:first-child{border-top:0}
-.mv .l{font-weight:600}.mv .l small{display:block;font-family:'IBM Plex Mono';font-size:9px;color:var(--muted);font-weight:400}
-.mv .r{text-align:right;font-family:'IBM Plex Mono';font-size:12px;font-weight:600}
-.mv .r small{display:block;font-size:9px;color:var(--muted);font-weight:400}
+.mv .l{font-weight:600}.mv .l small{display:block;font-family:'Manrope';font-size:11px;color:var(--muted);font-weight:400}
+.mv .r{text-align:right;font-family:'Manrope';font-size:12px;font-weight:600}
+.mv .r small{display:block;font-size:11px;color:var(--muted);font-weight:400}
 .mv .in{color:var(--diesel)}.mv .out{color:var(--alert)}
 .fbtn.pend.act{background:#8b3fb5;color:#fff;border-color:#8b3fb5}
 .otop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .oname{font-size:13px;font-weight:600;line-height:1.3;min-width:0}
-.oname small{display:block;font-family:'IBM Plex Mono';font-size:9px;color:var(--muted);font-weight:400;margin-top:2px}
-.obadge{font-family:'IBM Plex Mono';font-size:8px;padding:3px 8px;border-radius:999px;letter-spacing:.06em;
+.oname small{display:block;font-family:'Manrope';font-size:11px;color:var(--muted);font-weight:400;margin-top:2px}
+.obadge{font-family:'Manrope';font-size:11px;padding:3px 8px;border-radius:999px;letter-spacing:.06em;
   white-space:nowrap;border:1px solid}
 .b-wait{color:var(--muted2);border-color:var(--line);background:#efe9dc}
 .b-plan{color:#1f6fd0;border-color:#cfe0f5;background:#eaf2fc}
 .b-done{color:var(--diesel);border-color:#c9e8d2;background:#e8f6ec}
 .b-canc{color:#b3392a;border-color:#f0cec7;background:#fbeae7}
-.oqtyrow{display:flex;align-items:baseline;gap:7px;margin-top:6px;font-family:'IBM Plex Mono';font-size:11px}
+.oqtyrow{display:flex;align-items:baseline;gap:7px;margin-top:6px;font-family:'Manrope';font-size:12px}
 .obig{font-size:15px;font-weight:600;color:var(--ink)}
 .odone{color:var(--diesel);font-weight:600}
 .oshort{color:#b06a00;font-weight:600}
-.ometa{font-family:'IBM Plex Mono';font-size:9px;color:var(--muted);margin-top:5px;line-height:1.7}
+.ometa{font-family:'Manrope';font-size:11px;color:var(--muted);margin-top:5px;line-height:1.7}
 .ometa .lg{color:var(--muted2)}
 .oacts{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap;align-items:center}
 .ophotos{display:flex;gap:6px;margin-top:8px}
@@ -143,10 +143,10 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 .more[open]>summary{margin-left:auto;width:max-content;background:var(--bg)}
 .moremenu{margin-top:8px;padding:10px;background:var(--bg);border:1px solid var(--line);border-radius:4px}
 .moreb{display:flex;gap:6px;flex-wrap:wrap}
-.lockrow{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:11px;font-family:'IBM Plex Mono';text-transform:none;letter-spacing:0;color:var(--muted2)}
-.lockrow select{flex:1;padding:5px 6px;font-size:11px}
+.lockrow{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:12px;font-family:'Manrope';text-transform:none;letter-spacing:0;color:var(--muted2)}
+.lockrow select{flex:1;padding:5px 6px;font-size:12px}
 .oacts button{background:#fff;border:1px solid #cfc6b2;color:var(--ink);padding:7px 10px;
-  font-size:11.5px;font-family:'Manrope';letter-spacing:0;text-transform:none;border-radius:4px;font-weight:600}
+  font-size:12px;font-family:'Manrope';letter-spacing:0;text-transform:none;border-radius:4px;font-weight:600}
 .oacts button:hover{border-color:var(--ink)}
 .oacts button.ok{background:var(--green);border-color:var(--green);color:#fff}
 .oacts button.no{color:var(--alert);border-color:#e3b9b1}
@@ -163,20 +163,20 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 .dlgbox>#eDateBox input{width:100%}
 .dlgbox>#eDelBox input,.dlgbox>#eDelBox select{width:100%}
 .dlgbox h3{font-size:13px}
-.dlgbox .sub{font-family:'IBM Plex Mono';font-size:10px;line-height:1.5}
+.dlgbox .sub{font-family:'Manrope';font-size:11px;line-height:1.5}
 
 /* durak taşıma */
 .stop.movable{cursor:pointer}
 .stop.movable:hover{background:#faf7f0}
-.dayhead{background:var(--ink2);color:#c9c0b0;font-size:11px;font-weight:600;letter-spacing:.04em;padding:9px 16px;margin:0 -16px;display:flex;justify-content:space-between}
-.dayhead b{font-family:'IBM Plex Mono';color:#fff}
+.dayhead{background:var(--ink2);color:#c9c0b0;font-size:12px;font-weight:600;letter-spacing:.04em;padding:9px 16px;margin:0 -16px;display:flex;justify-content:space-between}
+.dayhead b{font-family:'Manrope';color:#fff}
 .daybar{display:flex;align-items:stretch;gap:6px;margin:0 -16px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line)}
 .daybar button{padding:0 12px;font-size:16px;font-weight:700;border:1px solid #cfc6b2;background:#fff;color:var(--ink);border-radius:4px}
 .daybar .daylab{flex:1;display:flex;flex-direction:column;justify-content:center;min-width:0}
-.daybar .daylab b{font-size:14px}.daybar .daylab span{font-size:11px;color:var(--muted2);font-family:'IBM Plex Mono'}
-.daybar input{width:auto;padding:4px 6px;font-size:11px}
-.daybar #dayToday{font-size:11px;font-weight:700}
-.daynote{margin:0 -16px;padding:8px 16px;background:#fff8e1;border-bottom:1px solid var(--line);font-size:11px;color:#6b5a1f;display:none}
+.daybar .daylab b{font-size:14px}.daybar .daylab span{font-size:12px;color:var(--muted2);font-family:'IBM Plex Mono'}
+.daybar input{width:auto;padding:4px 6px;font-size:12px}
+.daybar #dayToday{font-size:12px;font-weight:700}
+.daynote{margin:0 -16px;padding:8px 16px;background:#fff8e1;border-bottom:1px solid var(--line);font-size:12px;color:#6b5a1f;display:none}
 .phrow{display:flex;gap:6px;margin-top:4px}
 .phbtn{flex:1;padding:10px 8px;border:1px dashed #cfc6b2;background:#fff;color:var(--muted2);border-radius:4px;font-size:12px;font-weight:600}
 .phbtn.have{border:1px solid var(--green);color:var(--diesel);background:#f2faf4}
@@ -187,17 +187,17 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 .alertbox[open]>summary{border-bottom:1px solid var(--line)}
 .stop.sel{background:#fbf1d9;outline:1px solid var(--hi)}
 .movebar{background:#fbf1d9;border-left:3px solid var(--hi-border);padding:9px 13px;margin:0 16px 8px;
-  border-radius:4px;font-size:11px;line-height:1.5;color:var(--ink)}
+  border-radius:4px;font-size:12px;line-height:1.5;color:var(--ink)}
 .movebar b{color:var(--hi-border)}
 .movesel{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap}
 .movesel button{background:var(--card);border:1px solid var(--line);color:var(--muted2);padding:5px 9px;
-  font-family:'IBM Plex Mono';font-size:10px;letter-spacing:0;text-transform:none;font-weight:400;border-radius:999px}
+  font-family:'Manrope';font-size:11px;letter-spacing:0;text-transform:none;font-weight:400;border-radius:999px}
 .movesel button:hover{border-color:var(--hi-border);color:var(--hi-border)}
 .optbtn{background:transparent;border:1px solid var(--line);color:var(--muted2);padding:5px 8px;
-  font-size:9px;font-family:'IBM Plex Mono';letter-spacing:0;text-transform:none;border-radius:4px;font-weight:400}
+  font-size:11px;font-family:'Manrope';letter-spacing:0;text-transform:none;border-radius:4px;font-weight:400}
 .optbtn:hover{border-color:var(--hi-border);color:var(--hi-border)}
 .tripsep{background:#ece5d4;border-left:2px solid var(--line);padding:5px 12px;margin:0;
-  font-family:'IBM Plex Mono';font-size:9px;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase}
+  font-family:'Manrope';font-size:11px;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase}
 
 /* ---- şoför görev sayfası (yazdırma amaçlı, açık tema zaten) ---- */
 #sheet{position:fixed;inset:0;z-index:2000;background:#f4f1ea;color:#101418;display:none;overflow-y:auto}
@@ -210,19 +210,19 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 .sh-close:hover{border-color:var(--hi);color:var(--hi)}
 .sh-tabs{display:flex;gap:0;background:#2a2621;overflow-x:auto;position:sticky;top:47px;z-index:5}
 .sh-tab{background:transparent;border:0;border-bottom:3px solid transparent;color:#a39a8c;
-  padding:11px 14px;white-space:nowrap;font-size:11px;letter-spacing:.06em;cursor:pointer}
+  padding:11px 14px;white-space:nowrap;font-size:12px;letter-spacing:.06em;cursor:pointer}
 .sh-tab.act{color:#f2f0ec;border-bottom-color:var(--tabc,#d9a441);background:#1b1917}
 .sh-head{background:#fff;border-bottom:2px solid var(--ink);padding:16px}
-.sh-plate{font-family:'IBM Plex Mono';font-size:22px;font-weight:600;letter-spacing:.04em}
-.sh-sub{font-family:'IBM Plex Mono';font-size:11px;color:#6e6a63;margin-top:3px}
+.sh-plate{font-family:'Manrope';font-size:22px;font-weight:600;letter-spacing:.04em}
+.sh-sub{font-family:'Manrope';font-size:12px;color:#6e6a63;margin-top:3px}
 .sh-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);margin-top:13px;border:1px solid var(--line)}
 .sh-kpi div{background:#fff;padding:8px 4px;text-align:center}
-.sh-kpi b{display:block;font-family:'IBM Plex Mono';font-size:15px;font-weight:600}
-.sh-kpi span{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#6e6a63}
+.sh-kpi b{display:block;font-family:'Manrope';font-size:15px;font-weight:600}
+.sh-kpi span{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6e6a63}
 .sh-step{background:#fff;border-bottom:1px solid var(--line);padding:13px 16px;display:grid;
   grid-template-columns:36px 1fr;gap:12px;align-items:start}
 .sh-n{width:36px;height:36px;border-radius:50%;background:var(--ink);color:#fff;display:flex;
-  align-items:center;justify-content:center;font-family:'IBM Plex Mono';font-size:14px;font-weight:600}
+  align-items:center;justify-content:center;font-family:'Manrope';font-size:14px;font-weight:600}
 .sh-n.sq{border-radius:4px;font-size:16px}
 .sh-n.plant{background:var(--diesel)}
 .sh-n.garage{background:var(--hi-bg);color:var(--ink)}
@@ -230,7 +230,7 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 .sh-t{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .sh-t b{font-size:16px;font-weight:600;line-height:1.25}
 .sh-time{font-family:'IBM Plex Mono';font-size:15px;font-weight:600;white-space:nowrap}
-.sh-info{font-family:'IBM Plex Mono';font-size:12px;color:#4a4741;margin-top:5px;line-height:1.6}
+.sh-info{font-family:'Manrope';font-size:12px;color:#4a4741;margin-top:5px;line-height:1.6}
 .sh-vol{display:inline-block;background:var(--ink);color:#fff;padding:2px 8px;border-radius:4px;
   font-weight:600;font-size:13px;margin-right:4px}
 .sh-vol.part{background:#b06a00}
@@ -254,33 +254,33 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 .thead{display:grid;grid-template-columns:14px 1fr auto auto;gap:8px;align-items:center;margin-bottom:8px}
 .tdot{width:12px;height:12px;border-radius:3px;border:1px solid rgba(27,25,23,.25)}
 .tplate{background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:6px 7px;
-  font-family:'IBM Plex Mono';font-size:12px;font-weight:600;border-radius:4px;width:100%}
+  font-family:'Manrope';font-size:12px;font-weight:600;border-radius:4px;width:100%}
 .lic{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none;
-  font-family:'IBM Plex Mono';font-size:9px;letter-spacing:.05em;white-space:nowrap;
+  font-family:'Manrope';font-size:11px;letter-spacing:.05em;white-space:nowrap;
   border:1px solid var(--line);padding:5px 8px;border-radius:999px;background:var(--bg)}
 .lic:hover{border-color:var(--muted2)}
 .lic.no{border-color:#c9a6e0;background:#f3e9fa;color:#7a3fa8}
 .lic input{width:auto;margin:0;accent-color:var(--hi)}
 .comps{display:flex;flex-direction:column;gap:4px}
 .crow{display:grid;grid-template-columns:26px 1fr 1fr 26px;gap:5px;align-items:center}
-.clab{font-family:'IBM Plex Mono';font-size:9px;color:var(--muted);text-align:center}
+.clab{font-family:'Manrope';font-size:11px;color:var(--muted);text-align:center}
 .cin{background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:5px 6px;
-  font-family:'IBM Plex Mono';font-size:11px;border-radius:4px;width:100%;text-align:right}
+  font-family:'Manrope';font-size:12px;border-radius:4px;width:100%;text-align:right}
 .cin.fuel{color:var(--hi-border);font-weight:600}
 .cin.over{border-color:var(--alert);color:var(--alert)}
 .chead{display:grid;grid-template-columns:26px 1fr 1fr 26px;gap:5px;margin-bottom:3px}
-.chead span{font-family:'IBM Plex Mono';font-size:8px;color:var(--muted);letter-spacing:.08em;text-align:center;text-transform:uppercase}
+.chead span{font-family:'Manrope';font-size:11px;color:var(--muted);letter-spacing:.08em;text-align:center;text-transform:uppercase}
 .tfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:9px;
-  padding-top:8px;border-top:1px solid var(--line);font-family:'IBM Plex Mono';font-size:10px;color:var(--muted)}
+  padding-top:8px;border-top:1px solid var(--line);font-family:'Manrope';font-size:11px;color:var(--muted)}
 .tsum b{color:var(--ink)}
 .tsum .f{color:var(--hi-border)}
 .mini{display:flex;gap:4px}
 .mini button{background:transparent;border:1px solid var(--line);color:var(--muted2);padding:4px 8px;
-  font-size:10px;font-family:'IBM Plex Mono';letter-spacing:0;text-transform:none;border-radius:999px;font-weight:400}
+  font-size:11px;font-family:'Manrope';letter-spacing:0;text-transform:none;border-radius:999px;font-weight:400}
 .mini button:hover{border-color:var(--hi-border);color:var(--hi-border)}
 .mini button.del:hover{border-color:var(--alert);color:var(--alert)}
 .tlimits{display:flex;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
-.tir-tog{margin:0;font-size:10px;letter-spacing:.02em;text-transform:none;color:var(--muted2);
+.tir-tog{margin:0;font-size:11px;letter-spacing:.02em;text-transform:none;color:var(--muted2);
   display:flex;align-items:center;gap:6px;cursor:pointer;width:100%;
   border:1px solid var(--line);padding:7px 9px;border-radius:4px;background:var(--bg)}
 .tir-tog:hover{border-color:var(--muted2)}
@@ -288,29 +288,29 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 .tir-tog input{width:auto;margin:0;accent-color:var(--hi)}
 
 .shift-in{background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:4px 5px;
-  font-family:'IBM Plex Mono';font-size:10px;border-radius:4px;width:44px;text-align:right}
+  font-family:'Manrope';font-size:11px;border-radius:4px;width:44px;text-align:right}
 
 /* sipariş satırları */
 .ordrow{display:grid;grid-template-columns:1fr 84px 30px;gap:6px;padding:7px 0;border-top:1px solid var(--line);align-items:center}
 .ordrow:first-child{border-top:0}
 .ordname{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ordname small{display:block;font-family:'IBM Plex Mono';font-size:9px;color:var(--muted);font-weight:400}
-.ordqty{font-family:'IBM Plex Mono';font-size:11px;text-align:right;padding:5px 6px}
+.ordname small{display:block;font-family:'Manrope';font-size:11px;color:var(--muted);font-weight:400}
+.ordqty{font-family:'Manrope';font-size:12px;text-align:right;padding:5px 6px}
 
 .veh{border-bottom:2px solid var(--ink);margin:0 -16px}
 .vhead{padding:12px 16px;background:#fff;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 8px}
-.vname{font-family:'IBM Plex Mono';font-weight:600;font-size:16px;letter-spacing:.03em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.vname{font-family:'Manrope';font-weight:600;font-size:16px;letter-spacing:.03em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .chip{width:12px;height:12px;border-radius:3px;flex:none;border:1px solid rgba(27,25,23,.2)}
-.tag{font-family:'IBM Plex Mono';font-size:9px;padding:1px 6px;border-radius:999px;letter-spacing:.05em}
+.tag{font-family:'Manrope';font-size:11px;padding:1px 6px;border-radius:999px;letter-spacing:.05em}
 .tag.nolic{background:#f3e9fa;color:#7a3fa8;border:1px solid #d9bdec}
 .tag.nodrv{background:#fbeae7;color:#b3392a;border:1px solid #f0cec7}
-.vstat{flex-basis:100%;font-family:'IBM Plex Mono';font-size:11px;color:#4a4741;text-align:left;line-height:1.5}
+.vstat{flex-basis:100%;font-family:'Manrope';font-size:12px;color:#4a4741;text-align:left;line-height:1.5}
 .stops{padding:0}
 .stop{display:grid;grid-template-columns:36px 1fr auto;gap:12px;padding:13px 16px;background:#fff;border-top:0;border-bottom:1px solid var(--line);align-items:start}
 .sq{width:36px;height:36px;border-radius:50%;background:var(--ink);color:#fff;border:0;display:flex;align-items:center;justify-content:center;
-  font-family:'IBM Plex Mono';font-size:14px;font-weight:600;padding:0}
+  font-family:'Manrope';font-size:14px;font-weight:600;padding:0}
 .sname{font-size:15px;font-weight:600;line-height:1.3}
-.smeta{font-family:'IBM Plex Mono';font-size:11px;color:#4a4741;margin-top:4px;line-height:1.6}
+.smeta{font-family:'Manrope';font-size:12px;color:#4a4741;margin-top:4px;line-height:1.6}
 .stime{font-family:'IBM Plex Mono';font-size:14px;font-weight:600;color:var(--ink);text-align:right;white-space:nowrap}
 .r-garage{background:#fff;border-left:0}
 .r-garage .sq{background:var(--hi-bg);color:var(--ink);border-radius:4px;font-size:16px}
@@ -322,15 +322,15 @@ input[type=range]{width:100%;padding:0;background:transparent;border:0;accent-co
 div.warn{background:#fbeae7;border-left:3px solid var(--alert);margin:0 -16px;padding:12px 16px;font-size:12px;line-height:1.55;border-radius:0;border-bottom:1px solid var(--line)}
 div.ok{background:#e8f6ec;border-left:3px solid var(--diesel);margin:0 -16px;padding:12px 16px;font-size:12px;line-height:1.55;border-radius:0;border-bottom:1px solid var(--line)}
 div.info{background:#eaf2fc;border-left:3px solid #4a90d9;margin:0 -16px;padding:12px 16px;font-size:12px;line-height:1.55;border-radius:0;border-bottom:1px solid var(--line)}
-#status{padding:10px 16px;font-family:'IBM Plex Mono';font-size:11px;color:var(--hi-border);display:none}
+#status{padding:10px 16px;font-family:'Manrope';font-size:12px;color:var(--hi-border);display:none}
 #status.on{display:block}
 #map{width:100%;flex:1;min-height:0;background:#dcd8d0}
-.numico{color:#fff;border:2px solid #fff;border-radius:50%;font-family:'IBM Plex Mono';font-size:11px;
+.numico{color:#fff;border:2px solid #fff;border-radius:50%;font-family:'Manrope';font-size:12px;
   font-weight:600;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 5px rgba(0,0,0,.4)}
 .pinico{border:2px solid var(--ink);border-radius:4px;display:flex;align-items:center;justify-content:center;
   font-size:13px;box-shadow:0 1px 5px rgba(0,0,0,.4)}
 #legend{position:absolute;bottom:18px;right:12px;z-index:900;background:rgba(255,255,255,.95);
-  border:1px solid var(--line);border-radius:4px;padding:10px 12px;font-size:11px;font-family:'IBM Plex Mono';
+  border:1px solid var(--line);border-radius:4px;padding:10px 12px;font-size:12px;font-family:'Manrope';
   display:none;max-width:230px;box-shadow:var(--sh-md)}
 #legend.on{display:block}
 #legend div{display:flex;align-items:center;gap:7px;margin:3px 0}
@@ -342,8 +342,8 @@ div.info{background:#eaf2fc;border-left:3px solid #4a90d9;margin:0 -16px;padding
   border-bottom:1px solid var(--line);display:flex;padding:0 4px}
 #statbar .st{flex:1;padding:11px 10px;text-align:center;border-right:1px solid var(--line)}
 #statbar .st:last-child{border-right:0}
-#statbar .st b{display:block;font-family:'IBM Plex Mono';font-size:17px;font-weight:600;color:var(--ink)}
-#statbar .st span{font-family:'IBM Plex Mono';font-size:8px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+#statbar .st b{display:block;font-family:'Manrope';font-size:17px;font-weight:600;color:var(--ink)}
+#statbar .st span{font-family:'Manrope';font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
 @media(max-width:900px){
   #map{flex:none;height:60vh;display:none}
   body[data-tab="plan"] #map{display:block}                 /* harita yalnız Plan sekmesinde görünür */
@@ -359,7 +359,7 @@ div.info{background:#eaf2fc;border-left:3px solid #4a90d9;margin:0 -16px;padding
 }
 
 /* tarih/saat alanları: iOS Safari bunları farklı yükseklikte/ortalı çizer — diğer alanlarla hizala */
-input[type=date],input[type=datetime-local]{-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%;
+input[type=date],input[type=datetime-local]{font-family:'IBM Plex Mono';-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%;
   text-align:left;line-height:normal}
 .newform input,.newform select,.dlgbox input,.dlgbox select{min-height:40px}
 input[type=date]::-webkit-date-and-time-value,input[type=datetime-local]::-webkit-date-and-time-value{text-align:left;margin:0;min-height:1.2em}
@@ -508,7 +508,7 @@ html,body,*{touch-action:manipulation}
 
   <div class="sec tabpanel" data-tab="ayarlar" style="display:none">
     <div class="body">
-      <label style="margin-top:0;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--muted2)">Konumlar</label>
+      <label style="margin-top:0;font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--muted2)">Konumlar</label>
       <label>Garaj (enlem, boylam)</label>
       <input id="garage" value="40.7480, 30.3900">
       <button class="ghost" style="width:100%;margin-top:6px" onclick="pick('garage')">Haritadan seç</button>
@@ -516,7 +516,7 @@ html,body,*{touch-action:manipulation}
       <input id="plant" value="40.7569, 30.3783">
       <button class="ghost" style="width:100%;margin-top:6px" onclick="pick('plant')">Haritadan seç</button>
 
-      <label style="margin-top:20px;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--muted2)">Süreler &amp; Kısıtlar</label>
+      <label style="margin-top:20px;font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--muted2)">Süreler &amp; Kısıtlar</label>
       <label>Tesiste bugünkü dolum sırası</label>
       <div class="queue-wrap">
         <div class="queue-val"><span id="qval">0</span> dk</div>
@@ -543,12 +543,12 @@ html,body,*{touch-action:manipulation}
 
       <label>İş dağılımı</label>
       <div class="queue-wrap">
-        <div class="queue-val" style="font-size:11px"><span id="balval">dengeli</span></div>
+        <div class="queue-val" style="font-size:12px"><span id="balval">dengeli</span></div>
         <input type="range" id="balance" min="0" max="60" step="5" value="25">
       </div>
       <div class="hint">Sola: en az km (birkaç tanker çok çalışır). Sağa: iş tankerlere eşit dağılır.</div>
 
-      <label style="margin-top:20px;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--muted2)">Tanker Yapılandırması</label>
+      <label style="margin-top:20px;font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--muted2)">Tanker Yapılandırması</label>
       <div class="hint" style="margin-top:0;margin-bottom:8px">Göz sayısı ve hacimler (yapısal, nadiren değişir) buradan düzenlenir. Günlük mevcut yakıt miktarı Filo sekmesinden girilir.</div>
       <div id="tankConfigList"></div>
     </div>
@@ -565,9 +565,9 @@ html,body,*{touch-action:manipulation}
 
 <div class="maprel">
   <div id="statbar">
-    <div class="st"><b id="stOpen">0</b><span>Açık Sipariş</span></div>
+    <div class="st"><b id="stOpen">0</b><span>Sipariş</span></div>
     <div class="st"><b id="stVol">0</b><span>Talep L</span></div>
-    <div class="st"><b id="stTanker">0</b><span>Tanker</span></div>
+    <div class="st"><b id="stTanker">0</b><span>Elde L</span></div>
     <div class="st"><b id="stPlan">—</b><span>Plan</span></div>
   </div>
   <div id="map"></div><div id="legend"></div>
@@ -1080,7 +1080,7 @@ function setCap(i,j,v){
 }
 function setCur(i,j,v){
   tankers[i].comps[j].cur=Math.max(0,parseInt(v)||0);
-  save();updateSum(i);markOver(i);tankSaveSoon(i);
+  save();updateSum(i);markOver(i);tankSaveSoon(i);updateStatBar();
 }
 function updateSum(i){
   const t=tankers[i], el=document.getElementById('tsum'+i);
@@ -1772,7 +1772,7 @@ function renderOrders(){
     return head+`<div class="ocard st-${s.cls}">
       <div class="sh-n">${GL[o.status]||'…'}</div>
       <div>
-      <div class="sh-t"><b>${c?esc(c.name):'<i>silinmiş müşteri</i>'}${o.lockVeh?' <span style="color:var(--hi-border);font-size:11px" title="Araç kilitli">🔒</span>':''}</b>
+      <div class="sh-t"><b>${c?esc(c.name):'<i>silinmiş müşteri</i>'}${o.lockVeh?' <span style="color:var(--hi-border);font-size:12px" title="Araç kilitli">🔒</span>':''}</b>
         <span class="sh-time">${hm(dlv?o.deliveredAt:o.createdAt)}</span></div>
       <div class="sh-info">
         <span class="sh-vol${short?' part':''}">${L2(dlv?o.deliveredQty:o.qty)} L</span><span class="obadge b-${s.cls}">${s.lab}</span>${(o.status==='wait'||o.status==='plan')&&planDay(o)<todayStr()?` <span class="obadge b-late">GECİKMİŞ · ${fmtDayShort(planDay(o))}</span>`:''}
@@ -2748,7 +2748,7 @@ async function render(routes,extra,cfg,garage,plant,orders){
           <div class="smeta">${l.drive?dur(l.drive)+' sürüş · ':''}vardiya ${dur(r.veh.shift)}</div></div>
           <div class="stime">${hhmm(l.time)}</div></div>`;
       else if(l.kind==='plant')
-        html+=`<div class="stop r-plant"><div class="sq">⛽</div><div><div class="sname">Dolum tesisi${l.nth?` <span style="color:var(--diesel);font-size:10px">${l.trip}. sefer</span>`:''}</div>
+        html+=`<div class="stop r-plant"><div class="sq">⛽</div><div><div class="sname">Dolum tesisi${l.nth?` <span style="color:var(--diesel);font-size:11px">${l.trip}. sefer</span>`:''}</div>
           <div class="smeta">${l.nth?l.nth+' · ':''}${dur(l.drive)} sürüş · <b>${L2(l.vol)} L full dolum</b>${l.delivered!=null&&l.delivered<l.vol?` · ${L2(l.delivered)} L teslim · ${L2(l.vol-l.delivered)} L araçta kalır`:''} · ${dur(l.mins)}${cfg.queue?` (${cfg.loadFix} dk + ${cfg.queue} dk sıra)`:''}</div></div>
           <div class="stime">${hhmm(l.time)}</div></div>`;
       else{
@@ -2760,7 +2760,7 @@ async function render(routes,extra,cfg,garage,plant,orders){
         const phaseTxt=l.phase==='kalan'?'kalan yakıt':(l.phase==='besleme'?'beslemeyle':'dolum sonrası');
         html+=`<div class="stop${fixed?'':' movable'}${isSel?' sel':''}"${fixed?'':` onclick="stopClick('${r.veh.id.replace(/'/g,"\\'")}','${oid}')"`}>
           <div class="sq">${j}</div><div>
-          <div class="sname">${esc(l.a.o.name)}${lk?' <span style="color:var(--hi-border);font-size:10px">🔒</span>':''}</div>
+          <div class="sname">${esc(l.a.o.name)}${lk?' <span style="color:var(--hi-border);font-size:11px">🔒</span>':''}</div>
           <div class="smeta"><span class="${short?'partial':''}">${L2(l.a.give)} / ${L2(l.a.o.qty)} L${short?` · %${Math.round(l.a.give/l.a.o.qty*100)} kısmi`:''}</span> · ${gozStr(l.a)} · ${phaseTxt}<br>${dur(l.drive)} sürüş · ${dur(l.mins)} boşaltma</div></div>
           <div class="stime">${hhmm(l.time)}</div></div>`;
       }
@@ -2779,7 +2779,7 @@ async function render(routes,extra,cfg,garage,plant,orders){
         ${others.map(r=>`<button onclick="moveStop('${r.veh.id.replace(/'/g,"\\'")}')">→ ${esc(r.veh.id)}</button>`).join('')}
         <button onclick="clearSel()" style="margin-left:auto;border-color:var(--line)">vazgeç</button>
       </div>
-      <div style="font-family:'IBM Plex Mono';font-size:9px;color:var(--hi-border);margin-top:6px">Taşınan sipariş o araca kilitlenir 🔒</div>
+      <div style="font-family:'Manrope';font-size:11px;color:var(--hi-border);margin-top:6px">Taşınan sipariş o araca kilitlenir 🔒</div>
     </div>`;
   }
   const totKm=routes.reduce((a,b)=>a+b.dist,0), totL=routes.reduce((a,b)=>a+b.vol,0);
@@ -2800,7 +2800,7 @@ async function render(routes,extra,cfg,garage,plant,orders){
   const partials=routes.flatMap(r=>r.legs.filter(l=>l.kind==='drop'&&l.a.give<l.a.o.qty).map(l=>`${esc(l.a.o.name)}: ${L2(l.a.give)}/${L2(l.a.o.qty)} L (${r.veh.id})`));
   if(partials.length)alerts.push(`<div class="info"><b>Kısmi teslimat</b><br>${partials.join('<br>')}</div>`);
   const lefts=routes.filter(r=>r.leftover>0);
-  if(lefts.length)alerts.push(`<div class="info"><b>Full dolum — araçta kalan (ertesi güne)</b><br>${lefts.map(r=>`${r.veh.id}: ${L2(r.leftover)} L`).join('<br>')}<br><span style="color:var(--muted);font-size:10px">Tankerler full döndü. "Günü kapat" ile bu yakıt ertesi günün mevcut yakıtı olur.</span></div>`);
+  if(lefts.length)alerts.push(`<div class="info"><b>Full dolum — araçta kalan (ertesi güne)</b><br>${lefts.map(r=>`${r.veh.id}: ${L2(r.leftover)} L`).join('<br>')}<br><span style="color:var(--muted);font-size:11px">Tankerler full döndü. "Günü kapat" ile bu yakıt ertesi günün mevcut yakıtı olur.</span></div>`);
   if(alerts.length){
     const hasWarn=alerts.some(x=>x.startsWith('<div class="warn"'));
     top+=`<details class="alertbox"><summary${hasWarn?' style="color:var(--alert)"':''}>${hasWarn?'⚠':'ℹ'} Uyarılar ve notlar (${alerts.length}) ▾</summary>${alerts.join('')}</details>`;
@@ -2902,7 +2902,7 @@ function updateStatBar(){
   const g=id=>document.getElementById(id);
   if(g('stOpen'))g('stOpen').textContent=open.length;
   if(g('stVol'))g('stVol').textContent=L2(openL);
-  if(g('stTanker'))g('stTanker').textContent=tankers.length;
+  if(g('stTanker'))g('stTanker').textContent=L2(tankers.reduce((a,t)=>a+t.comps.reduce((b,c)=>b+(c.cur||0),0),0));   // araçlardaki mevcut yakıt toplamı
 }
 
 /* ---------- mobil: liste/harita atlama düğmeleri ---------- */

@@ -16,39 +16,39 @@ html,body{height:100%}
 body{font-family:'Manrope',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
 input,button,select,textarea{font-family:inherit;font-size:16px}
 button{cursor:pointer}
-.mono{font-family:'IBM Plex Mono'}
+.mono{font-family:'Manrope'}
 
 header{position:sticky;top:0;z-index:10;background:var(--ink);color:#f2f0ec;
   padding:13px 16px;display:flex;justify-content:space-between;align-items:center}
 header h1{font-size:14px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
-header span{font-family:'IBM Plex Mono';font-size:11px;color:#b7ada0}
+header span{font-family:'Manrope';font-size:12px;color:#b7ada0}
 
 .wrap{max-width:560px;margin:0 auto;padding:0 0 60px}
 
 /* form bloğu: görev formundaki başlık bloğu gibi beyaz + 2px koyu ayraç */
 .card{background:#fff;border-bottom:2px solid var(--ink);padding:14px 16px 16px}
-label{display:block;font-family:'IBM Plex Mono';font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+label{display:block;font-family:'Manrope';font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
 label:first-child{margin-top:0}
 input,select{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:12px 11px;
-  font-family:'IBM Plex Mono';font-size:16px;border-radius:4px}
+  font-family:'Manrope';font-size:16px;border-radius:4px}
 input:focus,select:focus{outline:2px solid var(--hi);outline-offset:-1px;border-color:var(--hi)}
 select{cursor:pointer}
 .primary{width:100%;margin-top:16px;padding:14px;background:var(--green);border:0;color:#fff;border-radius:4px;font-weight:700;font-size:14px}
 .primary:active{filter:brightness(.9)}
 .primary:disabled{background:#e5ddc9;color:#a89f8f;cursor:wait}
-.msg{font-family:'IBM Plex Mono';font-size:11px;min-height:16px;margin-top:10px;text-align:center}
+.msg{font-family:'Manrope';font-size:12px;min-height:16px;margin-top:10px;text-align:center}
 .msg.ok{color:var(--diesel)}
 .msg.err{color:var(--alert)}
 
 /* bölüm şeridi: görev formundaki sekme şeridi gibi */
-.sectitle{background:var(--ink2);color:#c9c0b0;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+.sectitle{background:var(--ink2);color:#c9c0b0;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
   padding:10px 16px;display:flex;justify-content:space-between;align-items:center}
-.sectitle b{font-family:'IBM Plex Mono';color:#fff;font-weight:600}
+.sectitle b{font-family:'Manrope';color:#fff;font-weight:600}
 
 /* sipariş satırı = görev formu adımı */
 .ocard{background:#fff;border-bottom:1px solid var(--line);padding:13px 16px;display:grid;grid-template-columns:36px 1fr;gap:12px;align-items:start}
 .sh-n{width:36px;height:36px;border-radius:50%;background:var(--muted);color:#fff;display:flex;align-items:center;justify-content:center;
-  font-family:'IBM Plex Mono';font-size:15px;font-weight:600}
+  font-family:'Manrope';font-size:15px;font-weight:600}
 .st-wait .sh-n{background:#8b8377}
 .st-plan .sh-n{background:var(--blue)}
 .st-done .sh-n{background:var(--green)}
@@ -56,11 +56,11 @@ select{cursor:pointer}
 .sh-t{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .sh-t b{font-size:16px;font-weight:600;line-height:1.25}
 .sh-time{font-family:'IBM Plex Mono';font-size:15px;font-weight:600;white-space:nowrap}
-.sh-info{font-family:'IBM Plex Mono';font-size:12px;color:#4a4741;margin-top:5px;line-height:1.6}
+.sh-info{font-family:'Manrope';font-size:12px;color:#4a4741;margin-top:5px;line-height:1.6}
 .sh-vol{display:inline-block;background:var(--ink);color:#fff;padding:2px 8px;border-radius:4px;font-family:'Manrope';font-weight:700;font-size:13px;margin-right:4px}
 .st-done .sh-vol{background:var(--green)}
 .st-onay .sh-vol{background:var(--xfer)}
-.obadge{font-family:'IBM Plex Mono';font-size:9px;padding:3px 8px;border-radius:999px;letter-spacing:.06em;white-space:nowrap;border:1px solid;vertical-align:middle}
+.obadge{font-family:'Manrope';font-size:11px;padding:3px 8px;border-radius:999px;letter-spacing:.06em;white-space:nowrap;border:1px solid;vertical-align:middle}
 .b-wait{color:var(--muted2);border-color:var(--line);background:#efe9dc}
 .b-plan{color:#1f6fd0;border-color:#cfe0f5;background:#eaf2fc}
 .b-done{color:var(--diesel);border-color:#c9e8d2;background:#e8f6ec}
@@ -73,14 +73,14 @@ select{cursor:pointer}
 .sh-btn.line{background:#fff;color:var(--ink);border:1px solid #cfc6b2}
 .sh-btn.red{background:#fff;color:var(--alert);border:1px solid #e3b9b1}
 .sh-btn:active{filter:brightness(.9)}
-.empty{padding:24px 16px;text-align:center;color:var(--muted);font-family:'IBM Plex Mono';font-size:12px;background:#fff;border-bottom:1px solid var(--line)}
+.empty{padding:24px 16px;text-align:center;color:var(--muted);font-family:'Manrope';font-size:12px;background:#fff;border-bottom:1px solid var(--line)}
 
-.mappick{background:#fff;border:1px solid #cfc6b2;color:var(--muted2);padding:10px 12px;border-radius:4px;font-family:'IBM Plex Mono';font-size:11px;width:100%;margin-top:8px;text-align:left;
+.mappick{background:#fff;border:1px solid #cfc6b2;color:var(--muted2);padding:10px 12px;border-radius:4px;font-family:'Manrope';font-size:12px;width:100%;margin-top:8px;text-align:left;
   display:flex;align-items:center;gap:8px}
 .mappick.have{border-color:var(--green);color:var(--diesel)}
 #pickMap{display:none;height:240px;border-radius:4px;margin-top:8px;border:1px solid var(--line)}
 #pickMap.on{display:block}
-.pickhint{font-family:'IBM Plex Mono';font-size:10px;color:var(--muted);text-align:center;margin-top:6px;display:none}
+.pickhint{font-family:'Manrope';font-size:11px;color:var(--muted);text-align:center;margin-top:6px;display:none}
 .pickhint.on{display:block}
 
 /* modal: koyu başlık şeritli */
@@ -89,7 +89,7 @@ select{cursor:pointer}
 .dlgbox{background:#fff;border-radius:0;padding:0 0 22px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto}
 .dlgbox>*{margin-left:18px;margin-right:18px}
 .dlgbox>h3{margin:0;padding:14px 18px;background:var(--ink);color:#f2f0ec;font-size:14px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
-.dlgbox>.csub{margin:0 0 6px;padding:8px 18px;background:var(--ink2);color:#a39a8c;font-family:'IBM Plex Mono';font-size:11px}
+.dlgbox>.csub{margin:0 0 6px;padding:8px 18px;background:var(--ink2);color:#a39a8c;font-family:'Manrope';font-size:12px}
 .dlgbox>input,.dlgbox>select{width:calc(100% - 36px)}
 .dlgbox>#eDateBox input{width:100%}
 .dlgbtns{display:flex;gap:8px;margin-top:18px}
@@ -98,7 +98,7 @@ select{cursor:pointer}
 
 /* tarih alanı: iOS Safari bunu farklı yükseklikte/ortalı çizer — diğer alanlarla hizala */
 input,select{min-height:48px}
-input[type=date]{-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%;text-align:left;line-height:normal}
+input[type=date]{font-family:'IBM Plex Mono';-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%;text-align:left;line-height:normal}
 input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0;min-height:1.2em}
 
 /* çift dokunmayla yakınlaşmayı kapat (kaydırma/harita hareketi etkilenmez) */

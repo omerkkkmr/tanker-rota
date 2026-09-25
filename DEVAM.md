@@ -1397,6 +1397,10 @@ Sekme sırası: **Siparişler → Teslimat → Plan → Stok → Yönetim**. Mob
 ## BİLGİ BARINDAN ŞOFÖR KALDIRILDI (2026-09-25)
 Tek ortak `#statbar` tüm sekmelerde aynı: Açık Sipariş / Talep L / Tanker / Plan. "Şoför" hücresi ve `stDriver` güncellemesi kaldırıldı.
 
+## YAZI TİPİ: MONO YALNIZ TARİH/SAAT, MİNİMUM 11px (2026-09-25)
+Üç ekranda (planlayıcı, sipariş, teslimat) `IBM Plex Mono` yalnız tarih/saat öğelerinde kaldı (`.sh-time`, `.stime`, `.daylab span`, `input[type=date|datetime-local]`); geri kalan her şey Manrope. Tüm `font-size` değerleri yükseltildi: 8/9/10→11, 11/11.5→12 (JS şablonlarındaki satır içi stiller dahil). 375px'te 7 sekme + sipariş/teslimat uygulamalarında taşma/küçük yazı taraması temiz.
+**Bilgi barı:** Şoför ve Tanker sayısı kaldırıldı → Sipariş / Talep L / **Elde L** (araçlardaki mevcut yakıt toplamı, `updateStatBar`; `setCur` de günceller) / Plan.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
