@@ -1327,6 +1327,22 @@ Kullanıcı: "eski denemeleri vs ekrandan ve sqlden sil, şifreye gerek yok, exc
   hata kontrolü eklendi. Kapsam: müşteride yalnız ad+konum var; telefon/adres gibi ek alanlar istenirse yeni
   kolon (SQL) gerekir.
 
+## TESLİMAT FİYATI — YALNIZ PLANLAYICI (2026-09-25)
+
+Kullanıcı: "fiyatı da yazacağımız bir alan olmalı, teslimatçı göremez, onay kısmında planlayıcı yazsın".
+- **Alan:** `orders.unit_price` (birim fiyat ₺/L) + kalıcı kayda `unit_price` ve `tutar` (= teslim edilen L × fiyat,
+  2 hane). **SQL: `supabase-v21-fiyat.sql` — KULLANICI ÇALIŞTIRMALI** (kolonlar + `log_teslimat` tetikleyicisi
+  fiyat/tutarı kalıcı kayda işler; tekrar çalıştırılabilir). Çalışmadan da uygulama çökmez: fiyat yazımı reddedilirse
+  fiyatsız yedek yazım + bir kez uyarı (fiyat o cihazda kalır); Teslimat sekmesi fiyat kolonları yoksa onsuz okur.
+- **Girdi noktaları (yalnız planlayıcı):** ✓ Onayla artık **"Teslimatı onayla" penceresi** açar (teslim edilen L,
+  birim fiyat, canlı tutar; fiyatsız onayda "yine de?" sorusu); ayrıca "Teslim işle", ✎ Düzenle (teslim edilmiş/onay
+  bekleyen) ve Teslimat girişi formunda fiyat alanı. Ondalık virgül/nokta kabul edilir (`inputmode=decimal`).
+- **Gösterim (yalnız planlayıcı):** kartta "₺ 42,50/L · 208.250,00 ₺"; Teslimat sekmesinde satır + gün başlığında gün
+  toplamı; Excel "Teslimatlar": Fark'tan sonra "Birim fiyat (₺/L)" ve "Tutar (₺)" sütunları + TOPLAM tutar.
+- **Şoför/sipariş ekranları:** fiyatı hiç göstermez VE `orders` sorgularında `select('*')` yerine açık kolon listesi
+  kullanır (fiyat isteğe bile dahil edilmez). Dürüst not: anon anahtar + açık RLS nedeniyle teknik bilgisi olan biri
+  yine de doğrudan veritabanından okuyabilir; bu "arayüzde ve istekte gizli" düzeyindedir, sıkı erişim kontrolü değildir.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

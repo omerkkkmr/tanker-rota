@@ -243,13 +243,13 @@ async function loadRoute(manual){
     if(myVehicle){
       const oids=myVehicle.legs.filter(l=>l.kind==='drop').map(l=>l.oid).filter(Boolean);
       if(oids.length){
-        const{data:ords,error:oe}=await sb.from('orders').select('*').in('id',oids);
+        const{data:ords,error:oe}=await sb.from('orders').select('id,status,delivered_qty,delivered_at,photos,deliver_note,vehicle,customer_id').in('id',oids);
         if(oe)throw oe;
         orderStatus={};ords.forEach(o=>orderStatus[o.id]=o);
       }else orderStatus={};
     }
     const t0=new Date();t0.setHours(0,0,0,0);
-    const{data:ex,error:ee}=await sb.from('orders').select('*, customers(name,lat,lng)')
+    const{data:ex,error:ee}=await sb.from('orders').select('id,status,delivered_qty,delivered_at,photos,deliver_note,vehicle,customer_id,customers(name,lat,lng)')
       .eq('vehicle',session.plate).in('status',['done','onay']).gte('delivered_at',t0.toISOString())
       .order('delivered_at',{ascending:false});
     if(ee)throw ee;

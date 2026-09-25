@@ -431,6 +431,9 @@ html,body,*{touch-action:manipulation}
         <input id="tTime" type="datetime-local">
         <label>Not</label>
         <input id="tNote" placeholder="opsiyonel">
+        <label>Birim fiyat (₺/L) — opsiyonel</label>
+        <input id="tPrice" type="text" inputmode="decimal" placeholder="örn. 42,50" oninput="priceTotal('t')">
+        <div class="hint" id="tTotal" style="min-height:14px"></div>
         <label>Fotoğraflar (opsiyonel)</label>
         <div id="tPh"></div>
         <button class="primary" onclick="saveTeslimatGiris()">Teslimatı kaydet</button>
@@ -571,6 +574,23 @@ html,body,*{touch-action:manipulation}
 </div>
 </div>
 
+<div class="dlg" id="adlg">
+  <div class="dlgbox">
+    <h3>Teslimatı onayla</h3>
+    <div class="sub" id="aSub"></div>
+    <label>Teslim edilen (L)</label>
+    <input id="aQty" type="text" readonly>
+    <label>Birim fiyat (₺/L)</label>
+    <input id="aPrice" type="text" inputmode="decimal" placeholder="örn. 42,50" oninput="priceTotal('a')">
+    <div class="hint" id="aTotal" style="min-height:14px"></div>
+    <div class="hint">Fiyatı yalnız sen görürsün; şoför ekranında görünmez. Litreyi/tarihi değiştirmek için önce ✎ Düzenle.</div>
+    <div class="row">
+      <button class="ghost" onclick="closeApprove()">Vazgeç</button>
+      <button class="primary" style="margin-top:0;padding:9px" onclick="confirmApprove()">✓ Onayla</button>
+    </div>
+  </div>
+</div>
+
 <div class="dlg" id="cdlg">
   <div class="dlgbox">
     <h3>Müşteriyi düzenle</h3>
@@ -613,6 +633,9 @@ html,body,*{touch-action:manipulation}
       <select id="eVeh"></select>
       <label>Şoför / teslimat notu</label>
       <input id="eDNote" placeholder="opsiyonel">
+      <label>Birim fiyat (₺/L)</label>
+      <input id="ePrice" type="text" inputmode="decimal" placeholder="örn. 42,50" oninput="priceTotal('e')">
+      <div class="hint" id="eTotal" style="min-height:14px"></div>
       <label>Fotoğraflar</label>
       <div id="ePh"></div>
     </div>
@@ -633,6 +656,9 @@ html,body,*{touch-action:manipulation}
     <input id="dTime" type="datetime-local">
     <label>Not</label>
     <input id="dNote" placeholder="opsiyonel">
+<label>Birim fiyat (₺/L) — opsiyonel</label>
+    <input id="dPrice" type="text" inputmode="decimal" placeholder="örn. 42,50" oninput="priceTotal('d')">
+    <div class="hint" id="dTotal" style="min-height:14px"></div>
     <label>Fotoğraflar (opsiyonel)</label>
     <div id="dPh"></div>
     <div class="row">
@@ -757,6 +783,10 @@ async function load(){
 const isoDay=d=>{const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');};
 const todayStr=()=>isoDay(new Date());
 const addDays=(iso,n)=>{const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+n);return isoDay(d);};
+const parsePrice=v=>{const n=parseFloat(String(v??'').trim().replace(',','.'));return isFinite(n)&&n>0?n:null;};
+const fmtTL=n=>n==null?'':Number(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+' ₺';
+const fmtUP=n=>n==null?'':Number(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:4});
+const tutarOf=(q,up)=>(q!=null&&up!=null)?Math.round(q*up*100)/100:null;
 const nextDay=()=>addDays(todayStr(),1);   // yeni siparişte varsayılan teslim günü: yarın
 const planDay=o=>o.planDate||isoDay(o.createdAt||new Date());
 const fmtDay=iso=>new Date(iso+'T12:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',weekday:'long'});
@@ -770,7 +800,7 @@ function fromRow(r){
   return {id:r.id,cid:r.customer_id,qty:r.qty,status,planDate,note:r.note||'',
     lockVeh:r.lock_veh,vehicle:r.vehicle,comp:r.comp,
     deliveredQty:r.delivered_qty,deliverNote:r.deliver_note||'',
-    photos:r.photos||[],gpsLat:r.gps_lat,gpsLng:r.gps_lng,
+    photos:r.photos||[],gpsLat:r.gps_lat,gpsLng:r.gps_lng,unitPrice:r.unit_price!=null?Number(r.unit_price):null,
     createdAt:r.created_at,plannedAt:r.planned_at,deliveredAt:r.delivered_at};
 }
 function toRow(o){
@@ -778,7 +808,8 @@ function toRow(o){
     lock_veh:o.lockVeh||null,vehicle:o.vehicle||null,comp:o.comp||null,
     delivered_qty:o.deliveredQty??null,deliver_note:o.deliverNote||'',plan_date:o.planDate||null,
     planned_at:o.plannedAt||null,delivered_at:o.deliveredAt||null,
-    ...(o._pd?{photos:o.photos||[]}:{})};   // fotoğraf yalnız planlayıcıda değiştiyse yazılır (şoförün yüklediği eski veriyle ezilmesin)
+    ...(o._pd?{photos:o.photos||[]}:{}),
+    ...((o.unitPrice!=null||o._up)?{unit_price:o.unitPrice??null}:{})};   // fiyat: yalnız planlayıcı yazar   // fotoğraf yalnız planlayıcıda değiştiyse yazılır (şoförün yüklediği eski veriyle ezilmesin)
 }
 function setCloudBadge(ok){
   const m=document.getElementById('savemark');
@@ -855,23 +886,27 @@ async function cloudOrderUpsert(o){
     if(error)throw error;
     o.id=data.id;myWrites.add(data.id);return data.id;
   };
-  const ok=r=>{o._pd=false;return r;};
+  const ok=r=>{o._pd=false;o._up=false;return r;};
   try{return ok(await write(row));}
   catch(e){
     console.warn('sipariş kaydı:',e);
-    // "plan_date" kolonu henüz eklenmediyse (supabase-v20 çalıştırılmadıysa) onsuz tekrar dene —
+    // yeni kolonlar (plan_date: supabase-v20, unit_price: supabase-v21) henüz eklenmediyse onsuz tekrar dene —
     // bu olmadan TÜM sipariş yazma işlemleri sessizce başarısız olurdu
-    if('plan_date' in row){
-      const{plan_date,...rowNoDate}=row;
+    const opt=['unit_price','plan_date'].filter(k=>k in row);
+    const tries=opt.length>1?[['unit_price'],['plan_date'],opt]:opt.map(k=>[k]);
+    for(const drop of tries){
+      const r2={...row};drop.forEach(k=>delete r2[k]);
       try{
-        const r=ok(await write(rowNoDate));
-        if(!planDateWarned){planDateWarned=true;alert('Sipariş günü (ajanda) buluta kaydedilemedi: veritabanında "plan_date" kolonu yok.\n\nSupabase → SQL Editor\'de supabase-v20-ajanda.sql dosyasını çalıştır. Sipariş kaydedildi ama tarihi yalnız bu cihazda kalır.');}
+        const r=ok(await write(r2));
+        if(drop.includes('unit_price')&&!priceColWarned){priceColWarned=true;alert('Fiyat buluta kaydedilemedi: veritabanında "unit_price" kolonu yok.\n\nSupabase → SQL Editor\'de supabase-v21-fiyat.sql dosyasını çalıştır. Teslimat kaydedildi ama fiyatı yalnız bu cihazda kalır.');}
+        if(drop.includes('plan_date')&&!planDateWarned){planDateWarned=true;alert('Sipariş günü (ajanda) buluta kaydedilemedi: veritabanında "plan_date" kolonu yok.\n\nSupabase → SQL Editor\'de supabase-v20-ajanda.sql dosyasını çalıştır. Sipariş kaydedildi ama tarihi yalnız bu cihazda kalır.');}
         return r;
-      }catch(e2){console.warn('yedek deneme de başarısız:',e2);}
+      }catch(e2){console.warn('yedek deneme başarısız:',e2);}
     }
     return o.id;
   }
 }
+let priceColWarned=false;
 async function cloudOrderDelete(id){
   if(cloudOK&&isUUID(id))try{await sb.from('orders').delete().eq('id',id);}catch(e){console.warn(e);}
 }
@@ -1216,6 +1251,7 @@ function openEdit(id){
       [...new Set([...tankers.map(t=>t.plate),o.vehicle].filter(Boolean))].map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
     document.getElementById('eVeh').value=o.vehicle||'';
     document.getElementById('eDNote').value=o.deliverNote||'';
+    document.getElementById('ePrice').value=o.unitPrice!=null?String(o.unitPrice).replace('.',','):'';priceTotal('e');
     phReset('e',o.photos);
   }
   document.getElementById('edlg').classList.add('on');
@@ -1246,6 +1282,7 @@ async function saveEdit(){
   }
   o.note=document.getElementById('eNote').value.trim();
   if(del){
+    {const np=parsePrice(document.getElementById('ePrice').value);if(np!==(o.unitPrice??null)){o.unitPrice=np;o._up=true;}}
     o.deliveredQty=dq;
     const t=document.getElementById('eDTime').value;
     if(t)o.deliveredAt=new Date(t).toISOString();
@@ -1280,6 +1317,7 @@ function openDlg(id){
   d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
   document.getElementById('dTime').value=d.toISOString().slice(0,16);
   document.getElementById('dNote').value=o.deliverNote||'';
+  document.getElementById('dPrice').value=o.unitPrice!=null?String(o.unitPrice).replace('.',','):'';priceTotal('d');
   phReset('d',o.photos);
   document.getElementById('dlg').classList.add('on');
   document.getElementById('dQty').focus();
@@ -1448,9 +1486,10 @@ async function loadTesLog(force){
   if(!force&&Date.now()-tesLogAt<8000)return;
   tesLogBusy=true;
   try{
-    const{data,error}=await sb.from('teslimat_kayitlari')
-      .select('order_id,customer_name,delivered_qty,vehicle,delivered_at,logged_at,siparis_silindi,deliver_note,photo_tank_url,photo_irsaliye_url')
-      .order('delivered_at',{ascending:false}).limit(tesLimit*3);
+    const COLS='order_id,customer_name,delivered_qty,vehicle,delivered_at,logged_at,siparis_silindi,deliver_note,photo_tank_url,photo_irsaliye_url';
+    const q=c=>sb.from('teslimat_kayitlari').select(c).order('delivered_at',{ascending:false}).limit(tesLimit*3);
+    let{data,error}=await q(COLS+',unit_price,tutar');
+    if(error)({data,error}=await q(COLS));   // fiyat kolonları (v21) henüz yoksa
     if(error)throw error;
     const seen=new Map();
     (data||[]).forEach(r=>{const k=r.order_id||r.logged_at,p=seen.get(k);if(!p||String(r.logged_at)>String(p.logged_at))seen.set(k,r);});
@@ -1466,12 +1505,12 @@ function tesItems(){
     have.add(o.id);
     const c=customers.find(x=>x.id===o.cid);
     items.push({pend:o.status==='onay',name:c?c.name:'silinmiş müşteri',qty:o.deliveredQty??o.qty,veh:o.vehicle||'',t:o.deliveredAt,note:o.deliverNote||'',
-      photos:(o.photos||[]).map(p=>({type:p.type,url:p.url,thumb:p.thumb||p.url})),gone:false});
+      photos:(o.photos||[]).map(p=>({type:p.type,url:p.url,thumb:p.thumb||p.url})),gone:false,up:o.unitPrice,tutar:tutarOf(o.deliveredQty??o.qty,o.unitPrice)});
   });
   tesLog.forEach(r=>{
     if(r.order_id&&have.has(r.order_id))return;
     items.push({pend:false,name:r.customer_name||'—',qty:r.delivered_qty||0,veh:r.vehicle||'',t:r.delivered_at||r.logged_at,note:r.deliver_note||'',
-      photos:[['tank',r.photo_tank_url],['irsaliye',r.photo_irsaliye_url]].filter(x=>x[1]).map(x=>({type:x[0],url:x[1],thumb:thumbOf(x[1])})),gone:!!r.siparis_silindi});
+      photos:[['tank',r.photo_tank_url],['irsaliye',r.photo_irsaliye_url]].filter(x=>x[1]).map(x=>({type:x[0],url:x[1],thumb:thumbOf(x[1])})),gone:!!r.siparis_silindi,up:r.unit_price!=null?Number(r.unit_price):null,tutar:r.tutar!=null?Number(r.tutar):null});
   });
   return items.filter(i=>i.qty>0||i.pend).sort((a,b)=>String(b.t||'').localeCompare(String(a.t||'')));
 }
@@ -1490,7 +1529,7 @@ function renderTesList(){
       last=d;
       const grp=list.filter(x=>(x.t?isoDay(x.t):'')===d);
       const rel=d===t?'Bugün':d===addDays(t,-1)?'Dün':'';
-      head=`<div class="dayhead" style="margin-top:0">${rel?rel+' · ':''}${d?fmtDay(d):'—'} <b>${grp.length} teslimat · ${L2(grp.reduce((a,x)=>a+x.qty,0))} L</b></div>`;
+      head=`<div class="dayhead" style="margin-top:0">${rel?rel+' · ':''}${d?fmtDay(d):'—'} <b>${grp.length} teslimat · ${L2(grp.reduce((a,x)=>a+x.qty,0))} L${grp.some(x=>x.tutar!=null)?` · ${fmtTL(grp.reduce((a,x)=>a+(x.tutar||0),0))}`:''}</b></div>`;
     }
     const k=i.pend?'onay':'done';
     return head+`<div class="ocard st-${k}">
@@ -1498,7 +1537,7 @@ function renderTesList(){
       <div>
         <div class="sh-t"><b>${esc(i.name)}</b><span class="sh-time">${hm(i.t)}</span></div>
         <div class="sh-info"><span class="sh-vol">${L2(i.qty)} L</span><span class="obadge b-${k}">${i.pend?'ONAY BEKLİYOR':'TESLİM'}</span>${i.gone?' <span class="obadge b-late">SİPARİŞ SİLİNDİ</span>':''}
-          ${i.veh?`<br>${esc(i.veh)}`:''}${i.note?`<br>${esc(i.note)}`:''}</div>
+          ${i.veh?`<br>${esc(i.veh)}`:''}${i.tutar!=null?`<br>₺ ${fmtUP(i.up)}/L · <b>${fmtTL(i.tutar)}</b>`:''}${i.note?`<br>${esc(i.note)}`:''}</div>
         ${i.photos.length?`<div class="ophotos">${i.photos.map(p=>`<a href="${p.url}" target="_blank"><img src="${p.thumb}" loading="lazy" onerror="this.onerror=null;this.src='${p.url}'" title="${p.type==='tank'?'Dolum tankı':'İrsaliye'}"></a>`).join('')}</div>`:''}
       </div>
     </div>`;
@@ -1521,6 +1560,7 @@ async function saveTeslimatGiris(){
   const open=orderList.find(o=>o.cid===cid&&(o.status==='wait'||o.status==='plan'));
   let o=null;
   if(open&&confirm(`Bu müşterinin açık bir siparişi var (${L2(open.qty)} L).\n\nBu teslimat o siparişe işlensin mi?\n\nTamam = o siparişi teslim edildi yap\nİptal = ayrı, yeni bir teslimat kaydı oluştur`))o=open;
+  const tup=parsePrice(document.getElementById('tPrice').value);
   let photos=null;
   if(PH.t.tank||PH.t.irsaliye){
     const btn=document.querySelector('.tabpanel[data-tab="teslimatgir"] .primary');btn.disabled=true;btn.textContent='Fotoğraf yükleniyor…';
@@ -1532,13 +1572,16 @@ async function saveTeslimatGiris(){
     o.status='done';o.deliveredQty=q;o.deliveredAt=when;o.deliverNote=note;
     if(veh)o.vehicle=veh;
     if(photos){o.photos=photos;o._pd=true;}
+    if(tup!=null&&tup!==(o.unitPrice??null)){o.unitPrice=tup;o._up=true;}
   }else{
     o={id:uid(),cid,qty:q,status:'done',note:'Teslimat girişi (planlayıcı)',createdAt:nowIso(),
       plannedAt:null,deliveredAt:when,deliveredQty:q,vehicle:veh,comp:null,deliverNote:note,lockVeh:null};
     if(photos){o.photos=photos;o._pd=true;}
+    if(tup!=null){o.unitPrice=tup;o._up=true;}
     orderList.push(o);
   }
   phReset('t');
+  document.getElementById('tPrice').value='';document.getElementById('tTotal').textContent='';
   document.getElementById('tQty').value='';document.getElementById('tNote').value='';resetTeslimatTime();
   save();renderOrders();draw();cloudOrderUpsert(o);
   setTimeout(()=>loadTesLog(true),900);
@@ -1556,6 +1599,7 @@ async function saveDeliv(){
     catch(e){console.warn(e);alert('Fotoğraf yüklenemedi — internet/sinyal kontrol edip tekrar dene.');btn.disabled=false;btn.textContent='Kaydet';return;}
     btn.disabled=false;btn.textContent='Kaydet';
   }
+  {const np=parsePrice(document.getElementById('dPrice').value);if(np!==(o.unitPrice??null)){o.unitPrice=np;o._up=true;}}
   o.deliveredQty=q;
   o.deliveredAt=t?new Date(t).toISOString():nowIso();
   o.deliverNote=document.getElementById('dNote').value.trim();
@@ -1608,7 +1652,37 @@ function renderDayBar(){
   note.style.display=viewDate===t?'none':'block';
   note.textContent=viewDate<t?'Geçmiş gün — o gün teslim edilen ve o güne planlanan siparişler.':'Ajanda günü — bu gün gelince siparişler rotaya girer, atama o gün yapılır.';
 }
-function approveOrder(id){setOrdStatus(id,'done');setTimeout(()=>loadTesLog(true),900);}
+const PQ={d:'dQty',e:'eDQty',t:'tQty',a:'aQty'};
+document.addEventListener('input',e=>{const m=Object.entries(PQ).find(([k,v])=>v===e.target.id);if(m&&m[0]!=='a')priceTotal(m[0]);});
+function priceTotal(ctx){
+  const el=document.getElementById(ctx+'Total');if(!el)return;
+  const q=parseInt(String(document.getElementById(PQ[ctx]).value).replace(/\D/g,''));
+  const up=parsePrice(document.getElementById(ctx+'Price').value);
+  el.textContent=(q>0&&up)?`Tutar: ${fmtTL(tutarOf(q,up))}`:'';
+}
+let apId=null;
+function approveOrder(id){
+  const o=byId(id);if(!o)return;
+  const c=customers.find(x=>x.id===o.cid);
+  apId=id;
+  document.getElementById('aSub').textContent=`${c?c.name:'—'}${o.vehicle?' · '+o.vehicle:''}`;
+  document.getElementById('aQty').value=`${L2(o.deliveredQty??o.qty)} L`;
+  document.getElementById('aQty').dataset.q=o.deliveredQty??o.qty;
+  document.getElementById('aPrice').value=o.unitPrice!=null?String(o.unitPrice).replace('.',','):'';
+  document.getElementById('aTotal').textContent=o.unitPrice!=null?`Tutar: ${fmtTL(tutarOf(o.deliveredQty??o.qty,o.unitPrice))}`:'';
+  document.getElementById('adlg').classList.add('on');
+  document.getElementById('aPrice').focus();
+}
+function closeApprove(){document.getElementById('adlg').classList.remove('on');apId=null;}
+function confirmApprove(){
+  const o=byId(apId);if(!o)return closeApprove();
+  const up=parsePrice(document.getElementById('aPrice').value);
+  if(!up&&!confirm('Fiyat girilmedi. Yine de onaylansın mı?'))return;
+  if(up!==(o.unitPrice??null)){o.unitPrice=up;o._up=true;}
+  closeApprove();
+  setOrdStatus(o.id,'done');
+  setTimeout(()=>loadTesLog(true),900);
+}
 function rejectOrder(id){
   const o=byId(id);if(!o)return;
   const c=customers.find(c=>c.id===o.cid);
@@ -1694,7 +1768,7 @@ function renderOrders(){
       <div class="sh-info">
         <span class="sh-vol${short?' part':''}">${L2(dlv?o.deliveredQty:o.qty)} L</span><span class="obadge b-${s.cls}">${s.lab}</span>${(o.status==='wait'||o.status==='plan')&&planDay(o)<todayStr()?` <span class="obadge b-late">GECİKMİŞ · ${fmtDayShort(planDay(o))}</span>`:''}
         ${short?`<span style="color:#b06a00"> · eksik ${L2(o.qty-o.deliveredQty)} L</span>`:''}
-        ${where?`<br>${where}`:''}${note?`<br>${note}`:''}
+        ${where?`<br>${where}`:''}${dlv&&o.unitPrice!=null?`<br>₺ ${fmtUP(o.unitPrice)}/L · <b>${fmtTL(tutarOf(o.deliveredQty,o.unitPrice))}</b>`:''}${note?`<br>${note}`:''}
       </div>
       ${dlv&&o.photos&&o.photos.length?`<div class="ophotos">${o.photos.map(p=>`<a href="${p.url}" target="_blank"><img src="${p.thumb||p.url}" loading="lazy" title="${p.type==='tank'?'Dolum tankı':p.type==='irsaliye'?'İrsaliye':p.type}"></a>`).join('')}</div>`:''}
       <div class="oacts">
@@ -1737,14 +1811,14 @@ async function exportExcel(btn){
     const styledRow=(vals,style)=>style?vals.map(v=>(v&&typeof v==='object')?{...v,s:style}:{v:v??'',t:typeof v==='number'?'n':'s',s:style}):vals;
     // TESLİMATLAR: kalıcı kayıt (onaylanmış) + onay bekleyenler + listede duran teslimler; sipariş başına TEK satır
     // (düzeltmelerde en son kayıt geçerli). Sipariş/ajanda listesi Excel'e girmez.
-    let logRows=[['Teslim tarihi','Müşteri','Araç','Göz','Sipariş (L)','Teslim edilen (L)','Fark (L)','Şoför notu','Sipariş notu','Dolum tankı','İrsaliye','Durum','Sipariş girişi','Kayıt zamanı','Kayıt no']];
+    let logRows=[['Teslim tarihi','Müşteri','Araç','Göz','Sipariş (L)','Teslim edilen (L)','Fark (L)','Birim fiyat (₺/L)','Tutar (₺)','Şoför notu','Sipariş notu','Dolum tankı','İrsaliye','Durum','Sipariş girişi','Kayıt zamanı','Kayıt no']];
     const tes=[],haveO=new Set();
     orderList.filter(o=>o.status==='done'||o.status==='onay').forEach(o=>{
       haveO.add(o.id);
       const c=customers.find(x=>x.id===o.cid);
       tes.push({t:o.deliveredAt,name:c?c.name:'—',veh:o.vehicle||'',comp:o.comp,qty:o.qty,dq:o.deliveredQty,dnote:o.deliverNote||'',note:o.note||'',
         tank:o.photos?.find(p=>p.type==='tank')?.url||'',irs:o.photos?.find(p=>p.type==='irsaliye')?.url||'',
-        durum:o.status==='onay'?'ONAY BEKLİYOR':'',created:o.createdAt,logged:'',id:o.id,gone:false});
+        durum:o.status==='onay'?'ONAY BEKLİYOR':'',created:o.createdAt,logged:'',id:o.id,gone:false,up:o.unitPrice,tutar:tutarOf(o.deliveredQty??o.qty,o.unitPrice)});
     });
     if(cloudOK){
       try{
@@ -1755,17 +1829,17 @@ async function exportExcel(btn){
         last.forEach(r=>{
           if(r.order_id&&haveO.has(r.order_id))return;
           tes.push({t:r.delivered_at,name:r.customer_name||'—',veh:r.vehicle||'',comp:r.comp,qty:r.qty,dq:r.delivered_qty,dnote:r.deliver_note||'',note:r.note||'',
-            tank:r.photo_tank_url||'',irs:r.photo_irsaliye_url||'',durum:r.siparis_silindi?'SİPARİŞ SİLİNDİ':'',created:r.order_created_at,logged:r.logged_at,id:r.order_id||r.id,gone:!!r.siparis_silindi});
+            tank:r.photo_tank_url||'',irs:r.photo_irsaliye_url||'',durum:r.siparis_silindi?'SİPARİŞ SİLİNDİ':'',created:r.order_created_at,logged:r.logged_at,id:r.order_id||r.id,gone:!!r.siparis_silindi,up:r.unit_price!=null?Number(r.unit_price):null,tutar:r.tutar!=null?Number(r.tutar):null});
         });
       }catch(e){console.warn('teslimat geçmişi çekilemedi (supabase-v14/v16/v17 SQL çalıştırılmış mı?):',e);}
     }
     tes.sort((a,b)=>String(b.t||'').localeCompare(String(a.t||'')));
     tes.forEach(x=>{
       const fark=(x.dq!=null&&x.qty!=null)?x.dq-x.qty:'';
-      logRows.push(styledRow([fmtDT(x.t),x.name,x.veh,x.comp??'',x.qty??'',x.dq??'',fark,x.dnote,x.note,
+      logRows.push(styledRow([fmtDT(x.t),x.name,x.veh,x.comp??'',x.qty??'',x.dq??'',fark,x.up??'',x.tutar??'',x.dnote,x.note,
         linkCell(x.tank,'Dolum tankı — aç'),linkCell(x.irs,'İrsaliye — aç'),x.durum,fmtDT(x.created),x.logged?fmtDT(x.logged):'',x.id],x.gone?DELCELL:null));
     });
-    if(tes.length)logRows.push(['','TOPLAM','','','',tes.reduce((a,x)=>a+(x.dq||0),0),'','','','','','','','','']);
+    if(tes.length)logRows.push(['','TOPLAM','','','',tes.reduce((a,x)=>a+(x.dq||0),0),'','',tes.reduce((a,x)=>a+(x.tutar||0),0),'','','','','','','','','']);
 
     // kalıcı iptal geçmişi
     let cancRows=[['İptal tarihi','Müşteri','Sipariş (L)','Araç','Not','Sipariş girişi','Kayıt zamanı','Kayıt no']];

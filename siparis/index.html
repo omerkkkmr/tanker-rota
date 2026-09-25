@@ -181,8 +181,8 @@ let customers=[], orderList=[], doneList=[];
 async function load(){
   const[cs,od,dn]=await Promise.all([
     sb.from('customers').select('id,name').order('name'),
-    sb.from('orders').select('*').in('status',['wait','plan','road']).order('created_at',{ascending:false}),
-    sb.from('orders').select('*').in('status',['done','onay']).order('delivered_at',{ascending:false}).limit(15),
+    sb.from('orders').select('id,customer_id,qty,status,plan_date,created_at,note,delivered_at,delivered_qty,vehicle,photos').in('status',['wait','plan','road']).order('created_at',{ascending:false}),
+    sb.from('orders').select('id,customer_id,qty,status,plan_date,created_at,note,delivered_at,delivered_qty,vehicle,photos').in('status',['done','onay']).order('delivered_at',{ascending:false}).limit(15),
   ]);
   if(cs.data)customers=cs.data;
   if(od.data)orderList=od.data;
