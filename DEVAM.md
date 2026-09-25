@@ -1434,6 +1434,9 @@ Müşteriler'deki desen genelleştirildi: Plan dışındaki HER sekmede (`goMapF
 ## FOTOĞRAF YEDEĞİ (2026-09-26)
 Aynı yedek görevi (tanker-rota-yedek, 5 günde bir) `fotograf_yedek.py` ile Storage `belgeler` bucket'ındaki YENİ fotoğrafları `fotograflar/YYYY-MM-DD/SAAT_ARAÇ_MÜŞTERİ_tür_xxxx.jpg` olarak indirir (tarih = yüklenme günü, TR saati); `fotograflar/_dizin.json` her fotoğrafın yolunu/müşteri/araç/litre bilgisini tutar; inenler atlanır, `-thumb` önizlemeleri alınmaz. Sahte Supabase sunucusuyla test edildi (ekleme, TR saati, tekrar çalıştırmada atlama); gerçek bucket şu an boş olduğundan gerçek indirme henüz denenmedi. Repo boyutu izlenmeli (≈6 MB/gün varsayımıyla yılda ~2 GB) — büyürse eski fotoğraflar arşivlenip repodan çıkarılır.
 
+## ANA EKRANA EKLENEBİLİR (PWA) (2026-09-26)
+Üç sayfa da ana ekrana uygulama gibi (adres çubuğu olmadan, `display:standalone`) eklenebilir: `manifest.json` (Tanker Rota), `siparis/manifest.json` (Sipariş), `teslimat/manifest.json` (Teslimat) — adlarda "şoför" kelimesi YOK (kullanıcı isteği). Simgeler `ikon/` altında (tanker kamyonu; planlayıcı amber, sipariş mavi, teslimat yeşil; 180/192/512). Head'e manifest/theme-color/apple-touch-icon/apple-mobile-web-app-* eklendi. **Service worker YOK** (bilinçli: eski sürüm önbelleği riski yok, çevrimdışı çalışma da yok). Kurulum: iPhone Safari → Paylaş → Ana Ekrana Ekle; Android Chrome → ⋮ → Ana ekrana ekle/Uygulamayı yükle. Gerçek telefonda kurulum denenmedi; manifest/simge/başlık dosyaları yerelde doğrulandı.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
