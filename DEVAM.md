@@ -1394,6 +1394,9 @@ Sekme sırası: **Siparişler → Teslimat → Plan → Stok → Yönetim**. Mob
 ## PLAN SEKMESİ (mobil): SONUÇLAR → LİTRE ŞERİDİ → HARİTA (2026-09-25)
 `placeMap` artık `#statbar` (Açık sipariş / Talep L / Tanker / Şoför / Plan) şeridini de Plan panelinin içine, haritanın hemen üstüne taşır; diğer sekmelerde/masaüstünde `.maprel` içindeki eski yerine döner.
 
+## BİLGİ BARINDAN ŞOFÖR KALDIRILDI (2026-09-25)
+Tek ortak `#statbar` tüm sekmelerde aynı: Açık Sipariş / Talep L / Tanker / Plan. "Şoför" hücresi ve `stDriver` güncellemesi kaldırıldı.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

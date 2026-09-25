@@ -568,7 +568,6 @@ html,body,*{touch-action:manipulation}
     <div class="st"><b id="stOpen">0</b><span>Açık Sipariş</span></div>
     <div class="st"><b id="stVol">0</b><span>Talep L</span></div>
     <div class="st"><b id="stTanker">0</b><span>Tanker</span></div>
-    <div class="st"><b id="stDriver">0</b><span>Şoför</span></div>
     <div class="st"><b id="stPlan">—</b><span>Plan</span></div>
   </div>
   <div id="map"></div><div id="legend"></div>
@@ -2904,7 +2903,6 @@ function updateStatBar(){
   if(g('stOpen'))g('stOpen').textContent=open.length;
   if(g('stVol'))g('stVol').textContent=L2(openL);
   if(g('stTanker'))g('stTanker').textContent=tankers.length;
-  if(g('stDriver'))g('stDriver').textContent=document.getElementById('drivers')?.value||'';
 }
 
 /* ---------- mobil: liste/harita atlama düğmeleri ---------- */
