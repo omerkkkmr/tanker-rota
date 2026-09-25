@@ -1424,6 +1424,9 @@ Müşteriler'deki desen genelleştirildi: Plan dışındaki HER sekmede (`goMapF
 **Not:** `customers.note` (**`supabase-v23-musteri-not.sql`** çalıştırılmalı). Yeni müşteri formu, Düzenle penceresi, liste (📝), Excel Müşteri Rehberi ("Not" sütunu) ve şoför ekranı (durak kartı + tamamlanan kartlar). Yazmada telefon/not kolonu yoksa o alan atlanıp tekrar denenir + bir kez uyarı (`custColWarned`); şoför okuması 3 kademeli fallback.
 **Harita (mobil):** "Haritadan seç" sonrası tıklayınca harita HER durumda kapanır (Müşteriler dahil). Açıkken ipucu şeridinde **✕ Vazgeç** var (`setCustMap(false)`): seçimi iptal eder, Düzenle penceresi açıksa geri getirir. Düğmeyle açılan (seçimsiz) harita düğmeyle kapanır.
 
+## VAZGEÇ ŞERİDİ YALNIZ SEÇİM SÜRERKEN (2026-09-25)
+`#mapHint` (✕ Vazgeç), `setStatus` her durum mesajında (ör. "Bulut verisi yükleniyor") açık kalıyordu; artık yalnız `pickMode` aktifken (`!!t&&!!pickMode`) görünür.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

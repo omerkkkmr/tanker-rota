@@ -992,7 +992,7 @@ map.on('click',e=>{
     if(fld)setTimeout(()=>document.getElementById(fld).scrollIntoView({block:'center',behavior:'smooth'}),100);
   }
 });
-function setStatus(t){const s=document.getElementById('status');s.textContent=t;s.className=t?'on':'';const h=document.getElementById('mapHint');if(h){document.getElementById('mapHintTxt').textContent=t;h.classList.toggle('on',!!t);}}
+function setStatus(t){const s=document.getElementById('status');s.textContent=t;s.className=t?'on':'';const h=document.getElementById('mapHint');if(h){document.getElementById('mapHintTxt').textContent=t;h.classList.toggle('on',!!t&&!!pickMode);}}   // şerit yalnız haritadan seçim sürerken görünür (diğer durum mesajları burada kalmasın)}
 const num=id=>+document.getElementById(id).value||0;
 
 /* ---------- müşteri ---------- */
