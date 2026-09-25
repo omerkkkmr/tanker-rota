@@ -1352,6 +1352,15 @@ düğme "📋 Haritayı Kapat"a döner. Haritadan seçme (müşteri/garaj/tesis/
 açar; müşteri düzenlemede seçimden sonra kapanıp listeye döner. Masaüstü düzeni değişmedi. 375px'de
 açma/kapama, karo yükleme ve boyut doğrulandı; yüzen düğme durum şeridini örtmesin diye alt boşluk eklendi.
 
+## HARİTA DÜĞMESİ: YÜZEN PİLL → SEKME ŞERİDİNDE KÜÇÜK İKON (2026-09-25)
+
+Kullanıcı: "harita aç butonu orana güzel olmamış, ekranda yer ediyor". Alttaki büyük siyah yüzen
+"Haritayı Aç/Kapat" düğmeleri (+ onlar için ayrılan alt boşluklar) kaldırıldı. Yerine sekme şeridinin
+SAĞ ucunda sabit (`position:sticky;right:0`) küçük 🗺️ düğmesi geldi (yalnız ≤900px): sekmeler kaysa da
+görünür kalır, ekranda ek yer kaplamaz; harita açıkken altın renkli ("on"). Mantık aynı (`setMapOpen`,
+harita seçim modları haritayı kendi açar). Masaüstünde düğme yok. 375px'de açma/kapama, sabit konum
+(kaydırınca değişmedi) ve harita boyutu doğrulandı.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

@@ -23,7 +23,7 @@ body{font-family:'Manrope',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;b
 @media(max-width:900px){
   body{display:block;height:auto;overflow:auto}
   .mainrow{display:block;overflow:visible}
-  #side{overflow-y:visible;border-right:0;border-bottom:1px solid var(--line);padding-bottom:76px}
+  #side{overflow-y:visible;border-right:0;border-bottom:1px solid var(--line);padding-bottom:12px}
 }
 #side{background:var(--bg);color:var(--ink);overflow-y:auto;border-right:1px solid var(--line)}
 .brand{padding:14px 16px;background:var(--ink);color:var(--htext);display:flex;align-items:baseline;justify-content:space-between;gap:10px;box-shadow:0 1px 0 rgba(0,0,0,.15)}
@@ -33,14 +33,12 @@ body{font-family:'Manrope',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;b
 /* sekme şeridi: görev formu sekmeleri gibi koyu */
 .tabbar{display:flex;background:var(--ink2);border-bottom:0;overflow-x:auto}
 @media(max-width:900px){.tabbar{position:sticky;top:0;z-index:50}}
-#mapJump,#listBack{display:none}
+.tabmap{display:none}
 @media(max-width:900px){
-  #mapJump{display:flex;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:900;
-    background:var(--ink);color:var(--htext);border:0;border-radius:999px;padding:13px 22px;
-    align-items:center;gap:8px;font-weight:700;font-size:12px;box-shadow:0 6px 18px rgba(27,25,23,.35)}
-  #listBack{display:flex;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:900;
-    background:var(--hi-bg);color:var(--ink);border:1px solid var(--hi-border);border-radius:999px;padding:13px 22px;
-    align-items:center;gap:8px;font-weight:700;font-size:12px;box-shadow:0 6px 18px rgba(27,25,23,.35)}
+  /* harita düğmesi: sekme şeridinin sağ ucunda sabit, ekranda ek yer kaplamaz */
+  .tabmap{display:block;position:sticky;right:0;flex:none;margin-left:auto;background:var(--ink);color:#f2f0ec;border:0;
+    border-left:1px solid #4a4032;border-radius:0;padding:0 15px;font-size:17px;line-height:1}
+  .tabmap.on{background:var(--hi-bg);color:var(--ink)}
 }
 .tabbtn{background:transparent;border:0;border-bottom:3px solid transparent;color:#a39a8c;border-radius:0;
   padding:12px 11px;font-size:12px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:5px}
@@ -352,7 +350,6 @@ div.info{background:#eaf2fc;border-left:3px solid #4a90d9;margin:0 -16px;padding
   #map{flex:none;height:60vh;display:none}
   .maprel.open #map{display:block}
   .maprel:not(.open) #legend{display:none!important}
-  .maprel:not(.open){padding-bottom:74px}   /* yüzen düğme durum şeridini örtmesin */
 }
 /* iOS Safari küçük inputlara dokununca sayfayı otomatik yakınlaştırır — mobilde hiçbir alan 16px'in altına inmesin.
    Dosyanın sonunda: aynı özgüllükteki (.tplate vb.) daha önceki kurallardan kaynak sırasında sonra gelmesi gerekiyor. */
@@ -389,6 +386,7 @@ html,body,*{touch-action:manipulation}
     <button class="tabbtn" data-tab="plan" onclick="showTab('plan')">Plan</button>
     <button class="tabbtn" data-tab="filo" onclick="showTab('filo')">Filo <b id="fleetcount"></b></button>
     <button class="tabbtn" data-tab="ayarlar" onclick="showTab('ayarlar')">Ayarlar</button>
+    <button class="tabmap" id="tabMap" onclick="setMapOpen(!document.querySelector('.maprel').classList.contains('open'))" title="Haritayı aç / kapat" aria-label="Harita">🗺️</button>
   </div>
 
   <div class="sec tabpanel" data-tab="siparisler">
@@ -564,10 +562,7 @@ html,body,*{touch-action:manipulation}
   </div>
 </div>
 
-<button id="mapJump" onclick="setMapOpen(true)">🗺️ Haritayı Aç</button>
-
 <div class="maprel">
-  <button id="listBack" onclick="setMapOpen(false)">📋 Haritayı Kapat</button>
   <div id="statbar">
     <div class="st"><b id="stOpen">0</b><span>Açık Sipariş</span></div>
     <div class="st"><b id="stVol">0</b><span>Talep L</span></div>
@@ -2895,12 +2890,9 @@ function setMapOpen(open){
   updateJumpButtons();
 }
 function updateJumpButtons(){
-  if(window.innerWidth>900)return;
   const open=document.querySelector('.maprel').classList.contains('open');
-  document.getElementById('mapJump').style.display=open?'none':'flex';
-  document.getElementById('listBack').style.display=open?'flex':'none';
+  document.getElementById('tabMap').classList.toggle('on',open);
 }
-window.addEventListener('scroll',updateJumpButtons,{passive:true});
 window.addEventListener('resize',updateJumpButtons);
 
 // yedek yenileme: realtime bağlantısı sessizce koparsa (uzun süre açık kalan
