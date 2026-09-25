@@ -1343,6 +1343,15 @@ Kullanıcı: "fiyatı da yazacağımız bir alan olmalı, teslimatçı göremez,
   kullanır (fiyat isteğe bile dahil edilmez). Dürüst not: anon anahtar + açık RLS nedeniyle teknik bilgisi olan biri
   yine de doğrudan veritabanından okuyabilir; bu "arayüzde ve istekte gizli" düzeyindedir, sıkı erişim kontrolü değildir.
 
+## MOBİLDE HARİTA DÜĞMEYLE AÇILIR (2026-09-25)
+
+Kullanıcı: "harita mobilde tuşa basınca açılsın, haritanın üstündeki veriler dursun ama harita karıştırıyor".
+≤900px'de harita varsayılan KAPALI; altta durum şeridi (Açık sipariş / Talep L / Tanker / Şoför / Plan) kalır.
+Yüzen "🗺️ Haritayı Aç" düğmesi haritayı açar (60vh, `invalidateSize` + son rota sınırlarına odaklanır) ve
+düğme "📋 Haritayı Kapat"a döner. Haritadan seçme (müşteri/garaj/tesis/müşteri düzenle) mobilde haritayı kendi
+açar; müşteri düzenlemede seçimden sonra kapanıp listeye döner. Masaüstü düzeni değişmedi. 375px'de
+açma/kapama, karo yükleme ve boyut doğrulandı; yüzen düğme durum şeridini örtmesin diye alt boşluk eklendi.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

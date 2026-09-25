@@ -348,7 +348,12 @@ div.info{background:#eaf2fc;border-left:3px solid #4a90d9;margin:0 -16px;padding
 #statbar .st:last-child{border-right:0}
 #statbar .st b{display:block;font-family:'IBM Plex Mono';font-size:17px;font-weight:600;color:var(--ink)}
 #statbar .st span{font-family:'IBM Plex Mono';font-size:8px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
-@media(max-width:900px){#map{flex:none;height:60vh}}
+@media(max-width:900px){
+  #map{flex:none;height:60vh;display:none}
+  .maprel.open #map{display:block}
+  .maprel:not(.open) #legend{display:none!important}
+  .maprel:not(.open){padding-bottom:74px}   /* yüzen düğme durum şeridini örtmesin */
+}
 /* iOS Safari küçük inputlara dokununca sayfayı otomatik yakınlaştırır — mobilde hiçbir alan 16px'in altına inmesin.
    Dosyanın sonunda: aynı özgüllükteki (.tplate vb.) daha önceki kurallardan kaynak sırasında sonra gelmesi gerekiyor. */
 @media(max-width:900px){
@@ -559,10 +564,10 @@ html,body,*{touch-action:manipulation}
   </div>
 </div>
 
-<button id="mapJump" onclick="document.querySelector('.maprel').scrollIntoView({behavior:'smooth'})">🗺️ Haritayı Göster</button>
+<button id="mapJump" onclick="setMapOpen(true)">🗺️ Haritayı Aç</button>
 
 <div class="maprel">
-  <button id="listBack" onclick="document.getElementById('side').scrollIntoView({behavior:'smooth'})">📋 Listeye Dön</button>
+  <button id="listBack" onclick="setMapOpen(false)">📋 Haritayı Kapat</button>
   <div id="statbar">
     <div class="st"><b id="stOpen">0</b><span>Açık Sipariş</span></div>
     <div class="st"><b id="stVol">0</b><span>Talep L</span></div>
@@ -943,6 +948,7 @@ let pickMode=null;
 
 function pick(m){
   pickMode=m;
+  if(window.innerWidth<=900)setMapOpen(true);
   setStatus(m==='cust'?'Haritada müşteri konumunu tıkla':'Haritada konumu tıkla');
   if(m==='cust')document.getElementById('cpick').classList.add('hot');
 }
@@ -956,7 +962,7 @@ map.on('click',e=>{
     document.getElementById('cELoc').value=`${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
     document.getElementById('cEName').value=window._custEditName??document.getElementById('cEName').value;
     document.getElementById('cdlg').classList.add('on');
-    if(window.innerWidth<=900)document.getElementById('side').scrollIntoView({behavior:'smooth'});
+    if(window.innerWidth<=900)setMapOpen(false);
   }
   pickMode=null;setStatus('');save();draw();
 });
@@ -1002,7 +1008,7 @@ function custEditPick(){
   document.getElementById('cdlg').classList.remove('on');
   setStatus('Haritada müşterinin yeni konumunu tıkla');
   window._custEditName=nm;
-  if(window.innerWidth<=900)document.querySelector('.maprel').scrollIntoView({behavior:'smooth'});
+  if(window.innerWidth<=900)setMapOpen(true);
 }
 function saveCustEdit(){
   const c=customers.find(x=>x.id===custEdId);if(!c)return closeCustEdit();
@@ -2798,6 +2804,7 @@ async function render(routes,extra,cfg,garage,plant,orders){
   }
   document.getElementById('out').innerHTML=top+html;
   const stPlanEl=document.getElementById('stPlan');if(stPlanEl)stPlanEl.textContent=`${used}/${cfg.drivers}`;
+  window._lastBounds=bounds;
   map.fitBounds(bounds,{padding:[45,45]});
 }
 
@@ -2876,12 +2883,22 @@ function updateStatBar(){
 }
 
 /* ---------- mobil: liste/harita atlama düğmeleri ---------- */
+// mobil: harita varsayılan KAPALI (üstündeki durum şeridi kalır); düğmeyle açılır/kapanır
+function setMapOpen(open){
+  const m=document.querySelector('.maprel');
+  m.classList.toggle('open',open);
+  if(open){
+    setTimeout(()=>{map.invalidateSize();if(window._lastBounds)map.fitBounds(window._lastBounds,{padding:[45,45]});m.scrollIntoView({behavior:'smooth'});},60);
+  }else{
+    document.getElementById('side').scrollIntoView({behavior:'smooth'});
+  }
+  updateJumpButtons();
+}
 function updateJumpButtons(){
   if(window.innerWidth>900)return;
-  const maprelTop=document.querySelector('.maprel').getBoundingClientRect().top;
-  const atMap=maprelTop<window.innerHeight*0.4;
-  document.getElementById('mapJump').style.display=atMap?'none':'flex';
-  document.getElementById('listBack').style.display=atMap?'flex':'none';
+  const open=document.querySelector('.maprel').classList.contains('open');
+  document.getElementById('mapJump').style.display=open?'none':'flex';
+  document.getElementById('listBack').style.display=open?'flex':'none';
 }
 window.addEventListener('scroll',updateJumpButtons,{passive:true});
 window.addEventListener('resize',updateJumpButtons);
