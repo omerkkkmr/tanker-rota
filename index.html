@@ -364,6 +364,7 @@ input::-webkit-calendar-picker-indicator{opacity:.6}
 
 /* çift dokunmayla yakınlaşmayı kapat (kaydırma/harita hareketi etkilenmez) */
 html,body,*{touch-action:manipulation}
+@media(max-width:900px){.daybar input{font-size:16px}}   /* iOS: <16px alana odaklanınca sayfa yakınlaşır */
 </style>
 </head>
 <body>
@@ -635,6 +636,8 @@ html,body,*{touch-action:manipulation}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script>
+// iOS Safari: iki parmakla sıkıştırma yakınlaşmasını kapat (harita kendi dokunma yönetimini kullanır)
+['gesturestart','gesturechange','gestureend'].forEach(t=>document.addEventListener(t,e=>e.preventDefault()));
 const OSRM='https://router.project-osrm.org';
 const COLORS=['#c8402c','#1f6fd0','#2f8f4f','#8b3fb5','#d97a00','#0d9b96','#b0245c','#5a6b1f'];
 

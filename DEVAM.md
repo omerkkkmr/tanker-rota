@@ -1280,6 +1280,16 @@ edilen), teslim işle, Filo "mevcut L" ve Ayarlar "hacim"; sipariş ekranı — 
 zaten vardı); şoför ekranı — üç teslim formunun litre alanı (zaten vardı). Ondalık gereken
 alanlara (dakika/saat ayarları) dokunulmadı.
 
+## YAKINLAŞTIRMA TAMAMEN KAPATILDI (2026-09-25)
+
+Kullanıcı: "yakınlaştırma olmasın" (önceki çift dokunma önlemi yetmedi). Üç kaynak kapatıldı:
+1. **Odaklanınca otomatik zoom:** iOS 16px'ten küçük alana odaklanınca sayfayı yakınlaştırır.
+   375px taramasıyla (tüm sekmeler + diyaloglar) bulundu: sipariş ekranı form alanları 15px
+   (16'ya çekildi) ve planlayıcı gün çubuğu tarih seçicisi 11px (mobilde 16px). Şoför ekranı zaten temizdi.
+2. **İki parmakla sıkıştırma:** iOS `user-scalable=no`'yu yok sayar → üç ekranda `gesturestart/
+   gesturechange/gestureend` `preventDefault` (harita kendi dokunma yönetimini kullandığı için etkilenmez).
+3. Çift dokunma (`touch-action:manipulation`) önceki turdan duruyor.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

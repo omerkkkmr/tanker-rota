@@ -160,6 +160,8 @@ html,body,*{touch-action:manipulation}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// iOS Safari: iki parmakla sıkıştırma yakınlaşmasını kapat (harita kendi dokunma yönetimini kullanır)
+['gesturestart','gesturechange','gestureend'].forEach(t=>document.addEventListener(t,e=>e.preventDefault()));
 /* ---------- Supabase (aynı proje, planlayıcıyla ortak) ---------- */
 const SB_URL='https://vtrtshvfwjjazpvcmfcq.supabase.co';
 const SB_KEY='sb_publishable_IIiVphchfanRWnzi9jehCQ_qt6w8i8o';
