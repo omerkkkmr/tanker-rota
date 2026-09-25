@@ -1391,6 +1391,9 @@ Sekme sırası: **Siparişler → Teslimat → Plan → Stok → Yönetim**. Mob
 ## YÖNETİM SEKMESİ AYRIŞTIRILDI (2026-09-25)
 `.tabbtn[data-tab="yonetim"]`: sağa yaslı (`margin-left:auto`) + sol ayraç çizgisi; günlük 4 sekmeden görsel olarak ayrı.
 
+## PLAN SEKMESİ (mobil): SONUÇLAR → LİTRE ŞERİDİ → HARİTA (2026-09-25)
+`placeMap` artık `#statbar` (Açık sipariş / Talep L / Tanker / Şoför / Plan) şeridini de Plan panelinin içine, haritanın hemen üstüne taşır; diğer sekmelerde/masaüstünde `.maprel` içindeki eski yerine döner.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

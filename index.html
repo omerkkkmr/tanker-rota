@@ -348,7 +348,8 @@ div.info{background:#eaf2fc;border-left:3px solid #4a90d9;margin:0 -16px;padding
   #map{flex:none;height:60vh;display:none}
   body[data-tab="plan"] #map{display:block}                 /* harita yalnız Plan sekmesinde görünür */
   body:not([data-tab="plan"]) #legend{display:none!important}
-  .tabpanel #map{margin:14px -16px 0;width:calc(100% + 32px)}   /* Plan sekmesinde harita listenin altında */
+  .tabpanel #statbar{margin:14px -16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .tabpanel #map{margin:0 -16px;width:calc(100% + 32px)}   /* Plan sekmesinde harita listenin altında */
   .tabpanel #legend{position:static;max-width:none;margin:0 -16px 10px;border-radius:0;border-left:0;border-right:0}
 }
 /* iOS Safari küçük inputlara dokununca sayfayı otomatik yakınlaştırır — mobilde hiçbir alan 16px'in altına inmesin.
@@ -2871,13 +2872,13 @@ let curTab='siparisler';
 const MGMT=['musteriler','filo','ayarlar'];let lastMgmt='musteriler';
 // mobilde harita Plan sekmesinin içine (rota listesinin üstüne) taşınır; diğer sekmelerde/masaüstünde yerinde kalır
 function placeMap(t){
-  const m=document.getElementById('map'),lg=document.getElementById('legend');
+  const m=document.getElementById('map'),lg=document.getElementById('legend'),sb=document.getElementById('statbar');
   if(window.innerWidth<=900&&t==='plan'){
     const host=document.querySelector('.tabpanel[data-tab="plan"] .body');
-    if(host&&m.parentElement!==host){host.appendChild(m);host.appendChild(lg);}
+    if(host&&m.parentElement!==host){host.appendChild(sb);host.appendChild(m);host.appendChild(lg);}
   }else{
     const rel=document.querySelector('.maprel');
-    if(rel&&m.parentElement!==rel){rel.appendChild(m);rel.appendChild(lg);}
+    if(rel&&m.parentElement!==rel){rel.appendChild(sb);rel.appendChild(m);rel.appendChild(lg);}
   }
 }
 window.addEventListener('resize',()=>placeMap(curTab));
