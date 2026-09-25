@@ -433,7 +433,7 @@ html,body,*{touch-action:manipulation}
         <label>Not</label>
         <input id="tNote" placeholder="opsiyonel">
         <label>Birim fiyat (₺/L) — opsiyonel</label>
-        <input id="tPrice" type="text" inputmode="decimal" placeholder="örn. 42,50" oninput="priceTotal('t')">
+        <input id="tPrice" type="text" inputmode="decimal" oninput="priceTotal('t')">
         <div class="hint" id="tTotal" style="min-height:14px"></div>
         <label>Fotoğraflar (opsiyonel)</label>
         <div id="tPh"></div>
@@ -580,7 +580,7 @@ html,body,*{touch-action:manipulation}
     <label>Teslim edilen (L)</label>
     <input id="aQty" type="text" readonly>
     <label>Birim fiyat (₺/L)</label>
-    <input id="aPrice" type="text" inputmode="decimal" placeholder="örn. 42,50" oninput="priceTotal('a')">
+    <input id="aPrice" type="text" inputmode="decimal" oninput="priceTotal('a')">
     <div class="hint" id="aTotal" style="min-height:14px"></div>
     <div class="hint">Fiyatı yalnız sen görürsün; şoför ekranında görünmez. Litreyi/tarihi değiştirmek için önce ✎ Düzenle.</div>
     <div class="row">
@@ -633,7 +633,7 @@ html,body,*{touch-action:manipulation}
       <label>Şoför / teslimat notu</label>
       <input id="eDNote" placeholder="opsiyonel">
       <label>Birim fiyat (₺/L)</label>
-      <input id="ePrice" type="text" inputmode="decimal" placeholder="örn. 42,50" oninput="priceTotal('e')">
+      <input id="ePrice" type="text" inputmode="decimal" oninput="priceTotal('e')">
       <div class="hint" id="eTotal" style="min-height:14px"></div>
       <label>Fotoğraflar</label>
       <div id="ePh"></div>
@@ -656,7 +656,7 @@ html,body,*{touch-action:manipulation}
     <label>Not</label>
     <input id="dNote" placeholder="opsiyonel">
 <label>Birim fiyat (₺/L) — opsiyonel</label>
-    <input id="dPrice" type="text" inputmode="decimal" placeholder="örn. 42,50" oninput="priceTotal('d')">
+    <input id="dPrice" type="text" inputmode="decimal" oninput="priceTotal('d')">
     <div class="hint" id="dTotal" style="min-height:14px"></div>
     <label>Fotoğraflar (opsiyonel)</label>
     <div id="dPh"></div>

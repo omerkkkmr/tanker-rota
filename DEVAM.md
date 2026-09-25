@@ -1385,6 +1385,9 @@ Planlayıcı üst menüsü 7 sekmeden 5'e indi: **Siparişler → Plan → Tesli
 ## MENÜ SIRASI + HARİTA AŞAĞIDA (2026-09-25)
 Sekme sırası: **Siparişler → Teslimat → Plan → Stok → Yönetim**. Mobilde Plan sekmesinde harita artık sonuçların ALTINDA (`placeMap` appendChild). Konum seçme akışı (`goMapForPick`) haritaya kendiliğinden kaydırır.
 
+## FİYAT ALANLARINDA SİLİK ÖRNEK YOK (2026-09-25)
+`tPrice/aPrice/ePrice/dPrice` girişlerinden "örn. 42,50" placeholder'ı kaldırıldı (alan boş görünür).
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
