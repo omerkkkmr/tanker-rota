@@ -390,6 +390,7 @@ html,body,*{touch-action:manipulation}
     <button data-sub="musteriler" onclick="showTab('musteriler')">Müşteriler <b id="custcount"></b></button>
     <button data-sub="filo" onclick="showTab('filo')">Filo <b id="fleetcount"></b></button>
     <button data-sub="ayarlar" onclick="showTab('ayarlar')">Ayarlar</button>
+  <button data-sub="rapor" onclick="showTab('rapor')">Rapor</button>
   </div>
 
   <div class="sec tabpanel" data-tab="siparisler">
@@ -420,7 +421,6 @@ html,body,*{touch-action:manipulation}
 
   <div class="sec tabpanel" data-tab="teslimatgir" style="display:none">
     <div class="body">
-      <button class="ghost" style="width:100%;margin-bottom:10px" onclick="exportExcel(this)">📥 Excel indir (stok + teslimatlar)</button>
       <div class="newform">
         <label style="margin-top:0">Teslimat girişi</label>
         <div class="hint" style="margin:0 0 8px">Sipariş/plan olmadan, yapılmış bir satışı veya teslimatı doğrudan kaydet. Fotoğraf gereken teslimatlar şoför ekranından girilir.</div>
@@ -450,7 +450,6 @@ html,body,*{touch-action:manipulation}
 
   <div class="sec tabpanel" data-tab="stok" style="display:none">
     <div class="body">
-      <button class="ghost" style="width:100%;margin-bottom:10px" onclick="exportExcel(this)">📥 Excel indir (stok + teslimatlar)</button>
       <div class="statgrid" id="stokSummary"></div>
       <div id="stokPending"></div>
       <div class="newform">
@@ -503,6 +502,14 @@ html,body,*{touch-action:manipulation}
       <div id="fleetlist"></div>
       <button class="ghost hot" style="width:100%;margin-top:6px" onclick="addTanker()">+ Tanker ekle</button>
       <div class="hint">Mevcut yakıt = vardiya başında gözde duran yakıt. Lisans yok = tesise giremez, garajda aktarımla yüklenir.</div>
+    </div>
+  </div>
+
+  <div class="sec tabpanel" data-tab="rapor" style="display:none">
+    <div class="body">
+      <label style="margin-top:0">Excel raporu</label>
+      <div class="hint" style="margin-bottom:10px">Stok hareketleri, günlük stok, teslimatlar (fiyat/tutar dahil), iptal geçmişi, araç özeti ve müşteri rehberi tek dosyada.</div>
+      <button class="primary" style="margin-top:0" onclick="exportExcel(this)">📥 Excel indir</button>
     </div>
   </div>
 
@@ -567,7 +574,7 @@ html,body,*{touch-action:manipulation}
   <div id="statbar">
     <div class="st"><b id="stOpen">0</b><span>Sipariş</span></div>
     <div class="st"><b id="stVol">0</b><span>Talep L</span></div>
-    <div class="st"><b id="stTanker">0</b><span>Elde L</span></div>
+    <div class="st"><b id="stTanker">0</b><span>Depo L</span></div>
     <div class="st"><b id="stPlan">—</b><span>Plan</span></div>
   </div>
   <div id="map"></div><div id="legend"></div>
@@ -2868,7 +2875,7 @@ async function run(){
 
 /* ---------- sekmeler ---------- */
 let curTab='siparisler';
-const MGMT=['musteriler','filo','ayarlar'];let lastMgmt='musteriler';
+const MGMT=['musteriler','filo','ayarlar','rapor'];let lastMgmt='musteriler';
 // mobilde harita Plan sekmesinin içine (rota listesinin üstüne) taşınır; diğer sekmelerde/masaüstünde yerinde kalır
 function placeMap(t){
   const m=document.getElementById('map'),lg=document.getElementById('legend'),sb=document.getElementById('statbar');

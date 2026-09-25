@@ -1404,6 +1404,9 @@ Tek ortak `#statbar` tüm sekmelerde aynı: Açık Sipariş / Talep L / Tanker /
 ## YAZI TİPİ DÜZELTMESİ: MONO = VERİ (2026-09-25)
 Önceki tur yanlış yorumlandı. Doğrusu: **mono = veri** (müşteri adı, litre/miktar, konum/adres, koordinat, tarih/saat, plaka, kullanıcının yazdığı giriş alanları); **menü/etiket/düğme/rozet/ipucu = Manrope**. Üç ekranda buna göre geri düzeltildi; min 11px korunuyor.
 
+## EXCEL BUTONU → YÖNETİM > RAPOR; "ELDE L" → "DEPO L" (2026-09-25)
+Excel indir düğmesi Teslimat ve Stok sekmelerinin üstünden kaldırıldı; Yönetim altına yeni **Rapor** alt sayfası (`data-tab="rapor"`, MGMT listesinde) eklendi. Bilgi barındaki hücre etiketi "Depo L" (hesap aynı: araçlardaki mevcut yakıt toplamı).
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
