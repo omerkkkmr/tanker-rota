@@ -1431,6 +1431,9 @@ Müşteriler'deki desen genelleştirildi: Plan dışındaki HER sekmede (`goMapF
 Özel repo **omerkkkmr/tanker-rota-yedek** (GitHub Actions, `yedek.yml`): her 5 günde bir 00:00 UTC (03:00 TR) + elle tetiklenebilir. `yedek.py` 9 tabloyu (customers, tankers, orders, routes, settings, teslimat_kayitlari, iptal_kayitlari, stok_girisleri, dolum_fisleri) `yedek/*.json` olarak commit'ler; geçmiş git history'sinde. Repo Secrets: SUPABASE_URL / SUPABASE_KEY (şu an anon anahtar — **erişim kilidi kurulunca service anahtarıyla güncellenmeli**, yoksa yedek boş/hatalı döner). Storage fotoğrafları yedeklenmez. İlk elle çalıştırma başarılı. **Bu repo ASLA herkese açılmamalı** (müşteri verisi).
 **Karar:** Şoför girişinde PIN İSTENMİYOR (kullanıcı kararı). Gelecekteki erişim kilidi tasarımı buna göre: planlayıcı e-posta+şifre; şoför PIN'siz.
 
+## FOTOĞRAF YEDEĞİ (2026-09-26)
+Aynı yedek görevi (tanker-rota-yedek, 5 günde bir) `fotograf_yedek.py` ile Storage `belgeler` bucket'ındaki YENİ fotoğrafları `fotograflar/YYYY-MM-DD/SAAT_ARAÇ_MÜŞTERİ_tür_xxxx.jpg` olarak indirir (tarih = yüklenme günü, TR saati); `fotograflar/_dizin.json` her fotoğrafın yolunu/müşteri/araç/litre bilgisini tutar; inenler atlanır, `-thumb` önizlemeleri alınmaz. Sahte Supabase sunucusuyla test edildi (ekleme, TR saati, tekrar çalıştırmada atlama); gerçek bucket şu an boş olduğundan gerçek indirme henüz denenmedi. Repo boyutu izlenmeli (≈6 MB/gün varsayımıyla yılda ~2 GB) — büyürse eski fotoğraflar arşivlenip repodan çıkarılır.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
