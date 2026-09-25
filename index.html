@@ -347,7 +347,7 @@ div.info{background:#eaf2fc;border-left:3px solid #4a90d9;margin:0 -16px;padding
   #map{flex:none;height:60vh;display:none}
   body[data-tab="plan"] #map{display:block}                 /* harita yalnız Plan sekmesinde görünür */
   body:not([data-tab="plan"]) #legend{display:none!important}
-  .tabpanel #map{margin:0 -16px;width:calc(100% + 32px)}   /* Plan sekmesinde haritayı listenin üstüne yerleştir */
+  .tabpanel #map{margin:14px -16px 0;width:calc(100% + 32px)}   /* Plan sekmesinde harita listenin altında */
   .tabpanel #legend{position:static;max-width:none;margin:0 -16px 10px;border-radius:0;border-left:0;border-right:0}
 }
 /* iOS Safari küçük inputlara dokununca sayfayı otomatik yakınlaştırır — mobilde hiçbir alan 16px'in altına inmesin.
@@ -379,8 +379,8 @@ html,body,*{touch-action:manipulation}
 <div id="side">
   <div class="tabbar" id="tabbar">
     <button class="tabbtn act" data-tab="siparisler" onclick="showTab('siparisler')">Siparişler <b id="ordcount"></b></button>
-    <button class="tabbtn" data-tab="plan" onclick="showTab('plan')">Plan</button>
     <button class="tabbtn" data-tab="teslimatgir" onclick="showTab('teslimatgir')">Teslimat <b id="onayTab" style="color:#c9a0e8"></b></button>
+    <button class="tabbtn" data-tab="plan" onclick="showTab('plan')">Plan</button>
     <button class="tabbtn" data-tab="stok" onclick="showTab('stok')">Stok</button>
     <button class="tabbtn" data-tab="yonetim" onclick="showTab('yonetim')">⚙ Yönetim</button>
   </div>
@@ -2873,7 +2873,7 @@ function placeMap(t){
   const m=document.getElementById('map'),lg=document.getElementById('legend');
   if(window.innerWidth<=900&&t==='plan'){
     const host=document.querySelector('.tabpanel[data-tab="plan"] .body');
-    if(host&&m.parentElement!==host){host.prepend(lg);host.prepend(m);}
+    if(host&&m.parentElement!==host){host.appendChild(m);host.appendChild(lg);}
   }else{
     const rel=document.querySelector('.maprel');
     if(rel&&m.parentElement!==rel){rel.appendChild(m);rel.appendChild(lg);}
@@ -2909,7 +2909,7 @@ function updateStatBar(){
 // mobilde harita yalnız Plan sekmesinde: haritadan seçme gerektiğinde Plan'a geçilir, seçimden sonra geri dönülür
 let pickReturnTab=null;
 function goMapForPick(){
-  if(window.innerWidth<=900){pickReturnTab=curTab;showTab('plan');window.scrollTo(0,0);}
+  if(window.innerWidth<=900){pickReturnTab=curTab;showTab('plan');setTimeout(()=>document.getElementById('map').scrollIntoView({block:'start'}),120);}
 }
 function returnFromPick(){
   if(pickReturnTab){const t=pickReturnTab;pickReturnTab=null;showTab(t);}

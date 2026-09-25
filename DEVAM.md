@@ -1382,6 +1382,9 @@ Planlayıcı üst menüsü 7 sekmeden 5'e indi: **Siparişler → Plan → Tesli
 **Test (375px, stub verisiyle):** 5 sekme kaydırmasız sığıyor; Yönetim→Filo geçişi ve son sayfa hatırlama; rozet; Teslimat sekmesinden onay diyaloğu → onay sonrası durum `done`, rozet siliniyor; konsol hatası yok.
 **Hâlâ bekleyen (kullanıcı):** `supabase-v21-fiyat.sql` çalıştırılmadı.
 
+## MENÜ SIRASI + HARİTA AŞAĞIDA (2026-09-25)
+Sekme sırası: **Siparişler → Teslimat → Plan → Stok → Yönetim**. Mobilde Plan sekmesinde harita artık sonuçların ALTINDA (`placeMap` appendChild). Konum seçme akışı (`goMapForPick`) haritaya kendiliğinden kaydırır.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
