@@ -1410,6 +1410,9 @@ Excel indir düğmesi Teslimat ve Stok sekmelerinin üstünden kaldırıldı; Y�
 ## MÜŞTERİ TELEFONU (2026-09-25)
 `customers.phone` (text, opsiyonel) — **`supabase-v22-telefon.sql` çalıştırılmalı.** Planlayıcıda: Yeni müşteri formu + Düzenle penceresi + liste (isim altında, `tel:` linki) + Excel "Müşteri Rehberi" (Telefon sütunu). Kolon yoksa kayıt telefonsuz tekrar denenir, bir kez uyarı çıkar, telefon yalnız cihazda kalır (fiyattaki desenle aynı). Şoför/sipariş ekranlarında henüz gösterilmiyor.
 
+## ŞOFÖR EKRANI: MÜŞTERİYİ ARA (2026-09-25)
+Rotadaki her durakta telefonu kayıtlıysa "▸ Yol tarifi" yanında **📞 Ara** (`tel:` linki) çıkar; yoksa görünmez. Telefonlar rota yüklemesinden AYRI bir `customers(id,phone)` sorgusuyla gelir — `supabase-v22-telefon.sql` çalıştırılmadıysa sorgu sessizce hata verir, rota normal yüklenir, sadece Ara düğmesi çıkmaz. Plan dışı/tamamlanan kartlarda yok.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

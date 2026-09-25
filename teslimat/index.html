@@ -176,6 +176,7 @@ const navUrl=(lat,lng)=>`https://www.google.com/maps/dir/?api=1&destination=${la
 
 let session=null;        // {id,plate}
 let myVehicle=null;      // routes.data.vehicles[] içindeki kendi kaydı
+let custPhone={};        // customer_id -> telefon (kolon yoksa boş kalır, rota yine yüklenir)
 let orderStatus={};      // oid -> orders satırı (status/delivered_qty/photos/...)
 let rtChannel=null;
 const isSent=o=>o&&(o.status==='done'||o.status==='onay');   // şoför girdi (onay bekliyor ya da onaylandı)
@@ -246,6 +247,7 @@ async function loadRoute(manual){
         const{data:ords,error:oe}=await sb.from('orders').select('id,status,delivered_qty,delivered_at,photos,deliver_note,vehicle,customer_id').in('id',oids);
         if(oe)throw oe;
         orderStatus={};ords.forEach(o=>orderStatus[o.id]=o);
+        try{const{data:cp,error:ce}=await sb.from('customers').select('id,phone');if(!ce&&cp){custPhone={};cp.forEach(c=>{if(c.phone)custPhone[c.id]=c.phone;});}}catch(_){}
       }else orderStatus={};
     }
     const t0=new Date();t0.setHours(0,0,0,0);
@@ -332,6 +334,7 @@ function render(){
         </div>
         <div class="sh-acts">
           <a class="sh-btn" href="${navUrl(l.lat,l.lng)}" target="_blank" rel="noopener">▸ Yol tarifi</a>
+          ${custPhone[o?.customer_id]?`<a class="sh-btn line" href="tel:${custPhone[o.customer_id].replace(/[^0-9+]/g,'')}">📞 Ara</a>`:''}
           <button class="sh-btn ${isPend?'purple':isDone?'grey':'green'}" onclick="openStop('${l.oid}')">${isPend?'✎ Detay / düzenle':isDone?'Detay':'✓ Teslim gir'}</button>
         </div>
       </div>
