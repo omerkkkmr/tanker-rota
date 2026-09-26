@@ -1446,6 +1446,9 @@ Aynı yedek görevi (tanker-rota-yedek, 5 günde bir) `fotograf_yedek.py` ile St
 ## KONUM ALANINA GOOGLE HARİTALAR LİNKİ (2026-09-26)
 `konumOku()` (index.html): "enlem, boylam" ya da Google Haritalar UZUN linki → [lat,lng]. Biçimler: `!3d..!4d..` (işaretli nokta, tercih), `?q= / ll= / query= / destination= / center=`, `/@lat,lng`. Alanlar: müşteri ekle (`cloc`), müşteri düzenle (`cELoc`), Ayarlar garaj/tesis (`garage`/`plant`) — yapıştırınca (paste/change) otomatik koordinata çevrilir; ayrıca `addCust`/`saveCustEdit`/`coord()` de linki kabul eder. Placeholder'da örnek koordinat yok ("Konum — Google Haritalar linkini yapıştır"). **Kısa link (maps.app.goo.gl) ÇÖZÜLEMEZ** (tarayıcıdan yönlendirme okunamıyor): uyarı çıkar, uzun link/haritadan seçme önerilir. 14 link biçimi node'da, yapıştırma akışı tarayıcıda test edildi.
 
+## KARAR: GİRİŞ/ŞİFRE/PIN YOK, 3 AYRI SAYFA KALIYOR (2026-09-26)
+Kullanıcı erişim kilidini (planlayıcı girişi, tek adres, fiyat sütunu kilidi) BİLİNÇLİ OLARAK reddetti: "şifre ile uğraşmak istemiyorum, kaybolur". Kabul edilen sonuçlar: adresi bilen herkes okuyabilir/yazabilir/silebilir; fiyat gizliliği yalnız arayüz düzeyinde. Azaltıcılar: adresler herkese açık paylaşılmaz, 5 günde bir veri+fotoğraf yedeği (tanker-rota-yedek). Bu konu tekrar AÇILMAZ; kullanıcı kendisi isterse konuşulur. Yedek anahtarı (anon) bu yüzden güncellenmek zorunda değil.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
