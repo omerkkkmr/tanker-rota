@@ -1449,6 +1449,14 @@ Aynı yedek görevi (tanker-rota-yedek, 5 günde bir) `fotograf_yedek.py` ile St
 ## KARAR: GİRİŞ/ŞİFRE/PIN YOK, 3 AYRI SAYFA KALIYOR (2026-09-26)
 Kullanıcı erişim kilidini (planlayıcı girişi, tek adres, fiyat sütunu kilidi) BİLİNÇLİ OLARAK reddetti: "şifre ile uğraşmak istemiyorum, kaybolur". Kabul edilen sonuçlar: adresi bilen herkes okuyabilir/yazabilir/silebilir; fiyat gizliliği yalnız arayüz düzeyinde. Azaltıcılar: adresler herkese açık paylaşılmaz, 5 günde bir veri+fotoğraf yedeği (tanker-rota-yedek). Bu konu tekrar AÇILMAZ; kullanıcı kendisi isterse konuşulur. Yedek anahtarı (anon) bu yüzden güncellenmek zorunda değil.
 
+## SEKME DÜZENİ YENİDEN (2026-09-26)
+**GERİ DÖNÜŞ YEDEĞİ:** etiket `duzen-oncesi-2026-09-26` + dal `yedek-duzen-oncesi` (GitHub, commit 60d944f). Eski hâle dönmek: `git reset --hard duzen-oncesi-2026-09-26 && git push -f origin main`.
+1. **Teslimat sekmesi:** onay bekleyenler + liste EN ÜSTTE; "Plan dışı teslimat gir" formu kapalı (`#tForm`, `tesForm()`), kayıtta kapanır, mesaj (`#tMsg`) formun dışında.
+2. **Plan sekmesi:** "Bugünün ayarları" — şoför sayısı, vardiya başı, dolum sırası, iş dağılımı (Ayarlar'dan taşındı; aynı id'ler) + araç özeti (`#planOzet`, Filo'ya link). Ayarlar'da kalan: konumlar, süre sabitleri, kısmi alt %.
+3. **Hesapla ≠ Yayınla:** `render()` artık rotayı şoförlere OTOMATİK göndermez (`publishRoutes` yalnız `yayinla()`'dan). `#yayinBar`: "gönderilmedi" (sarı, 📤 Şoförlere gönder) / "✓ gönderildi (saat)" / "değişti — şoförlerdeki liste eski". Bugün girilmiş teslimat (onay/done) varsa gönderirken confirm. Durak seçimi (`redrawPlan(true)`) durumu "değişti" yapmaz. Not: siparişlerin `plan` durumu/araç ataması hâlâ hesaplamada yazılır (yalnız şoför rotası ayrıldı).
+4. **Filo = tek yer:** araç kartında plaka, dolum var, gözler (hacim düzenlenebilir + mevcut yakıt + ✕), "+ göz ekle", vardiya, TIR. Ayarlar'daki "Tanker Yapılandırması" ve `renderTankConfig` kaldırıldı.
+**Test dersi:** testte `cloudOK=true` yapılınca gerçek `tankers` satırı değişti (54 KP 857 göz1 7000→6000); yedekten geri alındı (7000). Testlerde `cloudOK=false` kalmalı; bulutu açık test gerekiyorsa `sb.from` sahtelenmeli.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

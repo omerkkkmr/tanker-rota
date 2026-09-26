@@ -347,6 +347,14 @@ div.info{background:#eaf2fc;border-left:3px solid #4a90d9;margin:0 -16px;padding
 
 /* ---- durum şeridi (İstatistik çubuğu) ---- */
 #cmapbtn{display:none}
+.gunluk{padding:14px 16px 0}
+#yayinBar{padding:10px 16px 0}
+.yayin{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:4px;font-size:12px;line-height:1.4}
+.yayin.y-bekle{background:#fff4d9;border:1px solid #e2b95c;color:#6d4c00}
+.yayin.y-ok{background:#e6f3ea;border:1px solid #9fcfae;color:#1f6b3d}
+.yayin button{flex:none;background:#1f7a44;color:#fff;border:0;padding:9px 12px;font-weight:700;margin:0;width:auto}
+.planozet{margin-top:10px;padding:9px 12px;background:#fff;border:1px solid var(--line);border-radius:4px;font-size:12px;color:var(--muted2);line-height:1.5}
+.planozet a{color:var(--ink);font-weight:700;text-decoration:underline;cursor:pointer}
 #statbar{flex:none;z-index:800;background:var(--bg);
   border-bottom:1px solid var(--line);display:flex;padding:0 4px}
 #statbar .st{flex:1;padding:11px 10px;text-align:center;border-right:1px solid var(--line)}
@@ -435,7 +443,9 @@ html,body,*{touch-action:manipulation}
 
   <div class="sec tabpanel" data-tab="teslimatgir" style="display:none">
     <div class="body">
-      <div class="newform">
+      <button class="ghost" id="tFormBtn" style="width:100%" onclick="tesForm(document.getElementById('tForm').style.display==='none')">+ Plan dışı teslimat gir</button>
+      <div class="hint" id="tMsg" style="color:var(--diesel);min-height:14px;text-align:center"></div>
+      <div class="newform" id="tForm" style="display:none">
         <label style="margin-top:0">Teslimat girişi</label>
         <div class="hint" style="margin:0 0 8px">Sipariş/plan olmadan, yapılmış bir satışı veya teslimatı doğrudan kaydet. Fotoğraf gereken teslimatlar şoför ekranından girilir.</div>
         <label>Müşteri</label>
@@ -454,9 +464,8 @@ html,body,*{touch-action:manipulation}
         <label>Fotoğraflar (opsiyonel)</label>
         <div id="tPh"></div>
         <button class="primary" onclick="saveTeslimatGiris()">Teslimatı kaydet</button>
-        <div class="hint" id="tMsg" style="color:var(--diesel);min-height:14px;text-align:center"></div>
       </div>
-      <div class="dayhead" style="margin-top:14px">Teslimatlar — en yeni üstte <b id="tCount"></b></div>
+      <div class="dayhead" style="margin-top:10px">Teslimatlar — en yeni üstte <b id="tCount"></b></div>
       <div id="tRecent"></div>
       <button class="ghost" id="tMore" style="width:100%;margin-top:10px;display:none" onclick="tesLimit+=40;loadTesLog(true)">Daha eski teslimatları göster</button>
     </div>
@@ -541,13 +550,6 @@ html,body,*{touch-action:manipulation}
       <button class="ghost" style="width:100%;margin-top:6px" onclick="pick('plant')">Haritadan seç</button>
 
       <label style="margin-top:20px;font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--muted2)">Süreler &amp; Kısıtlar</label>
-      <label>Tesiste bugünkü dolum sırası</label>
-      <div class="queue-wrap">
-        <div class="queue-val"><span id="qval">0</span> dk</div>
-        <input type="range" id="queue" min="0" max="180" step="5" value="0">
-      </div>
-      <div class="hint">Her dolum uğrağına eklenir. O günkü yoğunluğa göre ayarla.</div>
-
       <div class="grid2">
         <div><label>Dolum süresi (dk)</label><input id="loadFix" type="number" value="25"></div>
         <div><label>Boşaltma sabit (dk)</label><input id="dropFix" type="number" value="8"></div>
@@ -558,28 +560,37 @@ html,body,*{touch-action:manipulation}
       </div>
       <div class="hint">Dolum sabit süre + sıra. Boşaltma ve aktarım hacimle artar.</div>
 
-      <div class="grid3">
-        <div><label>Şoför</label><input id="drivers" type="number" value="4" min="1"></div>
-        <div><label>Vardiya başı</label><input id="start" type="time" value="08:00"></div>
+      <div class="grid2">
         <div><label>Kısmi alt %</label><input id="partial" type="number" value="75" min="1" max="100"></div>
       </div>
       <div class="hint">Şoför sayısı kadar tanker çıkar. Göz atama en az %90 doluluk arar; altı "büyük iş" sayılıp bölünür/TIR'a gider. Kısmi sınır teslimatta kabul edilen en düşük dolulukdur.</div>
 
+    </div>
+  </div>
+
+  <div class="sec tabpanel" data-tab="plan" style="display:none">
+    <div class="gunluk">
+      <label style="margin-top:0;font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--muted2)">Bugünün ayarları</label>
+      <div class="grid2">
+        <div><label>Şoför sayısı</label><input id="drivers" type="number" value="4" min="1" inputmode="numeric"></div>
+        <div><label>Vardiya başı</label><input id="start" type="time" value="08:00"></div>
+      </div>
+      <label>Tesiste bugünkü dolum sırası</label>
+      <div class="queue-wrap">
+        <div class="queue-val"><span id="qval">0</span> dk</div>
+        <input type="range" id="queue" min="0" max="180" step="5" value="0">
+      </div>
+      <div class="hint">Her dolum uğrağına eklenir. O günkü yoğunluğa göre ayarla.</div>
       <label>İş dağılımı</label>
       <div class="queue-wrap">
         <div class="queue-val" style="font-size:12px"><span id="balval">dengeli</span></div>
         <input type="range" id="balance" min="0" max="60" step="5" value="25">
       </div>
-      <div class="hint">Sola: en az km (birkaç tanker çok çalışır). Sağa: iş tankerlere eşit dağılır.</div>
-
-      <label style="margin-top:20px;font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--muted2)">Tanker Yapılandırması</label>
-      <div class="hint" style="margin-top:0;margin-bottom:8px">Göz sayısı ve hacimler (yapısal, nadiren değişir) buradan düzenlenir. Günlük mevcut yakıt miktarı Filo sekmesinden girilir.</div>
-      <div id="tankConfigList"></div>
+      <div class="hint">Sola: en az km (birkaç tanker çok çalışır). Sağa: iş tankerlere eşit dağılır. Şoför sayısı kadar tanker çıkar.</div>
+      <div class="planozet" id="planOzet"></div>
     </div>
-  </div>
-
-  <div class="sec tabpanel" data-tab="plan" style="display:none">
     <div style="padding:12px 16px 0"><button class="primary" id="go" onclick="run()" style="margin-top:0">Rotayı hesapla</button></div>
+    <div id="yayinBar" style="display:none"></div>
     <div class="body" style="padding-top:12px">
       <div id="status"></div>
       <div id="out"></div>
@@ -1161,11 +1172,11 @@ function renderFleet(){
       <div class="comps">${t.comps.map((c,j)=>`
         <div class="crow">
           <div class="clab">${j+1}</div>
-          <div class="clab" id="hacim-${i}-${j}" style="text-align:right;padding-right:6px">${L2(c.cap)}</div>
-          <input class="cin fuel${c.cur>c.cap?' over':''}" type="number" inputmode="numeric" pattern="[0-9]*" value="${c.cur}" onchange="setCur(${i},${j},this.value)">
-          <span></span>
+          <input class="cin" type="number" inputmode="numeric" pattern="[0-9]*" value="${c.cap}" onchange="setCap(${i},${j},this.value)" title="Göz hacmi">
+          <input class="cin fuel${c.cur>c.cap?' over':''}" type="number" inputmode="numeric" pattern="[0-9]*" value="${c.cur}" onchange="setCur(${i},${j},this.value)" title="Şu an içindeki yakıt">
+          <button class="xbtn" onclick="delComp(${i},${j})" title="Gözü sil">✕</button>
         </div>`).join('')}</div>
-      <div class="hint" style="margin-top:2px">Göz/hacim değişikliği için <b>Ayarlar</b> sekmesine bak.</div>
+      <button class="ghost" style="width:100%;margin-top:6px" onclick="addComp(${i})">+ göz ekle</button>
       <div class="tfoot">
         <div class="tsum" id="tsum${i}"><b>${t.comps.length} göz · ${L2(cap)} L</b>${cur?` · <span class="f">${L2(cur)} L dolu</span>`:''}</div>
         <div class="mini">
@@ -1181,40 +1192,8 @@ function renderFleet(){
       </div>
     </div>`;
   }).join('');
-  renderTankConfig();
   updateStatBar();
 }
-// Ayarlar sekmesindeki "Tanker Yapılandırması": göz sayısı + hacim, yapısal
-// veri (nadiren değişir). Mevcut yakıt (Filo'daki .cin.fuel) buraya dahil
-// değil — aynı tankers[] dizisini, aynı setCap/addComp/delComp fonksiyonlarını
-// kullanır, yalnızca başka bir ekranda gösterir.
-function renderTankConfig(){
-  const el=document.getElementById('tankConfigList');
-  if(!el)return;
-  if(!tankers.length){el.innerHTML='<div class="empty">Tanker yok — Filo sekmesinden ekle</div>';return;}
-  el.innerHTML=tankers.map((t,i)=>{
-    const color=COLORS[i%COLORS.length];
-    const cap=t.comps.reduce((s,c)=>s+c.cap,0);
-    return `<div class="tcard">
-      <div class="thead">
-        <div class="tdot" style="background:${color}"></div>
-        <div class="vname" style="flex:1">${esc(t.plate)||'<i>plakasız</i>'}</div>
-      </div>
-      <div class="chead"><span>göz</span><span>hacim L</span><span></span></div>
-      <div class="comps">${t.comps.map((c,j)=>`
-        <div class="crow">
-          <div class="clab">${j+1}</div>
-          <input class="cin" type="number" inputmode="numeric" pattern="[0-9]*" value="${c.cap}" onchange="setCap(${i},${j},this.value)">
-          <button class="xbtn" onclick="delComp(${i},${j})" title="Gözü sil">✕</button>
-        </div>`).join('')}</div>
-      <div class="tfoot">
-        <div class="tsum" id="tcfgsum${i}"><b>${t.comps.length} göz · ${L2(cap)} L</b></div>
-        <button onclick="addComp(${i})">+ göz</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
 /* ---------- sipariş ----------
    Model (taşımaya hazır — her alan Supabase kolonu olacak):
    {id, cid, qty, status, note, createdAt, plannedAt, deliveredAt,
@@ -1599,6 +1578,11 @@ function resetTeslimatTime(){
   const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
   document.getElementById('tTime').value=d.toISOString().slice(0,16);
 }
+function tesForm(on){
+  document.getElementById('tForm').style.display=on?'block':'none';
+  document.getElementById('tFormBtn').textContent=on?'✕ Formu kapat':'+ Plan dışı teslimat gir';
+  if(on)document.getElementById('tForm').scrollIntoView({block:'start',behavior:'smooth'});
+}
 async function saveTeslimatGiris(){
   const cid=document.getElementById('tCust').value;
   const q=parseInt(document.getElementById('tQty').value);
@@ -1637,7 +1621,7 @@ async function saveTeslimatGiris(){
   document.getElementById('tQty').value='';document.getElementById('tNote').value='';resetTeslimatTime();
   save();renderOrders();draw();cloudOrderUpsert(o);
   setTimeout(()=>loadTesLog(true),900);
-  const m=document.getElementById('tMsg');m.textContent='✓ Teslimat kaydedildi';setTimeout(()=>{m.textContent='';},3000);
+  tesForm(false);const m=document.getElementById('tMsg');m.textContent='✓ Teslimat kaydedildi';setTimeout(()=>{m.textContent='';},3000);
 }
 function closeDlg(){document.getElementById('dlg').classList.remove('on');dlgId=null;phReset('d');}
 async function saveDeliv(){
@@ -2444,10 +2428,10 @@ function schedule(plan,T,D,cfg){
 let curPlan=null;   // {plans,go,park,unassigned,transfers,notes,used,M,cfg,garage,plant,ratio,orders}
 let selStop=null;   // {vehId,oid}
 
-function clearSel(){selStop=null;redrawPlan();}
+function clearSel(){selStop=null;redrawPlan(true);}
 function stopClick(vehId,oid){
-  if(selStop&&selStop.oid===oid){selStop=null;redrawPlan();return;}
-  selStop={vehId,oid};redrawPlan();
+  if(selStop&&selStop.oid===oid){selStop=null;redrawPlan(true);return;}
+  selStop={vehId,oid};redrawPlan(true);
 }
 function moveStop(toVeh){
   if(!curPlan||!selStop)return;
@@ -2527,14 +2511,43 @@ function optVeh(vehId){
   }
   redrawPlan();
 }
-async function redrawPlan(){
+let _sadeceSecim=false;   // durak seçimi rotayı değiştirmez: yayın durumunu "değişti" yapma
+async function redrawPlan(sadeceSecim){
   if(!curPlan)return;
+  _sadeceSecim=!!sadeceSecim;
   const routes=curPlan.plans.map(pl=>schedule(pl,curPlan.M.t,curPlan.M.d,curPlan.cfg));
   await render(routes,curPlan,curPlan.cfg,curPlan.garage,curPlan.plant,curPlan.orders);
 }
 
 /* ---------- şoför görev formu ---------- */
 let lastRun=null;   // {routes,cfg,garage,plant}
+
+// ---- yayın durumu: hesaplanan rota ancak "Şoförlere gönder" ile şoför ekranlarına gider ----
+let yayinDurum='yok',yayinSaat='';   // yok | bekliyor | gonderildi | degisti
+function yayinIsaretle(){
+  yayinDurum=yayinDurum==='gonderildi'||yayinDurum==='degisti'?'degisti':'bekliyor';
+  yayinBarCiz();
+}
+function yayinBarCiz(){
+  const el=document.getElementById('yayinBar');if(!el)return;
+  if(yayinDurum==='yok'||!lastRun){el.style.display='none';return;}
+  const msg={bekliyor:'Rota hesaplandı — şoförlere henüz <b>gönderilmedi</b>.',
+    degisti:`Rota değişti — şoförlerdeki liste eski (son gönderim ${yayinSaat}).`,
+    gonderildi:`✓ Şoförlere gönderildi (${yayinSaat}).`}[yayinDurum];
+  const ok=yayinDurum==='gonderildi';
+  el.style.display='block';
+  el.innerHTML=`<div class="yayin ${ok?'y-ok':'y-bekle'}"><span>${msg}</span>${ok?'':'<button onclick="yayinla()">📤 Şoförlere gönder</button>'}</div>`;
+}
+async function yayinla(){
+  if(!lastRun)return;
+  if(!cloudOK){alert('Bulut bağlantısı yok — rota gönderilemedi.');return;}
+  const bugun=todayStr();
+  const yapilan=orderList.filter(o=>(o.status==='done'||o.status==='onay')&&o.vehicle&&o.deliveredAt&&String(o.deliveredAt).slice(0,10)===bugun).length;
+  if(yapilan&&!confirm(`Şoförler bugün ${yapilan} teslimat girdi. Yeni rota gönderilirse şoför listeleri yeni hesaba göre değişir.\n\nGönderilsin mi?`))return;
+  await publishRoutes(lastRun.routes,lastRun.cfg,lastRun.garage,lastRun.plant);
+  yayinDurum='gonderildi';yayinSaat=new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+  yayinBarCiz();
+}
 
 // şoförlerin göreceği rotayı routes tablosuna yaz
 async function publishRoutes(routes,cfg,garage,plant){
@@ -2755,7 +2768,8 @@ async function render(routes,extra,cfg,garage,plant,orders){
   save();renderOrders();
   // buluta yaz: değişen siparişler + şoförlerin göreceği rota
   changed.forEach(cloudOrderUpsert);
-  publishRoutes(routes,cfg,garage,plant);
+  if(!_sadeceSecim)yayinIsaretle();   // rota şoförlere OTOMATİK gitmez: "Şoförlere gönder" ile yayınlanır
+  _sadeceSecim=false;
 
   layers.clearLayers();
   const leg=document.getElementById('legend');leg.innerHTML='';leg.className='on';
@@ -2983,6 +2997,12 @@ function updateStatBar(){
   if(g('stVol'))g('stVol').textContent=L2(openL);
   if(g('stTanker'))g('stTanker').textContent=stokKalan==null?'—':L2(stokKalan);   // Depo L = stok defteri bakiyesi (girişler − onaylı teslimatlar)
   stokBarYenile();
+  planOzetYenile();
+}
+function planOzetYenile(){
+  const el=document.getElementById('planOzet');if(!el)return;
+  const n=tankers.length,dolum=tankers.filter(t=>t.lic).length,fuel=tankers.reduce((a,t)=>a+t.comps.reduce((b,c)=>b+(c.cur||0),0),0);
+  el.innerHTML=`<b>${n} araç</b> · ${dolum} tanesi dolum yapabilir${fuel?` · araçlarda mevcut ${L2(fuel)} L`:''} — <a onclick="showTab('filo')">Filo</a>'da araç durumunu düzenle`;
 }
 // Depo L: Stok sekmesindeki "Kalan L" ile aynı hesap (aynı siparişin düzeltmelerinde son kayıt geçerli), ama yalnız gereken 3 kolon çekilir.
 // En fazla ~5 sn'de bir sorgu atılır; çağrılar birikirse sonuncusu (trailing) çalışır, böylece onay/giriş sonrası bar güncel kalır.
