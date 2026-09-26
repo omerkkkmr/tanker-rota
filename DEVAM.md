@@ -1457,6 +1457,9 @@ Kullanıcı erişim kilidini (planlayıcı girişi, tek adres, fiyat sütunu kil
 4. **Filo = tek yer:** araç kartında plaka, dolum var, gözler (hacim düzenlenebilir + mevcut yakıt + ✕), "+ göz ekle", vardiya, TIR. Ayarlar'daki "Tanker Yapılandırması" ve `renderTankConfig` kaldırıldı.
 **Test dersi:** testte `cloudOK=true` yapılınca gerçek `tankers` satırı değişti (54 KP 857 göz1 7000→6000); yedekten geri alındı (7000). Testlerde `cloudOK=false` kalmalı; bulutu açık test gerekiyorsa `sb.from` sahtelenmeli.
 
+## "GÜNÜ KAPAT — KALAN YAKITI YARINA AKTAR" DÜĞMESİ KALDIRILDI (2026-09-26)
+Kullanıcı: yakıt takibi zaten Stok'ta, düğme gereksiz. Plan sonucundaki 🌙 düğmesi ve iki kopya `endDay()` fonksiyonu silindi. "Full dolum — araçta kalan" bilgi kutusu KALDI (yalnız bilgi; metni "Günü kapat"a atıf yapmıyor). Filo'daki elle "mevcut yakıt" girişi planlama girdisi olarak duruyor. Geri dönüş: `duzen-oncesi-2026-09-26` etiketi.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

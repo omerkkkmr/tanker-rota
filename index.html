@@ -2607,33 +2607,6 @@ function applyOrderChange(payload){
   if(!curPlan||!lastRun)draw();
 }
 
-/* ---------- gün sonu: kalan yakıtı ertesi güne aktar ---------- */
-async function endDay(){
-  if(!lastRun)return;
-  const withLeft=lastRun.routes.filter(r=>r.leftover>0);
-  if(!withLeft.length)return alert('Ertesi güne aktarılacak kalan yakıt yok.');
-  const lines=withLeft.map(r=>`${r.veh.id}: ${L2(r.leftover)} L`).join('\n');
-  if(!confirm(`Şu tankerlerin kalan yakıtı ertesi güne (mevcut yakıt olarak) aktarılacak:\n\n${lines}\n\nDevam? Bu, tankerlerin mevcut yakıtını günceller.`))return;
-
-  for(const r of withLeft){
-    const ti=tankers.findIndex(t=>(t.plate.trim()||'')===r.veh.id);
-    if(ti<0)continue;
-    // leftover'ı gözlere yerleştir (büyük gözden başla, üstüne ekle)
-    let rem=r.leftover;
-    const order=tankers[ti].comps.map((c,i)=>({i,free:c.cap-(c.cur||0)}))
-      .filter(x=>x.free>0).sort((a,b)=>b.free-a.free);
-    for(const g of order){
-      if(rem<=0)break;
-      const put=Math.min(g.free,rem);
-      tankers[ti].comps[g.i].cur=(tankers[ti].comps[g.i].cur||0)+put;
-      rem-=put;
-    }
-    await cloudTankUpsert(tankers[ti]);
-  }
-  renderFleet();
-  alert('Kalan yakıtlar mevcut yakıta yazıldı. Ertesi gün bu tankerler önce bu yakıtı dağıtacak (tesise giremezler).');
-}
-
 const navUrl=(lat,lng)=>
   `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
 // bir durağın hangi gözlerden ne kadar verildiğini metne çevir
@@ -2875,7 +2848,7 @@ async function render(routes,extra,cfg,garage,plant,orders){
   const used=routes.filter(r=>r.drops).length;
   top+=`<div class="ok"><b>${used}/${cfg.drivers} şoför · ${orders.length-extra.unassigned.length}/${orders.length} sipariş · ${L2(totL)} L · ${totKm.toFixed(0)} km</b><br>Dolum ${cfg.loadFix} dk${cfg.queue?` + ${cfg.queue} dk sıra`:''} · Boşaltma ${cfg.dropFix} dk + ${cfg.dropVar} dk/1000 L
     ${used?`<br><button class="ghost hot" style="width:100%;margin-top:9px" onclick="openSheet(0)">📋 Şoför görev formları</button>`:''}
-    ${routes.some(r=>r.leftover>0)?`<br><button class="ghost" style="width:100%;margin-top:6px;border-color:#c9a6e0;color:#7a3fa8" onclick="endDay()">🌙 Günü kapat — kalan yakıtları ertesi güne aktar</button>`:''}</div>`;
+    </div>`;
   const alerts=[];
   if(extra.transfers.length)
     alerts.push(`<div class="info"><b>Garaj aktarımları</b><br>${extra.transfers.map(t=>`${t.from} göz ${t.fromComp} → ${t.to} göz ${t.toComp} · ${L2(t.vol)} L`).join('<br>')}</div>`);
@@ -2889,7 +2862,7 @@ async function render(routes,extra,cfg,garage,plant,orders){
   const partials=routes.flatMap(r=>r.legs.filter(l=>l.kind==='drop'&&l.a.give<l.a.o.qty).map(l=>`${esc(l.a.o.name)}: ${L2(l.a.give)}/${L2(l.a.o.qty)} L (${r.veh.id})`));
   if(partials.length)alerts.push(`<div class="info"><b>Kısmi teslimat</b><br>${partials.join('<br>')}</div>`);
   const lefts=routes.filter(r=>r.leftover>0);
-  if(lefts.length)alerts.push(`<div class="info"><b>Full dolum — araçta kalan (ertesi güne)</b><br>${lefts.map(r=>`${r.veh.id}: ${L2(r.leftover)} L`).join('<br>')}<br><span style="color:var(--muted);font-size:11px">Tankerler full döndü. "Günü kapat" ile bu yakıt ertesi günün mevcut yakıtı olur.</span></div>`);
+  if(lefts.length)alerts.push(`<div class="info"><b>Full dolum — araçta kalan (ertesi güne)</b><br>${lefts.map(r=>`${r.veh.id}: ${L2(r.leftover)} L`).join('<br>')}<br><span style="color:var(--muted);font-size:11px">Tankerler full döndü; bu yakıt araçta kalır, ertesi günün rotası Filo'daki mevcut yakıta göre hesaplanır.</span></div>`);
   if(alerts.length){
     const hasWarn=alerts.some(x=>x.startsWith('<div class="warn"'));
     top+=`<details class="alertbox"><summary${hasWarn?' style="color:var(--alert)"':''}>${hasWarn?'⚠':'ℹ'} Uyarılar ve notlar (${alerts.length}) ▾</summary>${alerts.join('')}</details>`;
@@ -2901,31 +2874,6 @@ async function render(routes,extra,cfg,garage,plant,orders){
 }
 
 /* ---------- run ---------- */
-// Günü kapat: full dönen tankerlerin kalan yakıtını ertesi günün mevcut yakıtına yaz
-async function endDay(){
-  if(!lastRun){alert('Önce rota hesapla.');return;}
-  const lefts=lastRun.routes.filter(r=>r.leftover>0);
-  if(!lefts.length){alert('Araçta kalan yakıt yok.');return;}
-  const özet=lefts.map(r=>`${r.veh.id}: ${L2(r.leftover)} L`).join('\n');
-  if(!confirm(`Şu tankerlerin kalan yakıtı ertesi günün mevcut yakıtına yazılacak:\n\n${özet}\n\nDevam?`))return;
-  for(const r of lefts){
-    const t=tankers.find(x=>(x.plate.trim()||'')===r.veh.id);
-    if(!t)continue;
-    // kalanı gözlere sığdığı kadar dağıt (büyük gözden başla)
-    let rem=r.leftover;
-    const order=t.comps.map((c,i)=>({i,c})).sort((a,b)=>b.c.cap-a.c.cap);
-    t.comps.forEach(c=>c.cur=0);   // önce sıfırla
-    for(const g of order){
-      if(rem<=0)break;
-      const put=Math.min(g.c.cap,rem);
-      t.comps[g.i].cur=put;rem-=put;
-    }
-    await cloudTankUpsert(t);
-  }
-  save();renderFleet();
-  alert('Kalan yakıtlar ertesi güne aktarıldı. Tanker kartlarında mevcut yakıt olarak görünüyor.');
-}
-
 async function run(){
   const btn=document.getElementById('go');
   try{
