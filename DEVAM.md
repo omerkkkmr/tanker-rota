@@ -1469,6 +1469,9 @@ Planlayıcıda Siparişler ("+ Yeni sipariş talebi") ve Teslimat ("+ Plan dış
 ## MÜŞTERİLER SEKMESİ: YENİ MÜŞTERİ FORMU KAPALI (2026-09-26)
 Planlayıcı > Yönetim > Müşteriler: üstte `[+ Yeni müşteri ekle] [🗺️ Haritayı aç]` satırı (`.addrow`), form (`#cForm`: ad, telefon, not, konum, "Haritadan seç", "Şu anki konumum", "Rehbere ekle") yalnız düğmeyle açılır; eklenince kapanır + `#cMsg` onayı; form açıkken yarım kalan haritadan seçim kapatılınca iptal olur. Müşteri listesi düğmelerin altına alındı. Konum hata mesajındaki örnek koordinat kaldırıldı. Bağımsız `siparis/` sayfasında bu alanlar zaten "+ Yeni müşteri ekle" seçilince görünüyordu (değişmedi).
 
+## SİPARİŞ SAYFASI: "YENİ MÜŞTERİ EKLE" KENDİLİĞİNDEN SEÇİLMESİN (2026-09-26)
+`siparis/index.html` `renderCustSelect`: listenin ilk seçeneği boş "Müşteri seç…"; liste boşken bile "+ Yeni müşteri ekle" otomatik seçili gelmiyordu-geliyordu (tek seçenek olduğu için). Artık varsayılan boş; ad/telefon/not/"Şu anki konumum"/"Haritadan seç" yalnız "+ Yeni müşteri ekle" seçilince açılır. Yenileme/realtime sırasında yapılan seçim korunur; müşteri seçmeden ekleme "Önce müşteri seç." uyarısı verir.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

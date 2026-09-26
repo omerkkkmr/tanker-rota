@@ -214,9 +214,10 @@ async function load(){
 function renderCustSelect(){
   const sel=document.getElementById('osel');
   const cur=sel.value;
-  sel.innerHTML=customers.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')
+  // ilk seçenek boş "Müşteri seç…": liste boşken bile "Yeni müşteri ekle" kendiliğinden seçilmesin (alanları yalnız o seçilince açılır)
+  sel.innerHTML='<option value="">Müşteri seç…</option>'+customers.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')
     +'<option value="__new__">+ Yeni müşteri ekle</option>';
-  if(cur&&(cur==='__new__'||customers.some(c=>c.id===cur)))sel.value=cur;
+  sel.value=(cur&&(cur==='__new__'||customers.some(c=>c.id===cur)))?cur:'';
   toggleNewCust();
 }
 function toggleNewCust(){
