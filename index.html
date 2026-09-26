@@ -502,7 +502,7 @@ html,body,*{touch-action:manipulation}
       <input id="cname" placeholder="Müşteri adı">
       <input id="cphone" type="tel" inputmode="tel" placeholder="Telefon (opsiyonel)" style="margin-top:6px">
       <input id="cnote" placeholder="Not (opsiyonel) — örn. kapı kodu, vardiya saati" style="margin-top:6px">
-      <input id="cloc" placeholder="40.7712, 30.3541" style="margin-top:6px">
+      <input id="cloc" placeholder="Konum — Google Haritalar linkini yapıştır" style="margin-top:6px">
       <div class="row">
         <button class="ghost" id="cpick" onclick="pick('cust')">Haritadan seç</button>
         <button class="ghost" id="cgps" onclick="useMyLocation()">📍 Şu anki konumum</button>
@@ -626,7 +626,7 @@ html,body,*{touch-action:manipulation}
     <label>Not</label>
     <input id="cENote" placeholder="Not (opsiyonel)">
     <label>Konum (enlem, boylam)</label>
-    <input id="cELoc" placeholder="40.7712, 30.3541" inputmode="decimal">
+    <input id="cELoc" placeholder="Konum — Google Haritalar linkini yapıştır">
     <div>
       <div class="phrow">
         <button type="button" class="phbtn" id="cEGps" onclick="custEditGps()">📍 Şu anki konumum</button>
@@ -1007,7 +1007,7 @@ const num=id=>+document.getElementById(id).value||0;
 /* ---------- müşteri ---------- */
 function addCust(){
   const n=document.getElementById('cname').value.trim();
-  const p=document.getElementById('cloc').value.split(',').map(x=>parseFloat(x.trim()));
+  const p=konumOku(document.getElementById('cloc').value)||[NaN,NaN];
   const ph=document.getElementById('cphone').value.trim(),nt=document.getElementById('cnote').value.trim();
   if(!n)return alert('Müşteri adı gir.');
   if(p.length!==2||p.some(isNaN))return alert('Koordinat geçersiz. Örnek: 40.7712, 30.3541');
@@ -1050,7 +1050,7 @@ function custEditPick(){
 function saveCustEdit(){
   const c=customers.find(x=>x.id===custEdId);if(!c)return closeCustEdit();
   const n=document.getElementById('cEName').value.trim();
-  const p=document.getElementById('cELoc').value.split(',').map(x=>parseFloat(x.trim()));
+  const p=konumOku(document.getElementById('cELoc').value)||[NaN,NaN];
   if(!n)return alert('Müşteri adı boş olamaz.');
   if(p.length!==2||p.some(isNaN)||Math.abs(p[0])>90||Math.abs(p[1])>180)return alert('Koordinat geçersiz. Örnek: 40.7712, 30.3541');
   const moved=Math.abs(c.lat-p[0])>1e-6||Math.abs(c.lng-p[1])>1e-6;
@@ -1996,9 +1996,40 @@ function unplanOrder(id){
 
 /* ---------- parse ---------- */
 function coord(id,label){
-  const p=document.getElementById(id).value.split(',').map(x=>parseFloat(x.trim()));
-  if(p.length!==2||p.some(isNaN))throw new Error(`${label} koordinatı geçersiz.`);
+  const p=konumOku(document.getElementById(id).value);
+  if(!p)throw new Error(`${label} koordinatı geçersiz.`);
   return {lat:p[0],lng:p[1]};
+}
+/* Konum metni → [enlem, boylam] | null. Kabul: "40.77, 30.35" ya da Google Haritalar (uzun) linki.
+   Link biçimleri: .../place/...!3d<lat>!4d<lng> (işaretlenen nokta, en doğrusu), ?q=<lat>,<lng> / ll= / query= / destination=, .../@<lat>,<lng>,zoom */
+function konumOku(v){
+  v=String(v||'').trim();if(!v)return null;
+  const gecerli=(a,b)=>isFinite(a)&&isFinite(b)&&Math.abs(a)<=90&&Math.abs(b)<=180?[a,b]:null;
+  if(!/[a-z]/i.test(v)){const p=v.split(',').map(x=>parseFloat(x.trim()));return p.length===2?gecerli(p[0],p[1]):null;}
+  let u=v;try{u=decodeURIComponent(v);}catch(e){}
+  const N='(-?\\d{1,3}(?:\\.\\d+)?)';
+  let m,last=null;
+  const re3=new RegExp('!3d'+N+'!4d'+N,'g');while((m=re3.exec(u)))last=m;                      // en son işaretli nokta
+  if(last)return gecerli(+last[1],+last[2]);
+  m=new RegExp('[?&](?:q|ll|query|destination|center|sll)=(?:loc:)?\\s*'+N+'\\s*,\\s*'+N).exec(u);
+  if(m)return gecerli(+m[1],+m[2]);
+  m=new RegExp('@'+N+','+N).exec(u);
+  if(m)return gecerli(+m[1],+m[2]);
+  return null;
+}
+const KISA_LINK=/(goo\.gl|maps\.app|g\.co\/)/i;
+// konum alanına link yapıştırılınca koordinata çevir
+function konumAlaniBagla(id,hane){
+  const el=document.getElementById(id);if(!el)return;
+  const cevir=()=>{
+    const v=el.value.trim();if(!v||!/[a-z]/i.test(v))return;
+    const p=konumOku(v);
+    if(p){el.value=`${p[0].toFixed(hane)}, ${p[1].toFixed(hane)}`;}
+    else if(KISA_LINK.test(v)){alert('Bu kısa bir Google Haritalar linki (maps.app.goo.gl), içindeki konum okunamıyor.\n\nLinki telefonda/tarayıcıda aç, adres çubuğundaki UZUN linki kopyalayıp yapıştır — ya da konumu haritadan seç.');}
+    else if(/google\.[a-z.]+\/maps|maps\.google/i.test(v)){alert('Bu linkte koordinat bulunamadı. Haritada yeri işaretleyip (uzun basıp) linki tekrar kopyala.');}
+  };
+  el.addEventListener('paste',()=>setTimeout(cevir,0));
+  el.addEventListener('change',cevir);
 }
 function parseFleet(){
   if(!tankers.length)throw new Error('En az bir tanker gerekli.');
@@ -3035,6 +3066,7 @@ FIELDS.forEach(f=>document.getElementById(f).addEventListener('input',()=>{
   if(f==='drivers')updateStatBar();
   save();if(f==='garage'||f==='plant')draw();
 }));
+['cloc','cELoc'].forEach(i=>konumAlaniBagla(i,6));['garage','plant'].forEach(i=>konumAlaniBagla(i,4));
 document.getElementById('cloc').addEventListener('keydown',e=>{if(e.key==='Enter')addCust()});
 document.getElementById('cname').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('cloc').focus()});
 document.getElementById('oqty').addEventListener('keydown',e=>{if(e.key==='Enter')addOrder()});

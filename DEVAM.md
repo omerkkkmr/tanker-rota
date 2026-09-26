@@ -1443,6 +1443,9 @@ Aynı yedek görevi (tanker-rota-yedek, 5 günde bir) `fotograf_yedek.py` ile St
 ## DURUM BARI "DEPO L" = STOK BAKİYESİ (2026-09-26)
 Önceki tanım (araçlardaki elle girilen yakıt toplamı) onaylanan teslimatla azalmadığı için "güncel değil" görünüyordu; kullanıcının "elimizdeki litre"si stok demekmiş. Artık `stokKalan` = Σ stok girişleri − Σ onaylı teslimat (aynı siparişin son kaydı) — Stok sekmesindeki "Kalan L" ile aynı hesap. `stokBarYenile()`: yalnız 3 kolon çeker (`stok_girisleri.litre`, `teslimat_kayitlari.order_id,delivered_qty,logged_at`), en fazla ~5 sn'de bir sorgu (trailing), `updateStatBar` her çağrıldığında (sipariş/onay/30 sn yenilemesi/realtime) tetiklenir; Stok sekmesi açılınca kesin değer yazılır. Gerçek veritabanıyla doğrulandı (bar = Stok Kalan L). Araçlardaki yakıt toplamı artık barda yok (Filo sekmesinde görünüyor).
 
+## KONUM ALANINA GOOGLE HARİTALAR LİNKİ (2026-09-26)
+`konumOku()` (index.html): "enlem, boylam" ya da Google Haritalar UZUN linki → [lat,lng]. Biçimler: `!3d..!4d..` (işaretli nokta, tercih), `?q= / ll= / query= / destination= / center=`, `/@lat,lng`. Alanlar: müşteri ekle (`cloc`), müşteri düzenle (`cELoc`), Ayarlar garaj/tesis (`garage`/`plant`) — yapıştırınca (paste/change) otomatik koordinata çevrilir; ayrıca `addCust`/`saveCustEdit`/`coord()` de linki kabul eder. Placeholder'da örnek koordinat yok ("Konum — Google Haritalar linkini yapıştır"). **Kısa link (maps.app.goo.gl) ÇÖZÜLEMEZ** (tarayıcıdan yönlendirme okunamıyor): uyarı çıkar, uzun link/haritadan seçme önerilir. 14 link biçimi node'da, yapıştırma akışı tarayıcıda test edildi.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
