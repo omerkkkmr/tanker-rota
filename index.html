@@ -425,7 +425,9 @@ html,body,*{touch-action:manipulation}
         <button id="dayToday" onclick="setViewDate(todayStr())">Bugün</button>
       </div>
       <div class="daynote" id="dayNote"></div>
-      <div class="newform">
+      <button class="ghost" id="oFormBtn" style="width:100%;margin-bottom:6px" onclick="ordForm(document.getElementById('oForm').style.display==='none')">+ Yeni sipariş talebi</button>
+      <div class="hint" id="oMsg" style="color:var(--diesel);text-align:center;min-height:0"></div>
+      <div class="newform" id="oForm" style="display:none">
         <label style="margin-top:0">Yeni sipariş talebi</label>
         <select id="osel"></select>
         <div class="grid2" style="margin-top:6px">
@@ -1211,6 +1213,11 @@ const nowIso=()=>new Date().toISOString();
 const fmtDT=s=>s?new Date(s).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
 
 const HINT0='Teslim günü varsayılan olarak yarın. Bugüne eklemek için tarihi bugün yap; ileri tarih ajandaya girer.';
+function ordForm(on){
+  document.getElementById('oForm').style.display=on?'block':'none';
+  document.getElementById('oFormBtn').textContent=on?'✕ Formu kapat':'+ Yeni sipariş talebi';
+  if(on){const q=document.getElementById('oqty');q.scrollIntoView({block:'center',behavior:'smooth'});}
+}
 function addOrder(){
   const cid=document.getElementById('osel').value;
   const qty=parseInt(document.getElementById('oqty').value);
@@ -1228,6 +1235,9 @@ function addOrder(){
   if(hint){hint.textContent=pd>todayStr()?`✓ Ajandaya eklendi: ${fmtDay(pd)} — o gün rotaya girer`:'✓ Bugüne eklendi';hint.style.color='var(--diesel)';setTimeout(()=>{hint.textContent=HINT0;hint.style.color='';},3500);}
   save();renderOrders();draw();
   cloudOrderUpsert(o);
+  ordForm(false);
+  const cm=document.getElementById('oMsg'),cn=customers.find(c=>c.id===cid);
+  if(cm){cm.textContent=`✓ ${cn?cn.name:'Talep'} · ${L2(qty)} L — ${pd>todayStr()?'ajandaya eklendi: '+fmtDay(pd):'bugüne eklendi'}`;cm.style.minHeight='16px';setTimeout(()=>{cm.textContent='';cm.style.minHeight='0';},4000);}
 }
 const byId=id=>orderList.find(o=>o.id===id);
 function delOrder(id){

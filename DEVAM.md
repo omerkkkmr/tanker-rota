@@ -1460,6 +1460,9 @@ Kullanıcı erişim kilidini (planlayıcı girişi, tek adres, fiyat sütunu kil
 ## "GÜNÜ KAPAT — KALAN YAKITI YARINA AKTAR" DÜĞMESİ KALDIRILDI (2026-09-26)
 Kullanıcı: yakıt takibi zaten Stok'ta, düğme gereksiz. Plan sonucundaki 🌙 düğmesi ve iki kopya `endDay()` fonksiyonu silindi. "Full dolum — araçta kalan" bilgi kutusu KALDI (yalnız bilgi; metni "Günü kapat"a atıf yapmıyor). Filo'daki elle "mevcut yakıt" girişi planlama girdisi olarak duruyor. Geri dönüş: `duzen-oncesi-2026-09-26` etiketi.
 
+## SİPARİŞLER SEKMESİ: TALEP FORMU KAPALI, DÜĞMEYLE AÇILIR (2026-09-26)
+"+ Yeni sipariş talebi" düğmesi (`#oFormBtn`, `ordForm()`); form (`#oForm`) varsayılan kapalı, ekleyince kapanır ve `#oMsg` altında yeşil onay ("✓ Müşteri · litre — bugüne/ajandaya eklendi") 4 sn görünür. Liste artık en üste yakın. Bağımsız `siparis/` uygulaması (ayrı sayfa) değişmedi.
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
