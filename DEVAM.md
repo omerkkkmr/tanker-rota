@@ -1463,6 +1463,9 @@ Kullanıcı: yakıt takibi zaten Stok'ta, düğme gereksiz. Plan sonucundaki �
 ## SİPARİŞLER SEKMESİ: TALEP FORMU KAPALI, DÜĞMEYLE AÇILIR (2026-09-26)
 "+ Yeni sipariş talebi" düğmesi (`#oFormBtn`, `ordForm()`); form (`#oForm`) varsayılan kapalı, ekleyince kapanır ve `#oMsg` altında yeşil onay ("✓ Müşteri · litre — bugüne/ajandaya eklendi") 4 sn görünür. Liste artık en üste yakın. Bağımsız `siparis/` uygulaması (ayrı sayfa) değişmedi.
 
+## "EKLE" DÜĞMELERİ: ORTAK GÖRÜNÜM + SİPARİŞ SAYFASI DA KAPALI FORM (2026-09-26)
+Planlayıcıda Siparişler ("+ Yeni sipariş talebi") ve Teslimat ("+ Plan dışı teslimat gir") düğmeleri üst çubuğa yapışıktı; ortak `.addbar/.addbtn/.addmsg` bileşeni: 16px üst/12px alt boşluk, tam genişlik, 46px yükseklik, koyu dolgulu; form açıkken beyaz çerçeveli "✕ Formu kapat" (`.open`); onay mesajı düğmenin altında. Bağımsız `siparis/` sayfasında da aynı: form (`#oCard`) kapalı, düğmeyle açılır, eklenince kapanır, onay `#gmsg`'de. Telefon boyutunda test edildi (siparis sayfasında `sb.from` sahtelenerek — gerçek veriye yazılmadı).
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).

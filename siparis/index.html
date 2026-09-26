@@ -33,6 +33,11 @@ header span{font-family:'Manrope';font-size:12px;color:#b7ada0}
 
 .wrap{max-width:560px;margin:0 auto;padding:0 0 60px}
 
+.addbar{padding:16px 16px 12px}
+.addbtn{display:block;width:100%;min-height:48px;margin:0;background:var(--ink);color:#f2f0ec;border:1px solid var(--ink);border-radius:4px;font-size:14px;font-weight:700;padding:12px}
+.addbtn.open{background:#fff;color:var(--ink);border-color:#cfc6b2}
+.addmsg{font-size:12px;font-weight:600;color:var(--green);text-align:center;line-height:1.4}
+.addmsg:not(:empty){margin-top:10px}
 /* form bloğu: görev formundaki başlık bloğu gibi beyaz + 2px koyu ayraç */
 .card{background:#fff;border-bottom:2px solid var(--ink);padding:14px 16px 16px}
 label{display:block;font-family:'Manrope';font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
@@ -121,7 +126,11 @@ html,body,*{touch-action:manipulation}
 </header>
 
 <div class="wrap">
-  <div class="card">
+  <div class="addbar">
+    <button class="addbtn" id="oFormBtn" onclick="ordForm(document.getElementById('oCard').style.display==='none')">+ Yeni sipariş talebi</button>
+    <div class="addmsg" id="gmsg"></div>
+  </div>
+  <div class="card" id="oCard" style="display:none">
     <label>Müşteri</label>
     <select id="osel" onchange="toggleNewCust()"></select>
     <input id="ncname" placeholder="Yeni müşteri adı" style="display:none;margin-top:8px">
@@ -321,6 +330,11 @@ function renderDone(){
   }).join('');
 }
 
+function ordForm(on){
+  document.getElementById('oCard').style.display=on?'block':'none';
+  const b=document.getElementById('oFormBtn');b.textContent=on?'✕ Formu kapat':'+ Yeni sipariş talebi';b.classList.toggle('open',on);
+  if(on)document.getElementById('oCard').scrollIntoView({block:'start',behavior:'smooth'});
+}
 async function addOrder(){
   let cid=document.getElementById('osel').value;
   const qty=parseInt(document.getElementById('oqty').value);
@@ -369,6 +383,8 @@ async function addOrder(){
     msg.className='msg ok';
     msg.textContent=pd>todayStr()?`✓ Ajandaya eklendi: ${fmtDay(pd)}`:isNew?(hadLoc?'✓ Yeni müşteri + talep eklendi':'✓ Yeni müşteri + talep eklendi (konum planlayıcıdan düzeltilmeli)'):'✓ Talep eklendi';
     setTimeout(()=>{msg.textContent='';},3500);
+    ordForm(false);   // form kapanır, onay düğmenin altında görünür
+    const gm=document.getElementById('gmsg');gm.textContent=msg.textContent;setTimeout(()=>{gm.textContent='';},4000);
     load();
   }catch(e){
     console.warn(e);
