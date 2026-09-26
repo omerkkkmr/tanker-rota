@@ -350,6 +350,10 @@ div.info{background:#eaf2fc;border-left:3px solid #4a90d9;margin:0 -16px;padding
 .addbar{padding:16px 0 12px}
 .addbtn{display:block;width:100%;min-height:46px;margin:0;background:var(--ink);color:#f2f0ec;border:1px solid var(--ink);border-radius:4px;font-size:14px;font-weight:700;letter-spacing:0;padding:12px}
 .addbtn.open{background:#fff;color:var(--ink);border-color:#cfc6b2}
+.addrow{display:flex;gap:8px}
+.addrow .addbtn{width:auto;flex:1.5}
+.addrow .addbtn.alt{flex:1;font-size:13px}
+.addbtn.alt{background:#fff;color:var(--ink);border-color:#cfc6b2}
 .addmsg{font-size:12px;font-weight:600;color:var(--diesel);text-align:center;line-height:1.4;margin-top:0;min-height:0}
 .addmsg:not(:empty){margin-top:10px}
 .gunluk{padding:14px 16px 0}
@@ -517,8 +521,15 @@ html,body,*{touch-action:manipulation}
 
   <div class="sec tabpanel" data-tab="musteriler" style="display:none">
     <div class="body">
-      <div id="custlist"></div>
-      <label>Yeni müşteri</label>
+      <div class="addbar">
+        <div class="addrow">
+          <button class="addbtn" id="cFormBtn" onclick="custForm(document.getElementById('cForm').style.display==='none')">+ Yeni müşteri ekle</button>
+          <button class="addbtn alt" id="cmapbtn" onclick="setCustMap(!custMapOpen)">🗺️ Haritayı aç</button>
+        </div>
+        <div class="addmsg" id="cMsg"></div>
+      </div>
+      <div class="newform" id="cForm" style="display:none">
+      <label style="margin-top:0">Yeni müşteri</label>
       <input id="cname" placeholder="Müşteri adı">
       <input id="cphone" type="tel" inputmode="tel" placeholder="Telefon (opsiyonel)" style="margin-top:6px">
       <input id="cnote" placeholder="Not (opsiyonel) — örn. kapı kodu, vardiya saati" style="margin-top:6px">
@@ -530,7 +541,8 @@ html,body,*{touch-action:manipulation}
       <div class="row">
         <button class="ghost" onclick="addCust()">Rehbere ekle</button>
       </div>
-      <button class="ghost" id="cmapbtn" onclick="setCustMap(!custMapOpen)" style="width:100%;margin-top:8px">🗺️ Haritayı aç</button>
+      </div>
+      <div id="custlist"></div>
     </div>
   </div>
 
@@ -1027,17 +1039,25 @@ function setStatus(t){const s=document.getElementById('status');s.textContent=t;
 const num=id=>+document.getElementById(id).value||0;
 
 /* ---------- müşteri ---------- */
+function custForm(on){
+  if(!on&&pickMode==='cust')setCustMap(false);   // yarım kalan haritadan seçimi iptal et
+  document.getElementById('cForm').style.display=on?'block':'none';
+  const b=document.getElementById('cFormBtn');b.textContent=on?'✕ Formu kapat':'+ Yeni müşteri ekle';b.classList.toggle('open',on);
+  if(on)document.getElementById('cname').focus();
+}
 function addCust(){
   const n=document.getElementById('cname').value.trim();
   const p=konumOku(document.getElementById('cloc').value)||[NaN,NaN];
   const ph=document.getElementById('cphone').value.trim(),nt=document.getElementById('cnote').value.trim();
   if(!n)return alert('Müşteri adı gir.');
-  if(p.length!==2||p.some(isNaN))return alert('Koordinat geçersiz. Örnek: 40.7712, 30.3541');
+  if(p.length!==2||p.some(isNaN))return alert('Konum geçersiz — Google Haritalar linki yapıştır, haritadan seç ya da "Şu anki konumum"a bas.');
   const c={id:uid(),name:n,lat:p[0],lng:p[1],phone:ph,note:nt};
   customers.push(c);
   document.getElementById('cname').value='';document.getElementById('cloc').value='';document.getElementById('cphone').value='';document.getElementById('cnote').value='';
   save();renderCust();draw();
   cloudCustUpsert(c).then(()=>{renderCust();renderOrders();});
+  custForm(false);
+  const cm=document.getElementById('cMsg');cm.textContent=`✓ ${c.name} rehbere eklendi`;setTimeout(()=>{cm.textContent='';},4000);
 }
 let custEdId=null;
 function editCust(id){
@@ -1074,7 +1094,7 @@ function saveCustEdit(){
   const n=document.getElementById('cEName').value.trim();
   const p=konumOku(document.getElementById('cELoc').value)||[NaN,NaN];
   if(!n)return alert('Müşteri adı boş olamaz.');
-  if(p.length!==2||p.some(isNaN)||Math.abs(p[0])>90||Math.abs(p[1])>180)return alert('Koordinat geçersiz. Örnek: 40.7712, 30.3541');
+  if(p.length!==2||p.some(isNaN)||Math.abs(p[0])>90||Math.abs(p[1])>180)return alert('Konum geçersiz — Google Haritalar linki yapıştır, haritadan seç ya da "Şu anki konumum"a bas.');
   const moved=Math.abs(c.lat-p[0])>1e-6||Math.abs(c.lng-p[1])>1e-6;
   c.name=n;c.lat=p[0];c.lng=p[1];c.phone=document.getElementById('cEPhone').value.trim();c.note=document.getElementById('cENote').value.trim();
   save();closeCustEdit();renderCust();renderOrders();renderTeslimatGiris();draw();

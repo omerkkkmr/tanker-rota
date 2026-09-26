@@ -1466,6 +1466,9 @@ Kullanıcı: yakıt takibi zaten Stok'ta, düğme gereksiz. Plan sonucundaki �
 ## "EKLE" DÜĞMELERİ: ORTAK GÖRÜNÜM + SİPARİŞ SAYFASI DA KAPALI FORM (2026-09-26)
 Planlayıcıda Siparişler ("+ Yeni sipariş talebi") ve Teslimat ("+ Plan dışı teslimat gir") düğmeleri üst çubuğa yapışıktı; ortak `.addbar/.addbtn/.addmsg` bileşeni: 16px üst/12px alt boşluk, tam genişlik, 46px yükseklik, koyu dolgulu; form açıkken beyaz çerçeveli "✕ Formu kapat" (`.open`); onay mesajı düğmenin altında. Bağımsız `siparis/` sayfasında da aynı: form (`#oCard`) kapalı, düğmeyle açılır, eklenince kapanır, onay `#gmsg`'de. Telefon boyutunda test edildi (siparis sayfasında `sb.from` sahtelenerek — gerçek veriye yazılmadı).
 
+## MÜŞTERİLER SEKMESİ: YENİ MÜŞTERİ FORMU KAPALI (2026-09-26)
+Planlayıcı > Yönetim > Müşteriler: üstte `[+ Yeni müşteri ekle] [🗺️ Haritayı aç]` satırı (`.addrow`), form (`#cForm`: ad, telefon, not, konum, "Haritadan seç", "Şu anki konumum", "Rehbere ekle") yalnız düğmeyle açılır; eklenince kapanır + `#cMsg` onayı; form açıkken yarım kalan haritadan seçim kapatılınca iptal olur. Müşteri listesi düğmelerin altına alındı. Konum hata mesajındaki örnek koordinat kaldırıldı. Bağımsız `siparis/` sayfasında bu alanlar zaten "+ Yeni müşteri ekle" seçilince görünüyordu (değişmedi).
+
 ## SONRAKİ AŞAMALAR (yol haritası)
 
 - ~~**Aşama 5: Şoför ekranı**~~ → **YAPILDI** (bkz. aşağıdaki not, 2026-09-22).
